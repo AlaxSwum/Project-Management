@@ -1,4 +1,4 @@
- import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://bayyefskgflbyyuwrlgm.supabase.co'
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheXllZnNrZ2ZsYnl5dXdybGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTg0MzAsImV4cCI6MjA2NTgzNDQzMH0.eTr2bOWOO7N7hzRR45qapeQ6V-u2bgV5BbQygZZgGGM'
@@ -86,34 +86,20 @@ export const supabaseAuth = {
   // Get current user
   getUser: async () => {
     try {
-      console.log('getUser called - checking if window is defined');
-      
       if (typeof window === 'undefined') {
-        console.log('Server-side rendering detected, returning null user');
         return { user: null, error: null }
       }
-      
-      console.log('Client-side detected, checking localStorage');
       
       const userData = localStorage.getItem('supabase_user')
       const token = localStorage.getItem('supabase_token')
       
-      console.log('LocalStorage check:', { 
-        hasUserData: !!userData, 
-        hasToken: !!token,
-        userDataPreview: userData ? userData.substring(0, 50) + '...' : null
-      });
-      
       if (userData && token) {
         const parsedUser = JSON.parse(userData);
-        console.log('Found user in localStorage:', parsedUser);
         return { user: parsedUser, error: null }
       }
       
-      console.log('No user found in localStorage');
       return { user: null, error: null }
     } catch (error) {
-      console.error('getUser error:', error);
       return { user: null, error }
     }
   },
@@ -175,18 +161,6 @@ export const supabaseAuth = {
 
 // Database helpers
 export const supabaseDb = {
-  // Lightweight project access check - only verifies membership, no data fetch
-  checkProjectAccess: async (projectId, userId) => {
-    const { data, error } = await supabase
-      .from('projects_project_members')
-      .select('id')
-      .eq('project_id', projectId)
-      .eq('user_id', userId)
-      .limit(1)
-      .single()
-    return { hasAccess: !!data && !error, error }
-  },
-
   // Users
   getUsers: async () => {
     const { data, error } = await supabase
@@ -196,79 +170,78 @@ export const supabaseDb = {
     return { data, error }
   },
 
-  // Projects - with user-based access control (optimized: single query with joins)
+  // Projects - with user-based access control
   getProjects: async (userId) => {
     if (!userId) {
-      // If no userId provided, return empty array for security
       return { data: [], error: null }
     }
 
     try {
-      // Step 1: Get all project IDs where the user is a member
+      // Step 1: Get user's project IDs (single query)
       const { data: membershipData, error: membershipError } = await supabase
         .from('projects_project_members')
         .select('project_id')
         .eq('user_id', userId)
 
       if (membershipError) return { data: null, error: membershipError }
-      
-      // If user is not a member of any projects, return empty array
       if (!membershipData || membershipData.length === 0) {
         return { data: [], error: null }
       }
 
-      // Extract project IDs the user has access to
       const accessibleProjectIds = membershipData.map(m => m.project_id)
 
-      // Step 2: Fetch projects AND all their members in just 2 parallel queries
-      const [projectsResult, allMembersResult] = await Promise.all([
-        // Fetch only needed columns instead of select('*')
-        supabase
-          .from('projects_project')
-          .select('id, name, description, project_type, status, color, is_archived, start_date, due_date, created_at, updated_at, created_by_id')
-          .in('id', accessibleProjectIds),
-        // Fetch ALL members for ALL accessible projects in a single query with join
-        supabase
-          .from('projects_project_members')
-          .select(`
-            project_id,
-            user_id,
-            auth_user(id, name, email, role)
-          `)
-          .in('project_id', accessibleProjectIds)
-      ])
-
-      if (projectsResult.error) return { data: null, error: projectsResult.error }
+      // Step 2: Fetch projects (single query)
+      const { data: projects, error } = await supabase
+        .from('projects_project')
+        .select('*')
+        .in('id', accessibleProjectIds)
       
-      const projects = projectsResult.data
-      const allMembers = allMembersResult.data || []
+      if (error) return { data: null, error }
+      
+      // Step 3: Fetch ALL members for ALL projects in ONE query (not per-project!)
+      const { data: allMembers, error: allMembersError } = await supabase
+        .from('projects_project_members')
+        .select('project_id, user_id')
+        .in('project_id', accessibleProjectIds)
 
-      // Log but don't fail if members query had an error
-      if (allMembersResult.error) {
-        console.error('Error fetching project members:', allMembersResult.error);
+      if (allMembersError) {
+        console.error('Error fetching all members:', allMembersError);
       }
 
-      // Step 3: Group members by project_id in memory (O(n) instead of N+1 queries)
-      const membersByProject = {}
-      for (const member of allMembers) {
-        const pid = member.project_id
-        if (!membersByProject[pid]) {
-          membersByProject[pid] = []
+      // Step 4: Get unique user IDs and fetch their info in ONE query
+      const uniqueUserIds = [...new Set((allMembers || []).map(m => m.user_id))];
+      
+      let usersMap = {};
+      if (uniqueUserIds.length > 0) {
+        const { data: users } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role, avatar_url')
+          .in('id', uniqueUserIds)
+        
+        if (users) {
+          usersMap = Object.fromEntries(users.map(u => [u.id, u]));
         }
-        membersByProject[pid].push({
-          id: member.auth_user?.id || member.user_id,
-          name: member.auth_user?.name || 'Unknown User',
-          email: member.auth_user?.email || '',
-          role: member.auth_user?.role || 'member'
-        })
       }
 
-      // Step 4: Attach members to projects
+      // Step 5: Group members by project and build final result
+      const membersByProject = {};
+      (allMembers || []).forEach(m => {
+        if (!membersByProject[m.project_id]) membersByProject[m.project_id] = [];
+        const userInfo = usersMap[m.user_id];
+        membersByProject[m.project_id].push({
+          id: userInfo?.id || m.user_id,
+          name: userInfo?.name || 'Unknown User',
+          email: userInfo?.email || '',
+          role: userInfo?.role || 'member',
+          avatar_url: userInfo?.avatar_url
+        });
+      });
+
       const projectsWithMembers = projects.map(project => ({
         ...project,
         members: membersByProject[project.id] || [],
-        project_members: (allMembers || []).filter(m => m.project_id === project.id)
-      }))
+        project_members: membersByProject[project.id] || []
+      }));
       
       return { data: projectsWithMembers, error: null }
     } catch (error) {
@@ -276,63 +249,52 @@ export const supabaseDb = {
     }
   },
 
-  // Single project access control (optimized: parallel queries)
+  // Single project access control
   getProject: async (id, userId) => {
     if (!userId) {
       return { data: null, error: new Error('Access denied: User ID required') }
     }
 
     try {
-      // Run membership check, project fetch, and members fetch in parallel
-      const [membershipResult, projectResult, membersResult] = await Promise.all([
-        supabase
-          .from('projects_project_members')
-          .select('id')
-          .eq('project_id', id)
-          .eq('user_id', userId)
-          .single(),
-        supabase
-          .from('projects_project')
-          .select('id, name, description, project_type, status, color, is_archived, start_date, due_date, created_at, updated_at, created_by_id')
-          .eq('id', id)
-          .single(),
-        supabase
-          .from('projects_project_members')
-          .select(`
-            user_id,
-            auth_user(id, name, email, role)
-          `)
-          .eq('project_id', id)
-      ])
+      // Fetch the project
+      const { data: project, error } = await supabase
+        .from('projects_project')
+        .select('*')
+        .eq('id', id)
+        .single()
+      
+      if (error) return { data: null, error }
+      
+      // Fetch member user_ids for this project (fast, no join)
+      const { data: memberRows } = await supabase
+        .from('projects_project_members')
+        .select('user_id')
+        .eq('project_id', id)
 
-      // Check access
-      if (membershipResult.error || !membershipResult.data) {
-        return { data: null, error: new Error('Access denied: You are not a member of this project') }
+      // Fetch user details in one query
+      const memberUserIds = (memberRows || []).map(m => m.user_id);
+      let transformedMembers = [];
+      
+      if (memberUserIds.length > 0) {
+        const { data: users } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role, avatar_url')
+          .in('id', memberUserIds)
+        
+        transformedMembers = (users || []).map(u => ({
+          id: u.id,
+          name: u.name || 'Unknown User',
+          email: u.email || '',
+          role: u.role || 'member',
+          avatar_url: u.avatar_url
+        }));
       }
-
-      if (projectResult.error) return { data: null, error: projectResult.error }
-      
-      const project = projectResult.data
-      const members = membersResult.data || []
-      
-      // Log but don't fail if members query had an error
-      if (membersResult.error) {
-        console.error(`Error fetching members for project ${id}:`, membersResult.error);
-      }
-      
-      // Transform members to match expected format
-      const transformedMembers = members.map(member => ({
-        id: member.auth_user?.id || member.user_id,
-        name: member.auth_user?.name || 'Unknown User',
-        email: member.auth_user?.email || '',
-        role: member.auth_user?.role || 'member'
-      }));
       
       return {
         data: {
           ...project,
-          members: transformedMembers, // Use 'members' for components
-          project_members: members // Keep both for compatibility
+          members: transformedMembers,
+          project_members: transformedMembers
         },
         error: null
       }
@@ -356,7 +318,6 @@ export const supabaseDb = {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         is_archived: false,  // ✅ Add required field
-        project_type: projectData.project_type || 'general',  // ✅ Default project_type to prevent NOT NULL violation
         status: projectData.status || 'planning',  // ✅ Default status
         // Set defaults for fields that might be missing
         start_date: projectData.start_date || null,
@@ -428,8 +389,7 @@ export const supabaseDb = {
       .from('projects_project')
       .delete()
       .eq('id', id)
-      .select()
-    return { data: data?.[0], error }
+    return { data, error }
   },
 
   // Tasks
@@ -468,11 +428,11 @@ export const supabaseDb = {
       const enrichedData = await Promise.all(
         data.map(async (task) => {
           const assigneesPromise = task.assignee_ids && task.assignee_ids.length > 0
-            ? supabase.from('auth_user').select('id, name, email, role').in('id', task.assignee_ids)
+            ? supabase.from('auth_user').select('id, name, email, role, avatar_url').in('id', task.assignee_ids)
             : Promise.resolve({ data: [] });
           
           const createdByPromise = task.created_by_id
-            ? supabase.from('auth_user').select('id, name, email').eq('id', task.created_by_id).single()
+            ? supabase.from('auth_user').select('id, name, email, avatar_url').eq('id', task.created_by_id).single()
             : Promise.resolve({ data: null });
 
           const [assigneesResult, createdByResult] = await Promise.all([assigneesPromise, createdByPromise]);
@@ -624,7 +584,7 @@ export const supabaseDb = {
 
       // ✅ Enrich the task with user data before returning
       const assignees = taskData.assignee_ids && taskData.assignee_ids.length > 0 ? 
-        await supabase.from('auth_user').select('id, name, email, role').in('id', taskData.assignee_ids) : 
+        await supabase.from('auth_user').select('id, name, email, role, avatar_url').in('id', taskData.assignee_ids) : 
         { data: [] };
 
       const enrichedTask = {
@@ -673,7 +633,7 @@ export const supabaseDb = {
 
       // ✅ Enrich the updated task with user data like createTask and getTasks do
       const assigneesPromise = updatedTask.assignee_ids && updatedTask.assignee_ids.length > 0
-        ? supabase.from('auth_user').select('id, name, email, role').in('id', updatedTask.assignee_ids)
+        ? supabase.from('auth_user').select('id, name, email, role, avatar_url').in('id', updatedTask.assignee_ids)
         : Promise.resolve({ data: [] });
       
       const createdByPromise = updatedTask.created_by_id
@@ -808,56 +768,51 @@ export const supabaseDb = {
   // Meetings
   getMeetings: async () => {
     try {
-    // Query meetings with attendee_ids column
-    const { data, error } = await supabase
-      .from('projects_meeting')
-      .select(`
-          id,
-          title,
-          description,
-          date,
-          time,
-          duration,
-          attendee_ids,
-          created_at,
-          updated_at,
-          created_by_id,
-          project_id
-        `)
+      // Query all meetings at once
+      const { data: meetingsData, error: meetingsError } = await supabase
+        .from('projects_meeting')
+        .select('id, title, description, date, time, duration, attendee_ids, agenda_items, meeting_link, reminder_time, created_at, updated_at, created_by_id, project_id')
+        .order('date', { ascending: false });
       
-      if (error) return { data: null, error }
+      if (meetingsError) return { data: null, error: meetingsError };
+      if (!meetingsData || meetingsData.length === 0) return { data: [], error: null };
       
-      // Enrich with project and creator info
-      const enrichedMeetings = await Promise.all(
-        (data || []).map(async (meeting) => {
-          // Get project info
-          const projectPromise = meeting.project_id 
-            ? supabase.from('projects_project').select('id, name').eq('id', meeting.project_id).single()
-            : Promise.resolve({ data: null });
-          
-          // Get creator info
-          const creatorPromise = meeting.created_by_id
-            ? supabase.from('auth_user').select('id, name, email').eq('id', meeting.created_by_id).single()
-            : Promise.resolve({ data: null });
-
-          const [projectResult, creatorResult] = await Promise.all([projectPromise, creatorPromise]);
-
-          return {
-            ...meeting,
-            project: meeting.project_id,
-            project_id: meeting.project_id,
-            project_name: projectResult.data?.name || 'Unknown Project',
-            created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
-            attendees_list: [], // Legacy field for backward compatibility
-            attendee_ids: meeting.attendee_ids || []
-          };
-        })
-      );
+      // Get unique project IDs and creator IDs
+      const projectIds = [...new Set(meetingsData.map(m => m.project_id).filter(Boolean))];
+      const creatorIds = [...new Set(meetingsData.map(m => m.created_by_id).filter(Boolean))];
       
-      return { data: enrichedMeetings, error: null }
+      // Batch fetch projects and users (2 queries instead of N*2)
+      const [projectsResult, usersResult] = await Promise.all([
+        projectIds.length > 0 
+          ? supabase.from('projects_project').select('id, name').in('id', projectIds)
+          : Promise.resolve({ data: [] }),
+        creatorIds.length > 0
+          ? supabase.from('auth_user').select('id, name, email, avatar_url').in('id', creatorIds)
+          : Promise.resolve({ data: [] })
+      ]);
+      
+      // Create lookup maps
+      const projectMap = new Map((projectsResult.data || []).map(p => [p.id, p.name]));
+      const userMap = new Map((usersResult.data || []).map(u => [u.id, u]));
+      
+      // Enrich meetings using maps (no additional queries)
+      const enrichedMeetings = meetingsData.map(meeting => ({
+        ...meeting,
+        project: meeting.project_id,
+        project_id: meeting.project_id,
+        project_name: projectMap.get(meeting.project_id) || 'Unknown Project',
+        created_by: userMap.get(meeting.created_by_id) || { id: 0, name: 'Unknown User', email: '' },
+        attendees_list: [],
+        attendee_ids: meeting.attendee_ids || [],
+        agenda_items: meeting.agenda_items || [],
+        meeting_link: meeting.meeting_link || null,
+        reminder_time: meeting.reminder_time || null
+      }));
+      
+      return { data: enrichedMeetings, error: null };
     } catch (error) {
       console.error('Error in getMeetings:', error);
-      return { data: [], error }
+      return { data: [], error };
     }
   },
 
@@ -878,6 +833,9 @@ export const supabaseDb = {
         time: meetingData.time,
         duration: meetingData.duration || 60,
         attendee_ids: meetingData.attendee_ids || null,
+        agenda_items: meetingData.agenda_items || null,
+        meeting_link: meetingData.meeting_link || null,
+        reminder_time: meetingData.reminder_time || null,
         created_by_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -943,6 +901,9 @@ export const supabaseDb = {
       if (meetingData.time) updateData.time = meetingData.time;
       if (meetingData.duration) updateData.duration = meetingData.duration;
       if (meetingData.attendee_ids !== undefined) updateData.attendee_ids = meetingData.attendee_ids;
+      if (meetingData.agenda_items !== undefined) updateData.agenda_items = meetingData.agenda_items;
+      if (meetingData.meeting_link !== undefined) updateData.meeting_link = meetingData.meeting_link;
+      if (meetingData.reminder_time !== undefined) updateData.reminder_time = meetingData.reminder_time;
 
     const { data, error } = await supabase
       .from('projects_meeting')
@@ -980,7 +941,8 @@ export const supabaseDb = {
           project_name: projectResult.data?.name || 'Unknown Project',
           created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
           attendees_list: [], // Legacy field for backward compatibility
-          attendee_ids: updatedMeeting.attendee_ids || []
+          attendee_ids: updatedMeeting.attendee_ids || [],
+          agenda_items: updatedMeeting.agenda_items || []
         },
         error: null
       };
@@ -1061,7 +1023,7 @@ export const supabaseDb = {
           created_at,
           task_id,
           user_id,
-          auth_user(id, name, email)
+          auth_user(id, name, email, avatar_url)
         `)
         .eq('task_id', taskId)
         .order('created_at', { ascending: true })
@@ -1278,7 +1240,7 @@ export const supabaseDb = {
   getContentCalendarMembers: async () => {
     try {
       // Use direct HTTP request to bypass RLS issues
-      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_members?select=*,auth_user(id,name,email,role,is_superuser,is_staff)`, {
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_members?select=*,auth_user(id,name,email,role,avatar_url,is_superuser,is_staff)`, {
         method: 'GET',
         headers: {
           'apikey': supabaseAnonKey,
@@ -1554,7 +1516,8 @@ export const supabaseDb = {
   // Folder Member Management
   getContentCalendarFolderMembers: async (folderId) => {
     try {
-      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_members?folder_id=eq.${folderId}&select=*,auth_user:user_id(id,name,email,role)`, {
+      // Fetch folder members without join to avoid 400 error
+      const response = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_members?folder_id=eq.${folderId}`, {
         method: 'GET',
         headers: {
           'apikey': supabaseAnonKey,
@@ -1564,11 +1527,47 @@ export const supabaseDb = {
       });
 
       if (!response.ok) {
+        console.error('Folder members query failed:', response.status);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return { data: data || [], error: null };
+      const members = await response.json();
+      console.log('Raw folder members:', members);
+      
+      // Fetch user details separately for each member
+      const membersWithUsers = await Promise.all(members.map(async (member) => {
+        try {
+          const userResponse = await fetch(`${supabaseUrl}/rest/v1/auth_user?id=eq.${member.user_id}`, {
+            method: 'GET',
+            headers: {
+              'apikey': supabaseAnonKey,
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            return {
+              ...member,
+              auth_user: userData[0] || { name: 'Unknown', email: '', id: member.user_id }
+            };
+          }
+          return {
+            ...member,
+            auth_user: { name: 'Unknown', email: '', id: member.user_id }
+          };
+        } catch (err) {
+          console.error('Error fetching user for member:', err);
+          return {
+            ...member,
+            auth_user: { name: 'Unknown', email: '', id: member.user_id }
+          };
+        }
+      }));
+      
+      console.log('Members with user details:', membersWithUsers);
+      return { data: membersWithUsers, error: null };
     } catch (error) {
       console.error('Error in getContentCalendarFolderMembers:', error);
       return { data: [], error };
@@ -1590,32 +1589,7 @@ export const supabaseDb = {
       if (checkResponse.ok) {
         const existingMembers = await checkResponse.json();
         if (existingMembers && existingMembers.length > 0) {
-          // User already exists - update their permissions instead
-          const memberData = {
-            role: permissions.role || 'viewer',
-            can_create: permissions.can_create || false,
-            can_edit: permissions.can_edit || false,
-            can_delete: permissions.can_delete || false,
-            can_manage_members: permissions.can_manage_members || false
-          };
-
-          const updateResponse = await fetch(`${supabaseUrl}/rest/v1/content_calendar_folder_members?folder_id=eq.${folderId}&user_id=eq.${userId}`, {
-            method: 'PATCH',
-            headers: {
-              'apikey': supabaseAnonKey,
-              'Authorization': `Bearer ${supabaseAnonKey}`,
-              'Content-Type': 'application/json',
-              'Prefer': 'return=representation'
-            },
-            body: JSON.stringify(memberData)
-          });
-
-          if (!updateResponse.ok) {
-            throw new Error(`Failed to update member permissions`);
-          }
-
-          const updatedData = await updateResponse.json();
-          return { data: updatedData?.[0], error: null, updated: true };
+          return { data: null, error: new Error('User is already a member of this folder') };
         }
       }
 
@@ -1797,6 +1771,10 @@ export const supabaseDb = {
   // Create password folder
   createPasswordFolder: async (folderData) => {
     try {
+      // Get current user ID
+      const { user } = await supabaseAuth.getUser();
+      const userId = user?.id || 1; // Fallback to 1 if no user
+
       const response = await fetch(`${supabaseUrl}/rest/v1/password_vault_folders`, {
         method: 'POST',
         headers: {
@@ -1807,7 +1785,8 @@ export const supabaseDb = {
         },
         body: JSON.stringify({
           ...folderData,
-          created_by: 60 // Replace with actual user ID
+          created_by: userId, // Use actual user ID
+          created_by_id: userId // Set both columns to avoid constraint issues
         })
       });
 

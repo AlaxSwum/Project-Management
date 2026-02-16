@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import Sidebar from '@/components/Sidebar'
 import { FolderIcon, CalendarIcon, ChevronDownIcon, ChevronRightIcon, UserGroupIcon, PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 interface ClassScheduleItem {
@@ -411,63 +412,71 @@ export default function ClassSchedulePage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ 
-        padding: '2rem', 
-        background: '#F5F5ED', 
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh'
-      }}>
-        <div style={{ 
-          width: '32px', 
-          height: '32px', 
-          border: '3px solid #C483D9', 
-          borderTop: '3px solid #5884FD', 
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div className="page-main" style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
       </div>
     )
   }
 
   if (!hasAccess) {
     return (
-      <div style={{ 
-        padding: '2rem', 
-        background: '#F5F5ED', 
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh'
-      }}>
-        <div style={{ textAlign: 'center', maxWidth: '500px' }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: '300', marginBottom: '1rem', color: '#1a1a1a', letterSpacing: '-0.02em' }}>
-            Access Denied
-          </h1>
-          <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem', lineHeight: '1.6' }}>
-            You don't have permission to access the Class Schedule.
-            Please contact an administrator to request access.
-          </p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            style={{
-              padding: '0.875rem 2rem',
-              background: '#5884FD',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '1rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
-            }}
-          >
-            Back to Dashboard
-          </button>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div className="page-main" style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}>
+          <div style={{ textAlign: 'center', maxWidth: '500px' }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: '300', marginBottom: '1rem', color: '#1a1a1a', letterSpacing: '-0.02em' }}>
+              Access Denied
+            </h1>
+            <p style={{ fontSize: '1.1rem', color: '#666666', marginBottom: '2rem', lineHeight: '1.6' }}>
+              You don't have permission to access the Class Schedule.
+              Please contact an administrator to request access.
+            </p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              style={{
+                padding: '0.875rem 2rem',
+                background: '#5884FD',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '1rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 12px rgba(88, 132, 253, 0.3)'
+              }}
+            >
+              Back to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -484,12 +493,16 @@ export default function ClassSchedulePage() {
         `
       }} />
       
-      <div id="main-content" className="main-content" style={{ 
-        padding: '2rem', 
-        background: '#F5F5ED', 
-        flex: 1,
-        minHeight: '100vh'
-      }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        
+        <div id="main-content" className="main-content page-main" style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#F5F5ED', 
+          flex: 1,
+          minHeight: '100vh'
+        }}>
           {/* Header */}
           <div style={{ 
             display: 'flex', 
@@ -1806,6 +1819,7 @@ export default function ClassSchedulePage() {
               </div>
             </div>
           )}
+        </div>
       </div>
     </>
   )

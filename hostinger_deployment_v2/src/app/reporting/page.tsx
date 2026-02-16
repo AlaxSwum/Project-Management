@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { reportingService } from '@/lib/api-compatibility';
 // Icons removed for clean design;
+import Sidebar from '@/components/Sidebar';
 
 export default function ReportingPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -113,9 +114,18 @@ export default function ReportingPage() {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             background: #F5F5ED;
           }
+          .reporting-container {
+            min-height: 100vh;
+            display: flex;
+            background: #F5F5ED;
+          }
           .main-content {
             flex: 1;
+            margin-left: ${isMobile ? '0' : '256px'};
             background: #F5F5ED;
+            padding-top: ${isMobile ? '70px' : '0'};
+            padding-left: ${isMobile ? '12px' : '0'};
+            padding-right: ${isMobile ? '12px' : '0'};
           }
           .header {
             background: transparent;
@@ -262,6 +272,10 @@ export default function ReportingPage() {
           }
           /* Mobile Responsive Styles */
           @media (max-width: 768px) {
+            .main-content {
+              margin-left: 0;
+            }
+            
             .header {
               padding: 1rem;
             }
@@ -362,7 +376,10 @@ export default function ReportingPage() {
           `
         }} />
 
-      <main className="main-content">
+      <div className="reporting-container">
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+
+        <main className="main-content">
           <header className="header">
             <h1 className="header-title">
               Team Reporting & KPIs
@@ -660,7 +677,8 @@ export default function ReportingPage() {
               </>
             )}
           </div>
-      </main>
+        </main>
+      </div>
 
       {/* Member Detail Modal */}
       {showDetailModal && selectedMember && (

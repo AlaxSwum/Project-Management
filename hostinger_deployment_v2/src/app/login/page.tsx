@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
@@ -48,7 +49,7 @@ export default function LoginPage() {
       <style jsx>{`
         .login-container {
           min-height: 100vh;
-          background: #fafafa;
+          background: #0D0D0D;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -57,10 +58,10 @@ export default function LoginPage() {
         }
         
         .login-card {
-          background: #ffffff;
+          background: #141414;
           border-radius: ${isMobile ? '12px' : '16px'};
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          border: 1px solid #e5e7eb;
+          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+          border: 1px solid #2D2D2D;
           padding: ${isMobile ? '2rem 1.5rem' : '3rem'};
           width: 100%;
           max-width: ${isMobile ? '100%' : '420px'};
@@ -76,13 +77,13 @@ export default function LoginPage() {
         .title {
           font-size: 2rem;
           font-weight: 700;
-          color: #111827;
+          color: #FFFFFF;
           margin-bottom: 0.5rem;
           letter-spacing: -0.025em;
         }
         
         .subtitle {
-          color: #6b7280;
+          color: #71717A;
           font-size: 1rem;
           line-height: 1.5;
           font-weight: 400;
@@ -91,8 +92,8 @@ export default function LoginPage() {
         .error-message {
           margin-bottom: 1.5rem;
           padding: 1rem;
-          background: #fef2f2;
-          border: 1px solid #fecaca;
+          background: #3D1F1F;
+          border: 1px solid #7F1D1D;
           border-radius: 8px;
           display: flex;
           align-items: center;
@@ -101,13 +102,13 @@ export default function LoginPage() {
         .error-icon {
           width: 1.25rem;
           height: 1.25rem;
-          color: #ef4444;
+          color: #EF4444;
           margin-right: 0.75rem;
           flex-shrink: 0;
         }
         
         .error-text {
-          color: #dc2626;
+          color: #FCA5A5;
           font-size: 0.875rem;
           font-weight: 500;
         }
@@ -127,34 +128,34 @@ export default function LoginPage() {
         .form-label {
           font-size: 0.875rem;
           font-weight: 600;
-          color: #374151;
+          color: #E4E4E7;
           margin-bottom: 0.5rem;
         }
         
         .form-input {
           width: 100%;
           padding: 0.875rem 1rem;
-          border: 1px solid #d1d5db;
+          border: 1px solid #2D2D2D;
           border-radius: 8px;
           font-size: 0.875rem;
           transition: all 0.2s ease;
-          background: #ffffff;
-          color: #111827;
+          background: #0D0D0D;
+          color: #FFFFFF;
           box-sizing: border-box;
         }
         
         .form-input:focus {
           outline: none;
-          border-color: #374151;
-          box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
+          border-color: #3B82F6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
         
         .form-input:hover {
-          border-color: #9ca3af;
+          border-color: #3F3F46;
         }
         
         .form-input::placeholder {
-          color: #9ca3af;
+          color: #52525B;
         }
         
         .remember-forgot {
@@ -173,40 +174,41 @@ export default function LoginPage() {
         .checkbox {
           width: 1rem;
           height: 1rem;
-          border: 1px solid #d1d5db;
+          border: 1px solid #2D2D2D;
           border-radius: 4px;
-          background: #ffffff;
+          background: #0D0D0D;
           cursor: pointer;
           transition: all 0.2s ease;
+          accent-color: #3B82F6;
         }
         
         .checkbox:checked {
-          background: #111827;
-          border-color: #111827;
+          background: #3B82F6;
+          border-color: #3B82F6;
         }
         
         .checkbox-label {
           font-size: 0.875rem;
-          color: #6b7280;
+          color: #71717A;
           cursor: pointer;
         }
         
         .forgot-link {
           font-size: 0.875rem;
           font-weight: 500;
-          color: #111827;
+          color: #3B82F6;
           text-decoration: none;
           transition: color 0.2s ease;
         }
         
         .forgot-link:hover {
-          color: #374151;
+          color: #60A5FA;
         }
         
         .submit-button {
           width: 100%;
           padding: 0.875rem 1.5rem;
-          background: #111827;
+          background: #3B82F6;
           color: #ffffff;
           border: none;
           border-radius: 8px;
@@ -219,11 +221,11 @@ export default function LoginPage() {
         }
         
         .submit-button:hover:not(:disabled) {
-          background: #1f2937;
+          background: #2563EB;
         }
         
         .submit-button:active:not(:disabled) {
-          background: #374151;
+          background: #1D4ED8;
         }
         
         .submit-button:disabled {
@@ -255,13 +257,13 @@ export default function LoginPage() {
           left: 0;
           right: 0;
           height: 1px;
-          background: #e5e7eb;
+          background: #2D2D2D;
         }
         
         .divider-label {
-          background: #ffffff;
+          background: #141414;
           padding: 0 1rem;
-          color: #6b7280;
+          color: #71717A;
           font-size: 0.875rem;
         }
         
@@ -270,19 +272,19 @@ export default function LoginPage() {
         }
         
         .signup-text {
-          color: #6b7280;
+          color: #71717A;
           font-size: 0.875rem;
         }
         
         .signup-link {
           font-weight: 600;
-          color: #111827;
+          color: #3B82F6;
           text-decoration: none;
           transition: color 0.2s ease;
         }
         
         .signup-link:hover {
-          color: #374151;
+          color: #60A5FA;
         }
         
         @keyframes spin {
@@ -313,10 +315,19 @@ export default function LoginPage() {
       
       <div className="login-container">
         <div className="login-card">
-          {/* Title */}
+          {/* Logo & Title */}
           <div className="title-section">
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+              <Image 
+                src="/logo.png" 
+                alt="Project Next Logo" 
+                width={64} 
+                height={64}
+                style={{ borderRadius: '12px' }}
+              />
+            </div>
             <h1 className="title">Welcome Back</h1>
-            <p className="subtitle">Sign in to continue to your dashboard</p>
+            <p className="subtitle">Sign in to continue to Project Next</p>
           </div>
 
           {/* Error Message */}

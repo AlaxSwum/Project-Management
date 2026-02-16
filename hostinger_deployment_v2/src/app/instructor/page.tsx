@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import Sidebar from '@/components/Sidebar';
 import { CalendarIcon, ClockIcon, MapPinIcon, FolderIcon, UserGroupIcon, ClipboardDocumentListIcon, ChartBarIcon, PlusIcon, CheckIcon, XMarkIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
 export const dynamic = 'force-dynamic';
@@ -631,12 +632,18 @@ export default function InstructorDashboard() {
 
   return (
     <div className="instructor-dashboard" style={{
+      display: 'flex',
       minHeight: '100vh',
       background: 'var(--background)',
-      fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      flex: '1',
-      padding: 'var(--spacing-xl)'
+      fontFamily: "'Mabry Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
     }}>
+      <Sidebar projects={[]} onCreateProject={() => {}} />
+      
+      <div className="page-main" style={{
+        flex: '1',
+        marginLeft: '16rem',
+        padding: 'var(--spacing-xl)'
+      }}>
         <div style={{
           background: 'var(--surface)',
           border: '1px solid var(--border)',
@@ -2147,6 +2154,7 @@ export default function InstructorDashboard() {
             </div>
           )}
         </div>
+      </div>
     </div>
   );
 }

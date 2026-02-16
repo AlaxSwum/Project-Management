@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import Sidebar from '@/components/Sidebar';
+import MobileHeader from '@/components/MobileHeader';
 import { 
   PlusIcon, 
   PencilIcon, 
@@ -999,23 +1001,28 @@ export default function CompanyOutreachPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ 
-        padding: '2rem', 
-        background: '#F5F5ED', 
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh'
-      }}>
-        <div style={{ 
-          width: '32px', 
-          height: '32px', 
-          border: '3px solid #C483D9', 
-          borderTop: '3px solid #5884FD', 
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div className="page-main" style={{ 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '12px' : '2rem', 
+          paddingTop: isMobile ? '70px' : '2rem',
+          background: '#F5F5ED', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
       </div>
     )
   }
@@ -1027,15 +1034,19 @@ export default function CompanyOutreachPage() {
 
   if (!hasAccess) {
     return (
-      <div style={{ 
-        padding: '2rem', 
-        background: '#F5F5ED', 
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh'
-      }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div className="page-main" style={{ 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '12px' : '2rem', 
+          paddingTop: isMobile ? '70px' : '2rem',
+          background: '#F5F5ED', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}>
           <div style={{ textAlign: 'center', maxWidth: '500px' }}>
             <h1 style={{ fontSize: '2.5rem', fontWeight: '300', marginBottom: '1rem', color: '#1a1a1a', letterSpacing: '-0.02em' }}>
               Access Denied
@@ -1062,6 +1073,7 @@ export default function CompanyOutreachPage() {
             </button>
           </div>
         </div>
+      </div>
     )
   }
 
@@ -1076,13 +1088,19 @@ export default function CompanyOutreachPage() {
         `
       }} />
       
-      <div style={{ 
-        padding: '2rem', 
-        background: '#F5F5ED', 
-        flex: 1,
-        minHeight: '100vh',
-        overflow: 'hidden'
-      }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F5ED' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        
+        <div className="page-main" style={{ 
+          marginLeft: isMobile ? '0' : '256px',
+          padding: isMobile ? '12px' : '2rem', 
+          paddingTop: isMobile ? '70px' : '2rem',
+          background: '#F5F5ED', 
+          flex: 1,
+          minHeight: '100vh',
+          overflow: 'hidden',
+          maxWidth: 'calc(100vw - 256px)'
+        }}>
           {/* Header */}
           <div style={{ 
             display: 'flex', 
@@ -1858,6 +1876,7 @@ export default function CompanyOutreachPage() {
               </div>
             )}
           </div>
+        </div>
       </div>
 
       {/* Add Form Modal */}

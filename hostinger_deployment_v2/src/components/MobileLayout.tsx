@@ -68,16 +68,16 @@ export default function MobileLayout({ children, title }: MobileLayoutProps) {
             top: 0,
             left: 0,
             right: 0,
-            background: 'white',
+            background: '#0D0D0D',
             zIndex: 1000,
             padding: '12px 16px',
-            borderBottom: '1px solid #E5E7EB',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            borderBottom: '1px solid #1F1F1F',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-            <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#1F2937' }}>
+            <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#FFFFFF' }}>
               {title}
             </h1>
             <button
@@ -86,7 +86,7 @@ export default function MobileLayout({ children, title }: MobileLayoutProps) {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: '#1F2937',
+                color: '#FFFFFF',
                 padding: '8px',
                 minWidth: '40px',
                 minHeight: '40px'
@@ -111,27 +111,28 @@ export default function MobileLayout({ children, title }: MobileLayoutProps) {
               padding: '16px'
             }} onClick={() => setShowMobileMenu(false)}>
               <div style={{
-                background: 'white',
+                background: '#1A1A1A',
                 borderRadius: '12px',
                 padding: '20px',
                 maxHeight: '80vh',
-                overflowY: 'auto'
+                overflowY: 'auto',
+                border: '1px solid #2D2D2D'
               }} onClick={(e) => e.stopPropagation()}>
                 <div style={{ marginBottom: '20px' }}>
-                  <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600' }}>Navigation</h3>
+                  <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#FFFFFF' }}>Navigation</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <a href="/dashboard" style={{ padding: '12px', textAlign: 'left', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: '8px', textDecoration: 'none', color: '#374151', display: 'block' }}>Dashboard</a>
-                    <a href="/personal" style={{ padding: '12px', textAlign: 'left', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: '8px', textDecoration: 'none', color: '#374151', display: 'block' }}>Personal Tasks</a>
-                    <a href="/my-tasks" style={{ padding: '12px', textAlign: 'left', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: '8px', textDecoration: 'none', color: '#374151', display: 'block' }}>My Tasks</a>
-                    <a href="/calendar" style={{ padding: '12px', textAlign: 'left', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: '8px', textDecoration: 'none', color: '#374151', display: 'block' }}>Calendar</a>
-                    <a href="/company-outreach" style={{ padding: '12px', textAlign: 'left', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: '8px', textDecoration: 'none', color: '#374151', display: 'block' }}>Company Outreach</a>
-                    <a href="/content-calendar" style={{ padding: '12px', textAlign: 'left', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: '8px', textDecoration: 'none', color: '#374151', display: 'block' }}>Content Calendar</a>
-                    <a href="/password-manager" style={{ padding: '12px', textAlign: 'left', background: '#F8FAFC', border: '1px solid #E5E7EB', borderRadius: '8px', textDecoration: 'none', color: '#374151', display: 'block' }}>Password Manager</a>
+                    <a href="/dashboard" style={{ padding: '12px', textAlign: 'left', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '8px', textDecoration: 'none', color: '#A1A1AA', display: 'block' }}>Dashboard</a>
+                    <a href="/personal" style={{ padding: '12px', textAlign: 'left', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '8px', textDecoration: 'none', color: '#A1A1AA', display: 'block' }}>Personal Tasks</a>
+                    <a href="/my-tasks" style={{ padding: '12px', textAlign: 'left', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '8px', textDecoration: 'none', color: '#A1A1AA', display: 'block' }}>My Tasks</a>
+                    <a href="/calendar" style={{ padding: '12px', textAlign: 'left', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '8px', textDecoration: 'none', color: '#A1A1AA', display: 'block' }}>Calendar</a>
+                    <a href="/company-outreach" style={{ padding: '12px', textAlign: 'left', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '8px', textDecoration: 'none', color: '#A1A1AA', display: 'block' }}>Company Outreach</a>
+                    <a href="/content-calendar" style={{ padding: '12px', textAlign: 'left', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '8px', textDecoration: 'none', color: '#A1A1AA', display: 'block' }}>Content Calendar</a>
+                    <a href="/password-manager" style={{ padding: '12px', textAlign: 'left', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '8px', textDecoration: 'none', color: '#A1A1AA', display: 'block' }}>Password Manager</a>
                   </div>
                 </div>
                 <button 
                   onClick={() => setShowMobileMenu(false)}
-                  style={{ width: '100%', padding: '12px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #10B981, #10B981)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
                 >
                   Close Menu
                 </button>

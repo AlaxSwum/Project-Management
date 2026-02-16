@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabaseAuth } from '@/lib/supabase';
+import { supabase, supabaseAuth } from '@/lib/supabase';
 
 interface User {
   id: number;
@@ -11,6 +11,9 @@ interface User {
   role: string;
   position?: string;
   date_joined: string;
+  avatar_url?: string;
+  location?: string;
+  bio?: string;
 }
 
 interface AuthContextType {
@@ -62,41 +65,59 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuth = async () => {
       try {
-        console.log('Starting auth initialization...');
-        
         // Small delay to ensure localStorage is fully available
         await new Promise(resolve => setTimeout(resolve, 50));
         
         const { user: currentUser, error } = await supabaseAuth.getUser();
         
-        console.log('Auth result:', { currentUser, error });
-        
         if (currentUser && !error) {
-          const userData: User = {
-            id: currentUser.id,
-            email: currentUser.email,
-            name: currentUser.user_metadata?.name || currentUser.email,
-            phone: currentUser.user_metadata?.phone || '',
-            role: currentUser.user_metadata?.role || 'member',
-            position: currentUser.user_metadata?.position || '',
-            date_joined: new Date().toISOString()
-          };
-          setUser(userData);
-          console.log('User set:', userData);
-        } else {
-          console.log('No user found or error occurred');
+          // Fetch full profile from database including avatar_url, location, bio
+          try {
+            const { data: profileData } = await supabase
+              .from('auth_user')
+              .select('name, email, phone, role, position, avatar_url, location, bio')
+              .eq('id', currentUser.id)
+              .single();
+            
+            const userData: User = {
+              id: currentUser.id,
+              email: profileData?.email || currentUser.email,
+              name: profileData?.name || currentUser.user_metadata?.name || currentUser.email,
+              phone: profileData?.phone || currentUser.user_metadata?.phone || '',
+              role: profileData?.role || currentUser.user_metadata?.role || 'member',
+              position: profileData?.position || currentUser.user_metadata?.position || '',
+              avatar_url: profileData?.avatar_url || '',
+              location: profileData?.location || '',
+              bio: profileData?.bio || '',
+              date_joined: new Date().toISOString()
+            };
+            setUser(userData);
+          } catch (profileError) {
+            // Fallback to basic user data if profile fetch fails
+            const userData: User = {
+              id: currentUser.id,
+              email: currentUser.email,
+              name: currentUser.user_metadata?.name || currentUser.email,
+              phone: currentUser.user_metadata?.phone || '',
+              role: currentUser.user_metadata?.role || 'member',
+              position: currentUser.user_metadata?.position || '',
+              avatar_url: '',
+              location: '',
+              bio: '',
+              date_joined: new Date().toISOString()
+            };
+            setUser(userData);
+          }
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        // Silent error handling
       } finally {
-        console.log('Setting isLoading to false');
         setIsLoading(false);
       }
     };
 
     // Set a maximum timeout for auth initialization
     const timeoutId = setTimeout(() => {
-      console.warn('Auth initialization timeout, proceeding without auth');
       setIsLoading(false);
     }, 3000);
 
@@ -115,29 +136,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('Attempting login for:', email);
       const { user: authUser, error } = await supabaseAuth.signIn(email, password);
       
       if (error) {
-        console.error('Login error:', error);
         throw new Error(error instanceof Error ? error.message : 'Login failed');
       }
 
       if (authUser) {
-        const userData: User = {
-          id: authUser.id,
-          email: authUser.email,
-          name: authUser.user_metadata?.name || authUser.email,
-          phone: authUser.user_metadata?.phone || '',
-          role: authUser.user_metadata?.role || 'member',
-          position: authUser.user_metadata?.position || '',
-          date_joined: new Date().toISOString()
-        };
-        setUser(userData);
-        console.log('Login successful:', userData);
+        // Fetch full profile from database including avatar_url, location, bio
+        try {
+          const { data: profileData } = await supabase
+            .from('auth_user')
+            .select('name, email, phone, role, position, avatar_url, location, bio')
+            .eq('id', authUser.id)
+            .single();
+          
+          const userData: User = {
+            id: authUser.id,
+            email: profileData?.email || authUser.email,
+            name: profileData?.name || authUser.user_metadata?.name || authUser.email,
+            phone: profileData?.phone || authUser.user_metadata?.phone || '',
+            role: profileData?.role || authUser.user_metadata?.role || 'member',
+            position: profileData?.position || authUser.user_metadata?.position || '',
+            avatar_url: profileData?.avatar_url || '',
+            location: profileData?.location || '',
+            bio: profileData?.bio || '',
+            date_joined: new Date().toISOString()
+          };
+          setUser(userData);
+        } catch (profileError) {
+          // Fallback to basic user data if profile fetch fails
+          const userData: User = {
+            id: authUser.id,
+            email: authUser.email,
+            name: authUser.user_metadata?.name || authUser.email,
+            phone: authUser.user_metadata?.phone || '',
+            role: authUser.user_metadata?.role || 'member',
+            position: authUser.user_metadata?.position || '',
+            avatar_url: '',
+            location: '',
+            bio: '',
+            date_joined: new Date().toISOString()
+          };
+          setUser(userData);
+        }
       }
     } catch (error: any) {
-      console.error('Login failed:', error);
       throw new Error(error.message || 'Login failed');
     }
   };

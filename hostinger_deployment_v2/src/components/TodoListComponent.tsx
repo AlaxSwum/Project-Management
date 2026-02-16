@@ -62,10 +62,7 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
   const [newTodo, setNewTodo] = useState({
     title: '',
     description: '',
-    start_date: new Date().toISOString().split('T')[0],
-    start_time: '09:00',
-    due_date: new Date().toISOString().split('T')[0],
-    due_time: '10:00'
+    due_date: ''
   });
 
   // Load todos from database
@@ -133,10 +130,7 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
       setNewTodo({
         title: '',
         description: '',
-        start_date: new Date().toISOString().split('T')[0],
-        start_time: '09:00',
-        due_date: new Date().toISOString().split('T')[0],
-        due_time: '10:00'
+        due_date: ''
       });
       setShowQuickAdd(false);
       setError('');
@@ -178,10 +172,7 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
     setNewTodo({
       title: todo.title,
       description: todo.description || '',
-      start_date: todo.due_date?.split('T')[0] || new Date().toISOString().split('T')[0],
-      start_time: '09:00',
-      due_date: todo.due_date?.split('T')[0] || new Date().toISOString().split('T')[0],
-      due_time: '10:00'
+      due_date: todo.due_date || ''
     });
     setShowQuickAdd(true);
   };
@@ -205,10 +196,7 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
       setNewTodo({
         title: '',
         description: '',
-        start_date: new Date().toISOString().split('T')[0],
-        start_time: '09:00',
-        due_date: new Date().toISOString().split('T')[0],
-        due_time: '10:00'
+        due_date: ''
       });
       setShowQuickAdd(false);
       setError('');
@@ -293,7 +281,7 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
   if (isLoading) {
     return (
       <div style={{ padding: '3rem', textAlign: 'center' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
+        <div style={{ width: '32px', height: '32px', border: '3px solid #2D2D2D', borderTop: '3px solid #FFFFFF', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
       </div>
     );
   }
@@ -303,15 +291,15 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
       <style dangerouslySetInnerHTML={{
         __html: `
           .todo-list-container {
-            background: #ffffff;
-            border: 2px solid #000000;
+            background: #1A1A1A;
+            border: 2px solid #2D2D2D;
             border-radius: 12px;
             overflow: hidden;
           }
           
           .todo-header {
-            background: #f9fafb;
-            border-bottom: 2px solid #e5e7eb;
+            background: #141414;
+            border-bottom: 2px solid #2D2D2D;
             padding: 1.5rem;
           }
           
@@ -323,8 +311,8 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           }
           
           .stat-card {
-            background: #ffffff;
-            border: 2px solid #e5e7eb;
+            background: #1A1A1A;
+            border: 2px solid #2D2D2D;
             border-radius: 8px;
             padding: 1rem 1.5rem;
             min-width: 120px;
@@ -334,13 +322,13 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           .stat-value {
             font-size: 1.5rem;
             font-weight: bold;
-            color: #000000;
+            color: #FFFFFF;
             margin-bottom: 0.25rem;
           }
           
           .stat-label {
             font-size: 0.875rem;
-            color: #6b7280;
+            color: #71717A;
             font-weight: 500;
           }
           
@@ -373,9 +361,9 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
             align-items: center;
             gap: 0.5rem;
             padding: 0.5rem 1rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2D2D2D;
             border-radius: 6px;
-            background: #ffffff;
+            background: #1A1A1A;
             cursor: pointer;
             font-size: 0.875rem;
             font-weight: 500;
@@ -383,20 +371,20 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           }
           
           .control-btn:hover {
-            border-color: #000000;
+            border-color: #2D2D2D;
             transform: translateY(-1px);
           }
           
           .control-btn.active {
-            background: #000000;
+            background: #2D2D2D;
             color: #ffffff;
-            border-color: #000000;
+            border-color: #2D2D2D;
           }
           
           .control-btn.primary {
-            background: #000000;
+            background: #2D2D2D;
             color: #ffffff;
-            border-color: #000000;
+            border-color: #2D2D2D;
           }
           
           .search-box {
@@ -407,14 +395,14 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           .search-input {
             width: 100%;
             padding: 0.5rem 0.5rem 0.5rem 2.5rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2D2D2D;
             border-radius: 6px;
             font-size: 0.875rem;
           }
           
           .search-input:focus {
             outline: none;
-            border-color: #000000;
+            border-color: #2D2D2D;
           }
           
           .search-icon {
@@ -422,22 +410,22 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
             left: 0.75rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #6b7280;
+            color: #71717A;
           }
           
           .filter-select {
             padding: 0.5rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2D2D2D;
             border-radius: 6px;
             font-size: 0.875rem;
             font-weight: 500;
-            background: #ffffff;
+            background: #1A1A1A;
             cursor: pointer;
           }
           
           .filter-select:focus {
             outline: none;
-            border-color: #000000;
+            border-color: #2D2D2D;
           }
           
           .todo-content {
@@ -445,7 +433,7 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           }
           
           .bulk-actions {
-            background: #fff7ed;
+            background: rgba(245, 158, 11, 0.1);
             border: 2px solid #fb923c;
             border-radius: 8px;
             padding: 1rem;
@@ -486,8 +474,8 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           }
           
           .bulk-btn.cancel {
-            background: #e5e7eb;
-            color: #374151;
+            background: #2D2D2D;
+            color: #A1A1AA;
           }
           
           .todo-list {
@@ -503,22 +491,22 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           }
           
           .todo-item {
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2D2D2D;
             border-radius: 8px;
             padding: 1rem;
             transition: all 0.2s ease;
-            background: #ffffff;
+            background: #1A1A1A;
           }
           
           .todo-item:hover {
-            border-color: #d1d5db;
+            border-color: #3D3D3D;
             transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
           }
           
           .todo-item.completed {
             opacity: 0.7;
-            background: #f9fafb;
+            background: #141414;
           }
           
           .todo-item.overdue {
@@ -551,19 +539,19 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           
           .todo-title {
             font-weight: 600;
-            color: #000000;
+            color: #FFFFFF;
             margin-bottom: 0.25rem;
             line-height: 1.4;
           }
           
           .todo-title.completed {
             text-decoration: line-through;
-            color: #6b7280;
+            color: #71717A;
           }
           
           .todo-description {
             font-size: 0.875rem;
-            color: #6b7280;
+            color: #71717A;
             margin-bottom: 0.75rem;
             line-height: 1.4;
           }
@@ -607,20 +595,20 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           
           .action-btn {
             padding: 0.375rem;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #2D2D2D;
             border-radius: 4px;
-            background: #ffffff;
+            background: #1A1A1A;
             cursor: pointer;
             transition: all 0.2s ease;
           }
           
           .action-btn:hover {
-            border-color: #000000;
+            border-color: #2D2D2D;
             transform: translateY(-1px);
           }
           
           .action-btn.edit {
-            color: #6b7280;
+            color: #71717A;
           }
           
           .action-btn.delete {
@@ -630,19 +618,19 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           .empty-state {
             text-align: center;
             padding: 3rem;
-            color: #6b7280;
+            color: #71717A;
           }
           
           .empty-state h3 {
             font-size: 1.125rem;
             font-weight: 600;
-            color: #000000;
+            color: #FFFFFF;
             margin-bottom: 0.5rem;
           }
           
           .quick-add-form {
-            background: #f9fafb;
-            border: 2px solid #e5e7eb;
+            background: #141414;
+            border: 2px solid #2D2D2D;
             border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
@@ -666,19 +654,19 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           .form-label {
             font-size: 0.875rem;
             font-weight: 600;
-            color: #000000;
+            color: #FFFFFF;
           }
           
           .form-input, .form-textarea, .form-select {
             padding: 0.5rem;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #2D2D2D;
             border-radius: 4px;
             font-size: 0.875rem;
           }
           
           .form-input:focus, .form-textarea:focus, .form-select:focus {
             outline: none;
-            border-color: #000000;
+            border-color: #2D2D2D;
           }
           
           .form-textarea {
@@ -704,15 +692,15 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
           }
           
           .form-btn.primary {
-            background: #000000;
+            background: #2D2D2D;
             color: #ffffff;
-            border-color: #000000;
+            border-color: #2D2D2D;
           }
           
           .form-btn.secondary {
-            background: #ffffff;
-            color: #374151;
-            border-color: #e5e7eb;
+            background: #1A1A1A;
+            color: #A1A1AA;
+            border-color: #2D2D2D;
           }
           
           .form-btn:hover {
@@ -890,27 +878,6 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Start Time</label>
-                <input
-                  type="time"
-                  value={newTodo.start_time}
-                  onChange={(e) => setNewTodo({ ...newTodo, start_time: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Due Time</label>
-                <input
-                  type="time"
-                  value={newTodo.due_time}
-                  onChange={(e) => setNewTodo({ ...newTodo, due_time: e.target.value })}
-                  className="form-input"
-                />
-              </div>
-            </div>
-
             <div className="form-actions">
               <button
                 onClick={() => {
@@ -918,11 +885,8 @@ export default function TodoListComponent({ projectId, projectMembers }: TodoLis
                   setEditingTodo(null);
                   setNewTodo({
                     title: '',
-                    description: '',
-                    start_date: new Date().toISOString().split('T')[0],
-                    start_time: '09:00',
-                    due_date: new Date().toISOString().split('T')[0],
-                    due_time: '10:00'
+                    description: '',  
+                    due_date: ''
                   });
                 }}
                 className="form-btn secondary"

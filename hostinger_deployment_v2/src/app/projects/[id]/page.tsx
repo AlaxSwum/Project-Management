@@ -1,36 +1,54 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectService, taskService } from '@/lib/api-compatibility';
+import { supabase } from '@/lib/supabase';
 import { 
   PlusIcon, 
-  CalendarIcon,
-  UserIcon,
-  TagIcon,
-  CheckCircleIcon,
-  ListBulletIcon,
-  Squares2X2Icon,
-  EllipsisVerticalIcon,
-  PencilIcon,
-  TrashIcon,
-  ClockIcon,
-  ChartBarIcon,
+  MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ClipboardDocumentListIcon
+  EllipsisHorizontalIcon,
+  PaperClipIcon,
+  ChatBubbleLeftIcon,
+  XMarkIcon,
+  Squares2X2Icon,
+  ListBulletIcon,
+  CalendarIcon as CalIcon,
+  ChartBarIcon,
+  FolderIcon,
+  ClockIcon,
+  TrashIcon,
+  PencilIcon,
+  UserGroupIcon,
+  MapIcon
 } from '@heroicons/react/24/outline';
-import TaskDetailModal from '@/components/TaskDetailModal';
-import ProjectMembersModal from '@/components/ProjectMembersModal';
-import TodoListComponent from '@/components/TodoListComponent';
+import Sidebar from '@/components/Sidebar';
+import UserAvatar, { AvatarGroup } from '@/components/UserAvatar';
 
 interface User {
   id: number;
   name: string;
   email: string;
   role: string;
+  avatar_url?: string;
+}
+
+interface Subtask {
+  id: number;
+  title: string;
+  is_completed: boolean;
+  completed_by_id?: number;
+  completed_at?: string;
+}
+
+interface ActivityLog {
+  id: number;
+  user_name: string;
+  activity_type: string;
+  description: string;
+  created_at: string;
 }
 
 interface Task {
@@ -43,13 +61,17 @@ interface Task {
   start_date: string | null;
   estimated_hours: number | null;
   actual_hours: number | null;
-  assignees: User[];  // Changed from single assignee to multiple assignees
-  assignee?: User | null;  // Keep for backwards compatibility
+  assignees: User[];
+  assignee?: User | null;
   created_by: User;
-  tags_list: string[];
+  tags_list?: string[];
+  tags?: string;
   created_at: string;
   updated_at: string;
   project_id: number;
+  subtasks?: Subtask[];
+  activity?: ActivityLog[];
+  report_to_ids?: number[];
 }
 
 interface Project {
@@ -67,18 +89,33 @@ interface Project {
 }
 
 const TASK_STATUSES = [
-  { value: 'todo', label: 'To Do', color: '#f3f4f6', icon: '' },
-  { value: 'in_progress', label: 'In Progress', color: '#dbeafe', icon: '' },
-  { value: 'review', label: 'Review', color: '#fef3c7', icon: '' },
-  { value: 'done', label: 'Done', color: '#d1fae5', icon: '' },
+  { value: 'todo', label: 'To Do', color: '#EF4444' },
+  { value: 'in_progress', label: 'In Progress', color: '#3B82F6' },
+  { value: 'review', label: 'Review', color: '#F59E0B' },
+  { value: 'done', label: 'Complete', color: '#10B981' },
 ];
 
-const PRIORITY_LEVELS = [
-  { value: 'low', label: 'Low', color: '#10b981', icon: '' },
-  { value: 'medium', label: 'Medium', color: '#f59e0b', icon: '' },
-  { value: 'high', label: 'High', color: '#ef4444', icon: '' },
-  { value: 'urgent', label: 'Urgent', color: '#dc2626', icon: '' },
-];
+const TAG_COLORS: Record<string, string> = {
+  'design': '#EC4899',
+  'ui/ux': '#EC4899',
+  'frontend': '#3B82F6',
+  'backend': '#8B5CF6',
+  'api': '#3B82F6',
+  'qa': '#06B6D4',
+  'auth': '#EF4444',
+  'database': '#6366F1',
+  'media': '#A855F7',
+  'performance': '#14B8A6',
+  'research': '#EF4444',
+};
+
+function getTagColor(tag: string): string {
+  const normalizedTag = tag.toLowerCase();
+  for (const [key, color] of Object.entries(TAG_COLORS)) {
+    if (normalizedTag.includes(key)) return color;
+  }
+  return '#71717A';
+}
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -88,50 +125,81 @@ export default function ProjectDetailPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [viewMode, setViewMode] = useState<'board' | 'list' | 'timeline' | 'gantt' | 'todo'>('board');
-  const [ganttView, setGanttView] = useState<'task' | 'gantt'>('task');
-  const [timelineStartDate, setTimelineStartDate] = useState<Date>(() => {
-    // Start from January 1st of current year
-    const today = new Date();
-    return new Date(today.getFullYear(), 0, 1);
-  });
   const [showCreateTask, setShowCreateTask] = useState(false);
-
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedView, setSelectedView] = useState<'kanban' | 'list' | 'calendar' | 'gantt' | 'growth'>('kanban');
+  const [expandedMonths, setExpandedMonths] = useState<string[]>([]);
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [filters, setFilters] = useState({
+    status: [] as string[],
+    priority: [] as string[],
+    assignee: [] as number[],
+    tags: [] as string[],
+  });
+  const [showAddColumnModal, setShowAddColumnModal] = useState(false);
+  const [newColumn, setNewColumn] = useState({
+    name: '',
+    type: 'text',
+    width: 150
+  });
+  const [ganttStartDate, setGanttStartDate] = useState(() => {
+    // Start from beginning of current month
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [showTaskMenu, setShowTaskMenu] = useState<number | null>(null);
-  const [showTaskDetail, setShowTaskDetail] = useState(false);
-  const [showMembersModal, setShowMembersModal] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+  const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
+  const [attachments, setAttachments] = useState<any[]>([]);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newSubtask, setNewSubtask] = useState('');
+  const [newComment, setNewComment] = useState('');
+  const [isEditingTask, setIsEditingTask] = useState(false);
+  const [editTaskForm, setEditTaskForm] = useState({ name: '', description: '', priority: '', status: '', due_date: '' });
+  const [newAttachmentUrl, setNewAttachmentUrl] = useState('');
+  const [newAttachmentName, setNewAttachmentName] = useState('');
+  const [activeTab, setActiveTab] = useState<'subtask' | 'attachment' | 'comments'>('subtask');
   const [newTask, setNewTask] = useState({
     name: '',
     description: '',
-    assignee_ids: [] as number[],  // Multiple assignees support
     priority: 'medium',
+    tags: '',
+    assignee_ids: [] as number[],
+    report_to_ids: [] as number[],
     start_date: '',
     due_date: '',
-    tags: '',
-    duration: 30  // Duration in minutes
   });
+  const [newTaskSubtasks, setNewTaskSubtasks] = useState<string[]>([]);
+  const [tempSubtask, setTempSubtask] = useState('');
+  const [showProjectMembers, setShowProjectMembers] = useState(false);
+  const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
+  const [editingMemberRole, setEditingMemberRole] = useState<string>('');
+  const [customRoleInput, setCustomRoleInput] = useState<string>('');
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [newMemberRole, setNewMemberRole] = useState<string>('Member');
+  const [userSearchQuery, setUserSearchQuery] = useState<string>('');
+  const [ganttViewMode, setGanttViewMode] = useState<'week' | 'month'>('month');
+  const [newTaskColumn, setNewTaskColumn] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState<'kanban' | 'list' | 'gantt' | 'calendar'>('kanban');
+  const [enteredTags, setEnteredTags] = useState<string[]>([]);
+  const [taskMenuOpen, setTaskMenuOpen] = useState<number | null>(null);
+  const [showDeleteProject, setShowDeleteProject] = useState(false);
+  const [deletingProject, setDeletingProject] = useState(false);
 
-  // Mobile detection
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
-    // Don't redirect if auth is still loading
     if (authLoading) return;
-    
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -139,32 +207,34 @@ export default function ProjectDetailPage() {
     fetchProject();
   }, [isAuthenticated, authLoading, params?.id, router]);
 
-  useEffect(() => {
-    // Auto-scroll to current week when gantt view is opened
-    if (ganttView === 'gantt') {
-      setTimeout(() => {
-        const currentWeek = getWeekNumber(new Date());
-        const scrollPosition = (currentWeek - 1) * 50 - 300; // Center the current week
-        const timelineElement = document.querySelector('.gantt-timeline-enhanced');
-        if (timelineElement) {
-          timelineElement.scrollLeft = Math.max(0, scrollPosition);
-        }
-      }, 100);
-    }
-  }, [ganttView, tasks]);
-
   const fetchProject = async () => {
     try {
-      const [projectData, tasksData, projectsData] = await Promise.all([
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Fetch current project and tasks (don't re-fetch all projects - sidebar has them)
+      const [projectData, tasksData] = await Promise.all([
         projectService.getProject(Number(params?.id)),
-        taskService.getProjectTasks(Number(params?.id)),
-        projectService.getProjects()
+        taskService.getProjectTasks(Number(params?.id))
       ]);
-      setProject(projectData as any);
+      const allProjectsData = null; // Use sidebar context instead
+      
+      // Check if user has access by seeing if they're a member in the project data
+      if (projectData && projectData.members && Array.isArray(projectData.members)) {
+        const isMember = projectData.members.some((m: any) => m.id === user.id);
+        if (!isMember) {
+          console.log('User not a member, redirecting to dashboard');
+          router.push('/dashboard');
+          return;
+        }
+      }
+      
+      setProject(projectData);
       setTasks(tasksData);
-      setAllProjects(projectsData);
+      setAllProjects(allProjectsData || []);
     } catch (err: any) {
-      setError('Failed to fetch project');
       if (err.response?.status === 404) {
         router.push('/dashboard');
       }
@@ -173,205 +243,62 @@ export default function ProjectDetailPage() {
     }
   };
 
-
-
+  const [creatingTask, setCreatingTask] = useState(false);
+  
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (creatingTask) return; // Prevent double submission
+    setCreatingTask(true);
     try {
       const taskData: any = {
         name: newTask.name.trim(),
         description: newTask.description.trim(),
         priority: newTask.priority,
         status: 'todo',
+        assignee_ids: newTask.assignee_ids,
+        report_to_ids: newTask.report_to_ids,
+        tags: newTask.tags.trim(),
+        start_date: newTask.start_date || null,
+        due_date: newTask.due_date || null,
       };
-
-      // Handle multiple assignees using assignee_ids array
-      if (newTask.assignee_ids && newTask.assignee_ids.length > 0) {
-        taskData.assignee_ids = newTask.assignee_ids;
-        console.log('Using assignee_ids array:', taskData.assignee_ids);
-      } else {
-        // Default to empty array if no assignees selected
-        taskData.assignee_ids = [];
-        console.log('No assignees selected, using empty array');
-      }
-
-      if (newTask.start_date && newTask.start_date.trim() !== '') {
-        taskData.start_date = newTask.start_date;
-      }
-
-      if (newTask.due_date && newTask.due_date.trim() !== '') {
-        taskData.due_date = newTask.due_date;
-      }
-
-      if (newTask.tags && newTask.tags.trim() !== '') {
-        taskData.tags = newTask.tags.trim();
-      }
-
-      // Add duration if provided
-      if (newTask.duration) {
-        taskData.duration = newTask.duration;
-      }
       
       const createdTask = await taskService.createTask(Number(params?.id), taskData);
+      
+      // Create subtasks if any
+      if (newTaskSubtasks.length > 0) {
+        const { supabase } = await import('@/lib/supabase');
+        const subtasksToCreate = newTaskSubtasks.map((title, index) => ({
+          task_id: createdTask.id,
+          title,
+          position: index,
+          created_by_id: user?.id
+        }));
+        
+        await supabase.from('task_subtasks').insert(subtasksToCreate);
+      }
+      
       setTasks([...tasks, createdTask]);
-      
-      // Send notifications for task assignment
-      if (taskData.assignee_ids && taskData.assignee_ids.length > 0 && user && project) {
-        try {
-          const { notificationService } = await import('@/lib/notification-service');
-          // Send notification to each assignee
-          for (const assigneeId of taskData.assignee_ids) {
-            await notificationService.sendTaskAssignmentNotification(
-              createdTask.id,
-              assigneeId,
-              user.id,
-              taskData.name
-            );
-          }
-        } catch (notificationError) {
-          console.error('Failed to send task assignment notifications:', notificationError);
-          // Don't fail the task creation if notifications fail
-        }
-      }
-      
-      setNewTask({
-        name: '',
-        description: '',
-        assignee_ids: [],
-        priority: 'medium',
-        start_date: '',
-        due_date: '',
-        tags: '',
-        duration: 30
-      });
+      setNewTask({ name: '', description: '', priority: 'medium', tags: '', assignee_ids: [], report_to_ids: [], start_date: '', due_date: '' });
+      setNewTaskSubtasks([]);
+      setTempSubtask('');
       setShowCreateTask(false);
-      setError('');
-    } catch (err: any) {
-      setError('Failed to create task');
-    }
-  };
-
-  const handleTaskStatusChange = async (taskId: number, newStatus: string) => {
-    try {
-      const task = tasks.find(t => t.id === taskId);
-      const oldStatus = task?.status || '';
-      
-      await taskService.updateTaskStatus(taskId, newStatus);
-      setTasks(tasks.map(task => 
-        task.id === taskId 
-          ? { ...task, status: newStatus }
-          : task
-      ));
-      
-      // Update selectedTask if it's the one being updated
-      if (selectedTask && selectedTask.id === taskId) {
-        setSelectedTask({ ...selectedTask, status: newStatus });
-      }
-
-      // Send notifications for status change
-      if (task && user && project && oldStatus !== newStatus) {
-        try {
-          const { notificationService } = await import('@/lib/notification-service');
-          // Send notification to task assignees about status change
-          if (task.assignees && task.assignees.length > 0) {
-            for (const assignee of task.assignees) {
-              await notificationService.sendTaskUpdateNotification(
-                task.id,
-                assignee.id,
-                user.id,
-                task.name,
-                `status changed from ${oldStatus} to ${newStatus}`
-              );
-            }
-          }
-        } catch (notificationError) {
-          console.error('Failed to send task status change notifications:', notificationError);
-          // Don't fail the status update if notifications fail
-        }
-      }
+      fetchProject();
     } catch (err) {
-      setError('Failed to update task status');
+      console.error('Error creating task:', err);
+    } finally {
+      setCreatingTask(false);
     }
   };
 
-  const handleUpdateTask = async (taskData: any) => {
-    if (!selectedTask) return;
-    
-    try {
-      const oldAssigneeIds = selectedTask.assignees?.map(a => a.id) || [];
-      const newAssigneeIds = taskData.assignee_ids || [];
-      
-      const updatedTask = await taskService.updateTask(selectedTask.id, taskData);
-      setTasks(tasks.map(task => 
-        task.id === selectedTask.id ? updatedTask : task
-      ));
-      setSelectedTask(updatedTask);
-
-      // Send notifications for new assignees
-      const addedAssigneeIds = newAssigneeIds.filter((id: number) => !oldAssigneeIds.includes(id));
-      if (addedAssigneeIds.length > 0 && user && project) {
-        try {
-          const { notificationService } = await import('@/lib/notification-service');
-          // Send notification to each new assignee
-          for (const assigneeId of addedAssigneeIds) {
-            await notificationService.sendTaskAssignmentNotification(
-              updatedTask.id,
-              assigneeId,
-              user.id,
-              updatedTask.name
-            );
-          }
-        } catch (notificationError) {
-          console.error('Failed to send task assignment notifications:', notificationError);
-          // Don't fail the task update if notifications fail
-        }
-      }
-
-      setError('');
-    } catch (err: any) {
-      setError('Failed to update task');
-      throw err;
+  const addTempSubtask = () => {
+    if (tempSubtask.trim()) {
+      setNewTaskSubtasks([...newTaskSubtasks, tempSubtask.trim()]);
+      setTempSubtask('');
     }
   };
 
-  const handleTaskClick = (task: Task, e: React.MouseEvent) => {
-    // Don't open modal if we're in the middle of a drag operation
-    if (draggedTask) return;
-    
-    e.stopPropagation();
-    setSelectedTask(task);
-    setShowTaskDetail(true);
-  };
-
-  const handleCloseTaskDetail = () => {
-    setShowTaskDetail(false);
-    setSelectedTask(null);
-  };
-
-  const handleMembersUpdate = async () => {
-    // Refresh project data to get updated members
-    await fetchProject();
-  };
-
-  const handleDeleteTask = async (taskId: number) => {
-    try {
-      await taskService.deleteTask(taskId);
-      setTasks(tasks.filter(task => task.id !== taskId));
-      setError('');
-    } catch (err: any) {
-      setError('Failed to delete task');
-      throw err;
-    }
-  };
-
-  const handleDeleteProject = async () => {
-    try {
-      await projectService.deleteProject(project!.id);
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError('Failed to delete project');
-      setShowDeleteConfirm(false);
-    }
+  const removeTempSubtask = (index: number) => {
+    setNewTaskSubtasks(newTaskSubtasks.filter((_, i) => i !== index));
   };
 
   const handleDragStart = (e: React.DragEvent, task: Task) => {
@@ -381,7 +308,6 @@ export default function ProjectDetailPage() {
 
   const handleDragOver = (e: React.DragEvent, status: string) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
     setDragOverColumn(status);
   };
 
@@ -393,5599 +319,3736 @@ export default function ProjectDetailPage() {
     e.preventDefault();
     setDragOverColumn(null);
     
-    if (draggedTask && draggedTask.status !== newStatus) {
-      await handleTaskStatusChange(draggedTask.id, newStatus);
+    if (!draggedTask || draggedTask.status === newStatus) return;
+    
+    const oldStatus = draggedTask.status;
+    
+    try {
+      await taskService.updateTask(draggedTask.id, { status: newStatus });
+      setTasks(tasks.map(t => t.id === draggedTask.id ? { ...t, status: newStatus } : t));
+      
+      // Send notification for status change
+      if (user?.id && draggedTask) {
+        const { supabase } = await import('@/lib/supabase');
+        
+        // Get task details to find who to notify
+        const { data: taskData } = await supabase
+          .from('projects_task')
+          .select('assignee_ids, report_to_ids, name, project_id')
+          .eq('id', draggedTask.id)
+          .single();
+        
+        if (taskData) {
+          const notifyUserIds = new Set<number>();
+          
+          // Only notify report_to users when task is moved (not assignees)
+          if (taskData.report_to_ids && Array.isArray(taskData.report_to_ids)) {
+            taskData.report_to_ids.forEach((id: number) => {
+              if (id !== user.id) notifyUserIds.add(id);
+            });
+          }
+          
+          // Create notifications
+          const statusMessages: Record<string, string> = {
+            'backlog': 'moved to backlog',
+            'in_progress': 'started working on',
+            'done': 'completed',
+            'archived': 'archived'
+          };
+          const action = statusMessages[newStatus] || `changed status to ${newStatus}`;
+          
+          const notifications = Array.from(notifyUserIds).map(recipientId => ({
+            task_id: draggedTask.id,
+            project_id: taskData.project_id,
+            recipient_id: recipientId,
+            sender_id: user.id,
+            notification_type: 'status_changed',
+            message: `${user?.name || 'Someone'} ${action} task: ${taskData.name}`,
+            task_name: taskData.name,
+            task_status: newStatus,
+            old_status: oldStatus,
+            new_status: newStatus,
+          }));
+          
+          if (notifications.length > 0) {
+            await supabase.from('task_notifications').insert(notifications);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error updating task:', err);
     }
     setDraggedTask(null);
   };
 
-  // Helper function to sort tasks in ascending order
-  const sortTasks = (taskList: Task[]) => {
-    return taskList.sort((a, b) => {
-      // 1. Sort by priority (urgent > high > medium > low)
-      const priorityOrder = { 'urgent': 0, 'high': 1, 'medium': 2, 'low': 3 };
-      const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] ?? 4;
-      const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] ?? 4;
-      
-      if (aPriority !== bPriority) {
-        return aPriority - bPriority;
-      }
+  // Filter for Kanban: only show tasks within 1 month
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  
+  const kanbanTasks = tasks.filter(task => {
+    // Only show tasks updated within 1 month in Kanban view
+    if (selectedView === 'kanban') {
+      const updatedDate = new Date(task.updated_at);
+      if (updatedDate < oneMonthAgo) return false;
+    }
+    return true;
+  });
 
-      // 2. Sort by due date (earliest first, nulls last)
-      if (a.due_date && b.due_date) {
-        const aDate = new Date(a.due_date).getTime();
-        const bDate = new Date(b.due_date).getTime();
-        if (aDate !== bDate) {
-          return aDate - bDate;
-        }
-      } else if (a.due_date && !b.due_date) {
-        return -1; // a has due date, b doesn't - a comes first
-      } else if (!a.due_date && b.due_date) {
-        return 1; // b has due date, a doesn't - b comes first
-      }
+  // Apply search and filters
+  const filteredTasks = (selectedView === 'kanban' ? kanbanTasks : tasks).filter(task => {
+    // Search filter
+    const matchesSearch = task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Status filter
+    const matchesStatus = filters.status.length === 0 || filters.status.includes(task.status);
+    
+    // Priority filter
+    const matchesPriority = filters.priority.length === 0 || filters.priority.includes(task.priority);
+    
+    // Assignee filter
+    const matchesAssignee = filters.assignee.length === 0 || 
+      (task.assignees && task.assignees.some(a => filters.assignee.includes(a.id)));
+    
+    // Tags filter
+    const taskTagsArray = task.tags_list || (task.tags ? task.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+    const matchesTags = filters.tags.length === 0 ||
+      taskTagsArray.some((tag: string) => filters.tags.includes(tag));
+    
+    return matchesSearch && matchesStatus && matchesPriority && matchesAssignee && matchesTags;
+  });
 
-      // 3. Sort by creation date (earliest first)
-      const aCreated = new Date(a.created_at).getTime();
-      const bCreated = new Date(b.created_at).getTime();
-      if (aCreated !== bCreated) {
-        return aCreated - bCreated;
+  // Group tasks by month for table view
+  const tasksByMonth = React.useMemo(() => {
+    const groups: Record<string, typeof filteredTasks> = {};
+    
+    filteredTasks.forEach(task => {
+      let monthKey = 'No Due Date';
+      if (task.due_date) {
+        monthKey = new Date(task.due_date).toLocaleString('default', { month: 'long', year: 'numeric' });
       }
-
-      // 4. Sort by name (alphabetical)
-      return a.name.localeCompare(b.name);
+      if (!groups[monthKey]) groups[monthKey] = [];
+      groups[monthKey].push(task);
     });
-  };
-
-  const getTasksByStatus = (status: string) => {
-    const statusTasks = tasks.filter(task => task.status === status);
-    return sortTasks(statusTasks);
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  const getPriorityConfig = (priority: string) => {
-    return PRIORITY_LEVELS.find(p => p.value === priority) || PRIORITY_LEVELS[1];
-  };
-
-  const getStatusConfig = (status: string) => {
-    return TASK_STATUSES.find(s => s.value === status) || TASK_STATUSES[0];
-  };
-
-  const isOverdue = (dueDate: string | null) => {
-    if (!dueDate) return false;
-    return new Date(dueDate) < new Date();
-  };
-
-  const getDaysUntilDue = (dueDate: string | null) => {
-    if (!dueDate) return null;
-    const today = new Date();
-    const due = new Date(dueDate);
-    const diffTime = due.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const handlePreviousYear = () => {
-    const newDate = new Date(timelineStartDate);
-    newDate.setFullYear(newDate.getFullYear() - 1);
-    setTimelineStartDate(newDate);
-  };
-
-  const handleNextYear = () => {
-    const newDate = new Date(timelineStartDate);
-    newDate.setFullYear(newDate.getFullYear() + 1);
-    setTimelineStartDate(newDate);
-  };
-
-  const getProjectStartDate = () => {
-    if (!tasks || tasks.length === 0) return timelineStartDate;
     
-    const taskDates = tasks
-      .map(task => task.start_date ? new Date(task.start_date) : null)
-      .filter(date => date !== null)
-      .sort((a, b) => a!.getTime() - b!.getTime());
-    
-    if (taskDates.length > 0) {
-      const earliestTask = taskDates[0]!;
-      // Start from the beginning of the year containing the earliest task
-      return new Date(earliestTask.getFullYear(), 0, 1);
-    }
-    
-    return timelineStartDate;
-  };
-
-  const getWeekNumber = (date: Date) => {
-    const startOfYear = new Date(date.getFullYear(), 0, 1);
-    const dayOfWeek = startOfYear.getDay();
-    const daysToFirstMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
-    const firstMonday = new Date(date.getFullYear(), 0, 1 + daysToFirstMonday);
-    
-    if (date < firstMonday) {
-      return 1;
-    }
-    
-    const diffTime = date.getTime() - firstMonday.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return Math.floor(diffDays / 7) + 1;
-  };
-
-  const getWeekStartDate = (year: number, weekNumber: number) => {
-    const startOfYear = new Date(year, 0, 1);
-    const dayOfWeek = startOfYear.getDay();
-    const daysToFirstMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
-    const firstMonday = new Date(year, 0, 1 + daysToFirstMonday);
-    const weekStart = new Date(firstMonday);
-    weekStart.setDate(firstMonday.getDate() + (weekNumber - 1) * 7);
-    return weekStart;
-  };
-
-  // Get task color based on status
-  const getTaskColor = (status: string) => {
-    switch(status) {
-      case 'todo': return '#6366F1'; // Indigo
-      case 'in_progress': return '#3B82F6'; // Blue
-      case 'review': return '#F59E0B'; // Amber
-      case 'done': return '#10B981'; // Emerald
-      default: return '#6B7280'; // Gray
-    }
-  };
-
-  // Get lighter background color for task bars
-  const getTaskBgColor = (status: string) => {
-    switch(status) {
-      case 'todo': return 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)';
-      case 'in_progress': return 'linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)';
-      case 'review': return 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)';
-      case 'done': return 'linear-gradient(135deg, #10B981 0%, #059669 100%)';
-      default: return 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)';
-    }
-  };
-
-  // Show loading state while auth is initializing
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  if (isLoading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #cccccc', borderTop: '3px solid #000000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-      </div>
-    );
-  }
-
-  if (!project) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff' }}>
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000', marginBottom: '1rem' }}>Project not found</h1>
-          <button
-            onClick={() => router.push('/dashboard')}
-            style={{ background: '#000000', color: '#ffffff', padding: '0.75rem 1.5rem', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-          
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-          }
-          
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-          }
-          
-          @keyframes shimmer {
-            0% { background-position: -200px 0; }
-            100% { background-position: calc(200px + 100%) 0; }
-          }
-          
-          @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(255, 179, 51, 0.3); }
-            50% { box-shadow: 0 0 30px rgba(255, 179, 51, 0.5); }
-          }
-          
-          body {
-            margin: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: #F5F5ED;
-            overflow-x: hidden;
-            max-width: 100vw;
-          }
-          
-          .project-container {
-            min-height: 100vh;
-            display: flex;
-            background: linear-gradient(135deg, #F5F5ED 0%, #FAFAF2 100%);
-            overflow-x: hidden;
-            max-width: 100vw;
-            position: relative;
-          }
-          
-          .project-container::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-              radial-gradient(circle at 20% 80%, rgba(255, 179, 51, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(196, 131, 217, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 40% 40%, rgba(88, 132, 253, 0.05) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-          }
-          
-          .main-content {
-            flex: 1;
-            background: transparent;
-            overflow-x: hidden;
-            max-width: 100vw;
-            position: relative;
-            z-index: 1;
-            padding-top: ${isMobile ? '70px' : '0'};
-            padding-left: ${isMobile ? '12px' : '0'};
-            padding-right: ${isMobile ? '12px' : '0'};
-          }
-          
-          .header {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 179, 51, 0.2);
-            padding: 2rem 3rem;
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border-radius: 0 0 24px 24px;
-            margin: 0 1rem;
-          }
-          .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-          }
-          
-          .header-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #FFB333;
-            margin: 0;
-            letter-spacing: -0.025em;
-            line-height: 1.2;
-            position: relative;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-          }
-          
-          .header-title:hover {
-            color: #F87239;
-            transform: translateX(8px);
-          }
-          
-          .header-title::after {
-            content: '';
-            position: absolute;
-            bottom: -6px;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background: #C483D9;
-            border-radius: 2px;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-          }
-          
-          .header-title:hover::after {
-            width: 120px;
-            background: #5884FD;
-          }
-          
-          .header-subtitle {
-            color: #6B7280;
-            text-transform: capitalize;
-            font-size: 1rem;
-            font-weight: 500;
-            margin-top: 0.75rem;
-            letter-spacing: 0.025em;
-            transition: all 0.3s ease;
-          }
-          
-          .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-          }
-          
-          .action-buttons-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            min-width: 360px;
-          }
-          
-          .action-btn {
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            font-size: 0.875rem;
-            position: relative;
-            background: rgba(255, 255, 255, 0.95);
-            border: 2px solid transparent;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          }
-          
-          .action-btn:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-          }
-          
-          .action-btn:active {
-            transform: translateY(-2px) scale(0.98);
-          }
-          .view-toggle {
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
-            padding: 0.5rem;
-            border: 2px solid #F5F5ED;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          }
-          
-          .todo-view {
-              padding: 0 !important;
-              background: transparent !important;
-              min-height: auto !important;
-          }
-          
-          .todo-container {
-              max-width: 100% !important;
-              margin: 0 auto !important;
-              padding: 0 !important;
-            }
-            
-            .todo-stats-grid {
-              display: grid !important;
-              grid-template-columns: repeat(3, 1fr) !important;
-              gap: 0.375rem !important;
-              margin-bottom: 0.75rem !important;
-            }
-            
-            .todo-stat-card {
-              background: #ffffff !important;
-              border: 2px solid #000000 !important;
-              border-radius: 6px !important;
-              padding: 0.5rem 0.25rem !important;
-              text-align: center !important;
-              min-height: 45px !important;
-              display: flex !important;
-              flex-direction: column !important;
-              justify-content: center !important;
-              align-items: center !important;
-            }
-            
-            .todo-stat-number {
-              font-size: 1rem !important;
-              font-weight: 700 !important;
-              color: #000000 !important;
-              margin: 0 !important;
-              line-height: 1 !important;
-            }
-            
-            .todo-stat-label {
-              font-size: 0.6rem !important;
-              font-weight: 600 !important;
-              color: #6b7280 !important;
-              margin-top: 0.2rem !important;
-              text-transform: uppercase !important;
-              letter-spacing: 0.025em !important;
-              line-height: 1.1 !important;
-            }
-            
-            .todo-controls {
-              display: flex !important;
-              flex-direction: column !important;
-              gap: 0.75rem !important;
-              margin-bottom: 1rem !important;
-            }
-            
-            .todo-add-btn {
-              background: #000000 !important;
-              color: #ffffff !important;
-              border: 2px solid #000000 !important;
-              border-radius: 8px !important;
-              padding: 0.75rem !important;
-              font-weight: 600 !important;
-              font-size: 0.9rem !important;
-              cursor: pointer !important;
-              transition: all 0.2s ease !important;
-              text-align: center !important;
-              touch-action: manipulation !important;
-              -webkit-tap-highlight-color: transparent !important;
-            }
-            
-            .todo-add-btn:hover {
-              transform: translateY(-1px) !important;
-              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-            }
-            
-            .todo-view-toggle {
-              display: flex !important;
-              gap: 0.25rem !important;
-              background: #ffffff !important;
-              border: 2px solid #000000 !important;
-              border-radius: 8px !important;
-              padding: 0.25rem !important;
-            }
-            
-            .todo-view-btn {
-              flex: 1 !important;
-              padding: 0.5rem !important;
-              border: none !important;
-              background: transparent !important;
-              color: #6b7280 !important;
-              border-radius: 4px !important;
-              cursor: pointer !important;
-              font-size: 0.8rem !important;
-              font-weight: 600 !important;
-              transition: all 0.2s ease !important;
-              text-align: center !important;
-            }
-            
-            .todo-view-btn.active {
-              background: #000000 !important;
-              color: #ffffff !important;
-            }
-            
-            .todo-filters {
-              display: flex !important;
-              flex-direction: column !important;
-              gap: 0.5rem !important;
-              margin-bottom: 1rem !important;
-            }
-            
-            .todo-filter-select {
-              padding: 0.75rem !important;
-              border: 2px solid #000000 !important;
-              border-radius: 8px !important;
-              background: #ffffff !important;
-              color: #000000 !important;
-              font-size: 0.9rem !important;
-              font-weight: 500 !important;
-              cursor: pointer !important;
-            }
-            
-            .todo-empty-state {
-              text-align: center !important;
-              padding: 3rem 1rem !important;
-              background: #ffffff !important;
-              border: 2px solid #000000 !important;
-              border-radius: 12px !important;
-              color: #6b7280 !important;
-            }
-            
-            .todo-empty-state h3 {
-              font-size: 1.1rem !important;
-              font-weight: 600 !important;
-              color: #000000 !important;
-              margin: 0 0 0.5rem 0 !important;
-            }
-            
-            .todo-empty-state p {
-              font-size: 0.9rem !important;
-              margin: 0 !important;
-              font-style: italic !important;
-          }
-          .view-btn {
-            padding: 0.75rem 1rem;
-            border: none;
-            background: transparent;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            color: #6B7280;
-            font-weight: 600;
-            font-size: 0.875rem;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            flex-direction: column;
-            min-height: 60px;
-          }
-          
-          .view-btn svg {
-            width: 20px;
-            height: 20px;
-            transition: all 0.3s ease;
-            opacity: 0.7;
-          }
-          
-          .view-btn:hover {
-            color: #FFB333;
-            transform: translateY(-2px);
-          }
-          
-          .view-btn:hover svg {
-            opacity: 1;
-            transform: scale(1.1);
-          }
-          
-          .view-btn.active {
-            background: #FFB333;
-            color: #FFFFFF;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(255, 179, 51, 0.3);
-          }
-          
-          .view-btn.active svg {
-            opacity: 1;
-            color: #FFFFFF;
-            transform: scale(1.05);
-          }
-          
-          .members-btn {
-            background: rgba(255, 255, 255, 0.95);
-            color: #5884FD;
-            border-color: #5884FD;
-          }
-          
-          .members-btn:hover {
-            background: #5884FD;
-            color: #FFFFFF;
-            border-color: #5884FD;
-          }
-          
-          .delete-btn {
-            background: rgba(255, 255, 255, 0.95);
-            color: #EF4444;
-            border-color: #EF4444;
-          }
-          
-          .delete-btn:hover {
-            background: #EF4444;
-            color: #FFFFFF;
-            border-color: #EF4444;
-          }
-          
-          .add-task-btn {
-            background: #FFB333;
-            color: #FFFFFF;
-            border-color: #FFB333;
-          }
-          
-          .add-task-btn:hover {
-            background: #F87239;
-            border-color: #F87239;
-          }
-          .project-stats {
-            display: flex;
-            align-items: center;
-            gap: 3rem;
-            flex-wrap: wrap;
-            margin-top: 1rem;
-          }
-          
-          .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-size: 1rem;
-            color: #374151;
-            font-weight: 600;
-            padding: 0.75rem 1.25rem;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 179, 51, 0.2);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-          }
-          
-          .stat-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            border-color: rgba(255, 179, 51, 0.4);
-          }
-          
-          .members-display {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.75rem 1.25rem;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 16px;
-            border: 1px solid rgba(196, 131, 217, 0.2);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-          }
-          
-          .members-display:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            border-color: rgba(196, 131, 217, 0.4);
-          }
-          
-          .members-avatars {
-            display: flex;
-            align-items: center;
-            margin: 0;
-            gap: -8px;
-          }
-          
-          .member-avatar {
-            width: 40px;
-            height: 40px;
-            background: #FFB333;
-            color: #FFFFFF;
-            border: 3px solid #FFFFFF;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.875rem;
-            font-weight: 700;
-            position: relative;
-            z-index: 1;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            margin-left: -8px;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-          }
-          
-          .member-avatar:first-child {
-            margin-left: 0;
-          }
-          
-          .member-avatar:nth-child(2) {
-            background: #F87239;
-          }
-          
-          .member-avatar:nth-child(3) {
-            background: #C483D9;
-          }
-          
-          .member-avatar:nth-child(4) {
-            background: #5884FD;
-          }
-          
-          .member-avatar:hover {
-            transform: translateY(-4px) scale(1.1);
-            z-index: 2;
-            box-shadow: 0 8px 20px rgba(255, 179, 51, 0.3);
-          }
-          
-          .member-avatar.more-members {
-            background: #6B7280;
-            font-size: 0.75rem;
-            z-index: 0;
-          }
-          
-          .members-count {
-            font-size: 0.925rem;
-            color: #6B7280;
-            font-weight: 600;
-            margin-left: 0.5rem;
-          }
-          
-          /* Modal and Form Styling */
-          .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            z-index: 1000;
-            backdrop-filter: blur(8px);
-            animation: fadeIn 0.3s ease-out;
-          }
-          
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          
-          @keyframes slideUp {
-            from { 
-              opacity: 0;
-              transform: translateY(20px) scale(0.95);
-            }
-            to { 
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
-          }
-          
-          .modal-content {
-            background: rgba(255, 255, 255, 0.98);
-            border: 2px solid #FFB333;
-            border-radius: 16px;
-            padding: 2rem;
-            width: 100%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(20px);
-            animation: slideUp 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative;
-          }
-          
-          .modal-content::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #FFB333, #F87239, #C483D9, #5884FD);
-            border-radius: 16px 16px 0 0;
-          }
-          
-          .modal-title {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #374151;
-            margin: 0 0 1.5rem 0;
-            letter-spacing: -0.025em;
-          }
-          
-          .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-          }
-          
-          .form-label {
-            font-size: 0.925rem;
-            font-weight: 600;
-            color: #374151;
-            letter-spacing: 0.025em;
-          }
-          
-          .form-input, .form-textarea, .form-select {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            border: 2px solid rgba(245, 245, 237, 0.8);
-            border-radius: 8px;
-            font-size: 0.925rem;
-            background: rgba(255, 255, 255, 0.9);
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            backdrop-filter: blur(10px);
-          }
-          
-          .form-input:focus, .form-textarea:focus, .form-select:focus {
-            outline: none;
-            border-color: #FFB333;
-            box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1);
-            background: #FFFFFF;
-          }
-          
-          .form-textarea {
-            resize: vertical;
-            min-height: 100px;
-          }
-          
-          .button-group {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 2px solid rgba(245, 245, 237, 0.6);
-          }
-          
-          .btn-primary, .btn-secondary {
-            flex: 1;
-            padding: 1rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.925rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative;
-            overflow: hidden;
-          }
-          
-          .btn-primary {
-            background: #FFB333;
-            color: #FFFFFF;
-            border: 2px solid #FFB333;
-          }
-          
-          .btn-primary:hover {
-            background: #F87239;
-            border-color: #F87239;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(255, 179, 51, 0.3);
-          }
-          
-          .btn-secondary {
-            background: rgba(255, 255, 255, 0.9);
-            color: #6B7280;
-            border: 2px solid #E5E7EB;
-          }
-          
-          .btn-secondary:hover {
-            background: #F9FAFB;
-            color: #374151;
-            border-color: #D1D5DB;
-            transform: translateY(-2px);
-          }
-          
-          /* Enhanced seamless flow animations */
-          .main-content-area > * {
-            animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-          }
-          
-          @keyframes fadeInUp {
-            from {
-              opacity: 0;
-              transform: translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          
-          .status-column:nth-child(1) { animation-delay: 0.1s; }
-          .status-column:nth-child(2) { animation-delay: 0.2s; }
-          .status-column:nth-child(3) { animation-delay: 0.3s; }
-          .status-column:nth-child(4) { animation-delay: 0.4s; }
-          
-          .task-card {
-            animation: slideInTask 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-            opacity: 0;
-          }
-          
-          @keyframes slideInTask {
-            from {
-              opacity: 0;
-              transform: translateX(-20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateX(0);
-            }
-          }
-          /* Mobile Responsive Styles */
-          @media (max-width: 768px) {
-            .project-stats {
-              display: none !important;
-            }
-            
-            .stat-item {
-              display: none !important;
-            }
-            
-            .members-display {
-              display: none !important;
-            }
-            
-            .header {
-              padding: 1rem 1rem 0.5rem 1rem;
-              position: relative;
-            }
-            
-            .header-title {
-              font-size: 1.5rem;
-              margin-bottom: 0.25rem;
-            }
-            
-            .header-subtitle {
-              font-size: 0.85rem;
-              margin-bottom: 1rem;
-            }
-            
-            .header-content {
-              flex-direction: column;
-              gap: 0;
-              align-items: stretch;
-            }
-            
-            .header-actions {
-              display: flex;
-              flex-direction: column;
-              gap: 0.75rem;
-              width: 100%;
-            }
-            
-            .action-buttons-grid {
-              order: 1;
-              display: grid;
-              grid-template-columns: repeat(3, 1fr);
-              gap: 0.5rem;
-              width: 100%;
-              min-width: unset;
-            }
-            
-            .view-toggle {
-              order: 2;
-              width: 100%;
-              justify-content: center;
-              padding: 0.25rem;
-              background: #ffffff;
-              border: 2px solid #000000;
-              border-radius: 8px;
-              margin-bottom: 0;
-            }
-            
-            .view-btn {
-              flex: 1;
-              padding: 0.5rem 0.375rem;
-              font-size: 0.75rem;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 0.2rem;
-              min-height: 50px;
-            }
-            
-            .view-btn svg {
-              width: 20px;
-              height: 20px;
-            }
-            
-            .view-btn.active {
-              background: #000000;
-              color: #ffffff;
-            }
-            
-            .action-btn {
-              padding: 0.875rem 0.5rem;
-              font-size: 0.8rem;
-              gap: 0.5rem;
-              flex-direction: column;
-              min-height: 60px;
-            }
-            
-            .action-btn svg {
-              width: 18px;
-              height: 18px;
-            }
-            
-            .members-btn {
-              background: #ffffff;
-              border: 2px solid #6b7280;
-              color: #374151;
-            }
-            
-            .delete-btn {
-              background: #ffffff;
-              border: 2px solid #ef4444;
-              color: #ef4444;
-            }
-            
-            .add-task-btn {
-              background: #000000;
-              color: #ffffff;
-              border: 2px solid #000000;
-              font-weight: 600;
-            }
-            
-
-            
-
-            
-            .main-content-area {
-              padding: 1rem;
-            }
-            
-            .view-description {
-              padding: 1rem;
-              margin-bottom: 1rem;
-            }
-            
-            .view-description h3 {
-              font-size: 1.1rem;
-              margin-bottom: 0.5rem;
-            }
-            
-            .view-description p {
-              font-size: 0.85rem;
-              line-height: 1.4;
-            }
-            
-            .board-grid {
-              grid-template-columns: 1fr;
-              gap: 1rem;
-            }
-            
-            .status-column {
-              padding: 1rem;
-              min-height: auto;
-            }
-            
-            .status-header {
-              margin-bottom: 1rem;
-              padding-bottom: 0.75rem;
-            }
-            
-            .status-title {
-              font-size: 1rem;
-            }
-            
-            .status-count {
-              padding: 0.25rem 0.75rem;
-              font-size: 0.75rem;
-            }
-            
-            .task-card {
-              padding: 1rem;
-              margin-bottom: 0.75rem;
-              border-radius: 8px;
-            }
-            
-            .task-title {
-              font-size: 0.95rem;
-              line-height: 1.3;
-            }
-            
-            .task-meta-item {
-              padding: 0.5rem;
-              font-size: 0.8rem;
-              border-radius: 4px;
-            }
-            
-            .assignee-avatar {
-              width: 20px;
-              height: 20px;
-              font-size: 0.65rem;
-            }
-            
-            .modal-content {
-              background: #ffffff;
-              border: 2px solid #000000;
-              padding: 2rem !important;
-              width: 100%;
-              max-width: 95vw;
-              padding: 1.5rem !important;
-              margin: 0.5rem;
-              border-radius: 8px !important;
-            }
-            
-            .modal-title {
-              font-size: 1.25rem;
-              margin-bottom: 1rem !important;
-            }
-            
-            .form-group {
-              margin-bottom: 1.25rem !important;
-            }
-            
-            .form-label {
-              font-size: 0.9rem;
-              margin-bottom: 0.4rem !important;
-            }
-            
-            .form-input, .form-textarea, .form-select {
-              padding: 1rem;
-              font-size: 1rem;
-              border-radius: 6px;
-            }
-            
-            .button-group {
-              flex-direction: column;
-              gap: 0.75rem;
-              margin-top: 1.25rem !important;
-            }
-            
-            .btn-primary, .btn-secondary {
-              padding: 1rem;
-              font-size: 1rem;
-              border-radius: 6px;
-            }
-          }
-          
-          @media (max-width: 480px) {
-            .header {
-              padding: 0.75rem 0.75rem 0.25rem 0.75rem;
-            }
-            
-            .project-stats {
-              display: none !important;
-            }
-            
-            .stat-item {
-              display: none !important;
-            }
-            
-            .members-display {
-              display: none !important;
-            }
-            
-            .header-title {
-              font-size: 1.25rem;
-              text-align: center;
-            }
-            
-            .header-subtitle {
-              font-size: 0.8rem;
-              text-align: center;
-              margin-bottom: 1rem;
-            }
-            
-            .main-content-area {
-              padding: 0.75rem;
-            }
-            
-            .view-toggle {
-              padding: 0.2rem;
-              margin-bottom: 0;
-            }
-            
-            .view-btn {
-              padding: 0.5rem 0.25rem;
-              font-size: 0.7rem;
-              min-height: 45px;
-              gap: 0.15rem;
-            }
-            
-            .view-btn svg {
-              width: 16px;
-              height: 16px;
-            }
-            
-            .action-btn {
-              padding: 0.75rem 0.375rem;
-              font-size: 0.75rem;
-              gap: 0.375rem;
-              min-height: 55px;
-            }
-            
-            .action-btn svg {
-              width: 16px;
-              height: 16px;
-            }
-            
-            .project-stats {
-              gap: 0.5rem;
-              padding: 0.75rem;
-              margin-top: 0.75rem;
-            }
-            
-
-            
-            .view-description {
-              padding: 0.75rem;
-            }
-            
-            .view-description h3 {
-              font-size: 1rem;
-            }
-            
-            .view-description p {
-              font-size: 0.8rem;
-            }
-            
-            .status-column {
-              padding: 0.75rem;
-            }
-            
-            .status-title {
-              font-size: 0.9rem;
-            }
-            
-            .task-card {
-              padding: 0.75rem;
-            }
-            
-            .task-title {
-              font-size: 0.9rem !important;
-              word-wrap: break-word !important;
-              overflow-wrap: break-word !important;
-              word-break: break-word !important;
-              white-space: normal !important;
-              hyphens: auto !important;
-              max-width: 100% !important;
-              display: block !important;
-            }
-            
-            .task-meta-item {
-              padding: 0.375rem;
-              font-size: 0.75rem;
-            }
-            
-            .assignee-avatar {
-              width: 18px;
-              height: 18px;
-              font-size: 0.6rem;
-            }
-            
-            .modal-content {
-              max-width: 98vw;
-              padding: 1.25rem !important;
-              margin: 0.25rem;
-            }
-            
-            .modal-title {
-              font-size: 1.1rem;
-              margin-bottom: 0.75rem !important;
-            }
-            
-            .form-group {
-              margin-bottom: 1rem !important;
-            }
-            
-            .form-input, .form-textarea, .form-select {
-              padding: 0.875rem;
-              font-size: 0.9rem;
-              border-radius: 6px;
-            }
-            
-            .button-group {
-              gap: 0.625rem;
-              margin-top: 1rem !important;
-            }
-            
-            .btn-primary, .btn-secondary {
-              padding: 0.875rem;
-              font-size: 0.9rem;
-              border-radius: 6px;
-            }
-          }
-          
-          /* Ultra-small mobile screens */
-          @media (max-width: 360px) {
-            .header {
-              padding: 0.5rem;
-            }
-            
-            .header-title {
-              font-size: 1.1rem;
-            }
-            
-            .header-subtitle {
-              font-size: 0.75rem;
-            }
-            
-            .main-content-area {
-              padding: 0.5rem;
-            }
-            
-            .view-toggle {
-              padding: 0.2rem;
-            }
-            
-            .view-btn {
-              padding: 0.5rem 0.25rem;
-              font-size: 0.7rem;
-              min-height: 45px;
-            }
-            
-            .view-btn svg {
-              width: 14px;
-              height: 14px;
-            }
-            
-            .members-btn, .delete-btn, .add-task-btn {
-              padding: 0.75rem;
-              font-size: 0.8rem;
-            }
-            
-            .project-stats {
-              padding: 0.5rem;
-            }
-            
-            .stat-item {
-              padding: 0.5rem;
-              font-size: 0.75rem;
-            }
-            
-            .view-description {
-              padding: 0.5rem;
-            }
-            
-            .status-column {
-              padding: 0.5rem;
-            }
-            
-            .task-card {
-              padding: 0.5rem;
-            }
-            
-            .modal-content {
-              padding: 1rem;
-              margin: 0.1rem;
-            }
-          }
-          
-          .project-stats {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            font-size: 0.9rem;
-            color: #666666;
-          }
-          .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-          }
-          .main-content-area {
-            padding: 2rem 3rem;
-            overflow-x: auto;
-            max-width: 100%;
-            position: relative;
-          }
-          
-          .main-content-area::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-              radial-gradient(circle at 25% 25%, rgba(255, 179, 51, 0.03) 0%, transparent 50%),
-              radial-gradient(circle at 75% 75%, rgba(196, 131, 217, 0.03) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-          }
-          
-          .error-message {
-            background: rgba(255, 255, 255, 0.95);
-            border: 2px solid #EF4444;
-            color: #DC2626;
-            padding: 1.25rem 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.1);
-            backdrop-filter: blur(10px);
-            position: relative;
-            z-index: 1;
-          }
-          
-          .board-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.5rem;
-            min-height: 600px;
-            position: relative;
-            z-index: 1;
-          }
-          
-          .status-column {
-            background: rgba(255, 255, 255, 0.95);
-            border: 2px solid #F5F5ED;
-            border-radius: 16px;
-            padding: 1.5rem;
-            min-height: 600px;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-            backdrop-filter: blur(20px);
-            position: relative;
-            overflow: hidden;
-          }
-          
-          .status-column::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: #FFB333;
-            transition: all 0.4s ease;
-          }
-          
-          .status-column:nth-child(2)::before {
-            background: #5884FD;
-          }
-          
-          .status-column:nth-child(3)::before {
-            background: #F87239;
-          }
-          
-          .status-column:nth-child(4)::before {
-            background: #C483D9;
-          }
-          
-          .status-column:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
-            border-color: rgba(255, 179, 51, 0.3);
-          }
-          
-          .status-column.drag-over {
-            border-color: #FFB333;
-            background: rgba(255, 179, 51, 0.05);
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 20px 60px rgba(255, 179, 51, 0.2);
-          }
-          .status-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid rgba(245, 245, 237, 0.6);
-            position: relative;
-            z-index: 1;
-          }
-          
-          .status-title-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-          }
-          
-          .status-icon {
-            font-size: 1.25rem;
-            transition: all 0.3s ease;
-          }
-          
-          .status-title {
-            font-weight: 700;
-            color: #374151;
-            font-size: 1.1rem;
-            letter-spacing: -0.025em;
-            transition: all 0.3s ease;
-          }
-          
-          .status-count {
-            background: rgba(255, 179, 51, 0.1);
-            border: 2px solid #FFB333;
-            padding: 0.375rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #FFB333;
-            min-width: 24px;
-            text-align: center;
-            transition: all 0.3s ease;
-          }
-          .tasks-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            min-height: 400px;
-          }
-          .task-card {
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid rgba(245, 245, 237, 0.8);
-            border-radius: 12px;
-            padding: 1.25rem;
-            cursor: grab;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative;
-            overflow: hidden;
-            min-height: 80px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-          }
-          
-          .task-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: #FFB333;
-            opacity: 0;
-            transition: all 0.3s ease;
-          }
-          
-          .task-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
-            border-color: rgba(255, 179, 51, 0.4);
-          }
-          
-          .task-card:hover::before {
-            opacity: 1;
-          }
-          
-          .task-card:active {
-            cursor: grabbing;
-          }
-          
-          .task-card.dragging {
-            opacity: 0.6;
-            transform: rotate(5deg) scale(1.05);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-          }
-          .task-header {
-            margin-bottom: 0.75rem;
-          }
-          .task-title {
-            font-weight: 600 !important;
-            color: #374151 !important;
-            font-size: 1rem !important;
-            line-height: 1.4 !important;
-            flex: 1 !important;
-            margin-right: 0.5rem !important;
-            letter-spacing: -0.025em !important;
-            transition: all 0.3s ease !important;
-            word-wrap: break-word !important;
-            overflow-wrap: break-word !important;
-            word-break: break-word !important;
-            white-space: normal !important;
-            hyphens: auto !important;
-            max-width: 100% !important;
-            display: block !important;
-          }
-          
-          .task-card:hover .task-title {
-            color: #FFB333;
-          }
-          .task-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-          }
-          .task-priority {
-            font-size: 1.1rem;
-            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
-          }
-          .task-menu-btn {
-            background: none;
-            border: none;
-            padding: 0.25rem;
-            border-radius: 4px;
-            cursor: pointer;
-            color: #9ca3af;
-            transition: all 0.2s ease;
-          }
-          .task-menu-btn:hover {
-            background: #f3f4f6;
-            color: #000000;
-          }
-          .task-description {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-bottom: 1rem;
-            line-height: 1.5;
-          }
-          .task-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-          }
-          .task-meta-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.8rem;
-            color: #6b7280;
-            background: #f9fafb;
-            padding: 0.5rem;
-            border-radius: 6px;
-            border: 1px solid #e5e7eb;
-          }
-          .task-meta-item.overdue {
-            background: #fef2f2;
-            border-color: #fecaca;
-            color: #dc2626;
-            animation: pulse 2s infinite;
-          }
-          .task-meta-item.urgent {
-            background: #fff7ed;
-            border-color: #fed7aa;
-            color: #ea580c;
-          }
-          .assignee-avatar {
-            width: 24px;
-            height: 24px;
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            border: 2px solid #000000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #000000;
-          }
-          .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            z-index: 50;
-            animation: fadeIn 0.3s ease-out;
-          }
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          .modal-content {
-            background: #ffffff;
-            border: 2px solid #000000;
-            padding: 2rem !important;
-            width: 100%;
-            max-width: 600px;
-            border-radius: 12px !important;
-            max-height: 90vh;
-            height: auto;
-            overflow-y: auto !important;
-            overflow-x: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            animation: slideIn 0.3s ease-out;
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-            /* Enhanced scrolling support for all devices */
-            -webkit-overflow-scrolling: touch; /* iOS smooth scrolling */
-            scrollbar-width: thin; /* Firefox */
-            scrollbar-color: #000000 #f1f1f1; /* Firefox */
-          }
-          /* Custom scrollbar styling for webkit browsers */
-          .modal-content::-webkit-scrollbar {
-            width: 8px;
-          }
-          .modal-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-          }
-          .modal-content::-webkit-scrollbar-thumb {
-            background: #000000;
-            border-radius: 4px;
-          }
-          .modal-content::-webkit-scrollbar-thumb:hover {
-            background: #333333;
-          }
-          /* Enhanced mobile support */
-          @media (max-width: 768px) {
-            .modal-content {
-              max-height: 95vh !important;
-              margin: 0.5rem;
-              padding: 1.5rem !important;
-              max-width: calc(100vw - 1rem);
-            }
-          }
-          @media (max-height: 600px) {
-            .modal-content {
-              max-height: 98vh !important;
-              padding: 1rem !important;
-            }
-          }
-          @keyframes slideIn {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-          }
-          .modal-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #000000;
-            margin-bottom: 1.5rem !important;
-            text-align: center;
-          }
-          /* Enhanced form layout for scrollable modal */
-          .modal-content form {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0; /* Allow shrinking */
-          }
-          .form-group {
-            margin-bottom: 1.5rem !important;
-            flex-shrink: 0; /* Prevent form groups from shrinking */
-          }
-          .form-label {
-            display: block;
-            font-weight: 600;
-            color: #000000;
-            margin-bottom: 0.5rem !important;
-            font-size: 0.9rem;
-          }
-          .form-input {
-            width: 100%;
-            padding: 0.875rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            box-sizing: border-box;
-            background: #ffffff;
-            color: #000000;
-            transition: all 0.2s ease;
-          }
-          .form-input:focus {
-            outline: none;
-            border-color: #000000;
-            background: #f9fafb;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-          }
-          .form-textarea {
-            width: 100%;
-            padding: 0.875rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            box-sizing: border-box;
-            background: #ffffff;
-            color: #000000;
-            resize: vertical;
-            font-family: inherit;
-            transition: all 0.2s ease;
-          }
-          .form-textarea:focus {
-            outline: none;
-            border-color: #000000;
-            background: #f9fafb;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-          }
-          .form-select {
-            width: 100%;
-            padding: 0.875rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            box-sizing: border-box;
-            background: #ffffff;
-            color: #000000;
-            transition: all 0.2s ease;
-          }
-          .form-select:focus {
-            outline: none;
-            border-color: #000000;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-          }
-          .button-group {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem !important;
-            flex-shrink: 0; /* Keep buttons at bottom */
-            position: sticky;
-            bottom: 0;
-            background: #ffffff;
-            padding-top: 1rem;
-            border-top: 1px solid #e5e7eb;
-          }
-          .btn-primary {
-            flex: 1;
-            background: linear-gradient(135deg, #000000 0%, #333333 100%);
-            color: #ffffff;
-            border: none;
-            padding: 1rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-          }
-          .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
-          }
-          .btn-secondary {
-            flex: 1;
-            background: #ffffff;
-            color: #000000;
-            border: 2px solid #000000;
-            padding: 1rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-          }
-          .btn-secondary:hover {
-            background: #f9fafb;
-            transform: translateY(-1px);
-          }
-          .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem 1rem;
-            text-align: center;
-            color: #9ca3af;
-            font-style: italic;
-          }
-
-          /* View Description Styles */
-          .view-description {
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-          }
-          .view-description h3 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #000000;
-            margin: 0 0 0.5rem 0;
-          }
-          .view-description p {
-            font-size: 0.9rem;
-            color: #6b7280;
-            margin: 0;
-            line-height: 1.5;
-          }
-
-          /* View Container Styles */
-          .board-view, .list-view, .timeline-view, .gantt-view {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-          }
-
-          /* Timeline View Styles */
-          .timeline-view {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-          }
-          .timeline-header-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          }
-          .timeline-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-          }
-          .stat-card {
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          }
-          .stat-label {
-            font-size: 0.75rem;
-            color: #6b7280;
-            margin-bottom: 0.25rem;
-            font-weight: 500;
-          }
-          .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #000000;
-          }
-          .timeline-grid {
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-          }
-          .timeline-grid-header {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            background: #f8fafc;
-            border-bottom: 2px solid #000000;
-            font-weight: 600;
-            color: #000000;
-          }
-          .timeline-task-column, .timeline-chart-column {
-            padding: 1rem 1.5rem;
-            border-right: 1px solid #e5e7eb;
-          }
-          .timeline-chart-column {
-            border-right: none;
-          }
-          .timeline-grid-body {
-            min-height: 400px;
-          }
-          .timeline-row {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            border-bottom: 1px solid #e5e7eb;
-            align-items: center;
-            min-height: 80px;
-          }
-          .timeline-row:last-child {
-            border-bottom: none;
-          }
-          .timeline-task-info {
-            padding: 1rem 1.5rem;
-            border-right: 1px solid #e5e7eb;
-          }
-          .task-name {
-            font-weight: 600;
-            color: #000000;
-            margin-bottom: 0.5rem;
-          }
-          .task-details {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-          }
-          .task-status-badge {
-            padding: 0.2rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            text-transform: capitalize;
-            border: 1px solid;
-          }
-          .status-todo { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
-          .status-in_progress { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
-          .status-review { background: #fef3c7; color: #92400e; border-color: #f59e0b; }
-          .status-done { background: #d1fae5; color: #065f46; border-color: #10b981; }
-          .task-assignee {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            font-size: 0.75rem;
-            color: #6b7280;
-          }
-          .assignee-avatar-sm {
-            width: 16px;
-            height: 16px;
-            background: #f3f4f6;
-            border: 1px solid #000000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6rem;
-            font-weight: 600;
-            color: #000000;
-          }
-          .task-priority {
-            font-size: 0.75rem;
-            padding: 0.1rem 0.3rem;
-            border-radius: 8px;
-            text-transform: capitalize;
-          }
-          .priority-low { background: #d1fae5; color: #065f46; }
-          .priority-medium { background: #fef3c7; color: #92400e; }
-          .priority-high { background: #fecaca; color: #991b1b; }
-          .priority-urgent { background: #fecaca; color: #991b1b; font-weight: 600; }
-          .timeline-chart {
-            padding: 1rem 1.5rem;
-            position: relative;
-          }
-          .timeline-bar-container {
-            position: relative;
-          }
-          .timeline-bar {
-            height: 20px;
-            background: #e5e7eb;
-            border-radius: 10px;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid #d1d5db;
-          }
-          .timeline-progress {
-            height: 100%;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            position: relative;
-          }
-          .timeline-dates {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 0.5rem;
-            font-size: 0.7rem;
-            color: #6b7280;
-          }
-          .due-date.overdue {
-            color: #dc2626;
-            font-weight: 600;
-          }
-
-          /* Gantt Chart Styles */
-          .gantt-view {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-            background: #ffffff;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 2px solid #000000;
-          }
-          .gantt-header-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #ffffff;
-            padding: 1rem;
-            border-radius: 6px;
-            border: 2px solid #000000;
-          }
-          .gantt-controls {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-          }
-          .gantt-btn {
-            background: #000000;
-            color: #ffffff;
-            border: 2px solid #000000;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
-            font-size: 0.875rem;
-          }
-          .gantt-btn:hover {
-            background: #ffffff;
-            color: #000000;
-            transform: translateY(-1px);
-          }
-          .date-range-controls {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: #ffffff;
-            padding: 0.25rem;
-            border-radius: 4px;
-            border: 2px solid #000000;
-          }
-          .nav-btn {
-            background: #ffffff;
-            color: #000000;
-            border: 1px solid #000000;
-            padding: 0.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          .nav-btn:hover {
-            background: #000000;
-            color: #ffffff;
-          }
-          .date-range {
-            font-weight: 600;
-            color: #000000;
-            min-width: 150px;
-            text-align: center;
-            font-size: 0.9rem;
-          }
-          .gantt-chart {
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 12px;
-            overflow: hidden;
-            display: flex;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-          }
-          .gantt-sidebar {
-            width: 300px;
-            border-right: 2px solid #000000;
-            background: #f8fafc;
-          }
-          .gantt-sidebar-header {
-            padding: 1rem 1.5rem;
-            font-weight: 600;
-            color: #000000;
-            border-bottom: 2px solid #000000;
-            background: #ffffff;
-          }
-          .gantt-tasks {
-            min-height: 400px;
-          }
-          .gantt-task-row {
-            border-bottom: 1px solid #e5e7eb;
-            padding: 1rem 1.5rem;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-          }
-          .gantt-task-row:last-child {
-            border-bottom: none;
-          }
-          .gantt-task-info {
-            width: 100%;
-          }
-          .gantt-task-name {
-            font-weight: 600;
-            color: #000000;
-            margin-bottom: 0.25rem;
-            font-size: 0.9rem;
-          }
-          .gantt-task-meta {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-          }
-          .assignee-avatar-xs {
-            width: 14px;
-            height: 14px;
-            background: #ffffff;
-            border: 1px solid #000000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.5rem;
-            font-weight: 600;
-            color: #000000;
-          }
-          .priority-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            border: 1px solid #000000;
-          }
-          .priority-dot.priority-low { background: #10b981; }
-          .priority-dot.priority-medium { background: #f59e0b; }
-          .priority-dot.priority-high { background: #ef4444; }
-          .priority-dot.priority-urgent { background: #dc2626; }
-          .gantt-timeline {
-            flex: 1;
-            background: #ffffff;
-          }
-          .gantt-timeline-header {
-            border-bottom: 2px solid #000000;
-            background: #f8fafc;
-            padding: 1rem;
-          }
-          .gantt-dates {
-            display: grid;
-            grid-template-columns: repeat(30, 1fr);
-            gap: 0.25rem;
-            text-align: center;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: #000000;
-          }
-          .gantt-date {
-            padding: 0.25rem;
-            border-radius: 4px;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-          }
-          .gantt-bars {
-            padding: 1rem;
-            min-height: 400px;
-          }
-          .gantt-bar-row {
-            margin-bottom: 1rem;
-            height: 40px;
-            display: flex;
-            align-items: center;
-          }
-          .gantt-bar {
-            height: 24px;
-            border-radius: 12px;
-            position: relative;
-            min-width: 60px;
-            border: 2px solid #000000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
-          }
-          .gantt-bar:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          }
-          .gantt-bar-content {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 0.5rem;
-          }
-          .gantt-bar-text {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #000000;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            flex: 1;
-          }
-          .gantt-bar-duration {
-            font-size: 0.65rem;
-            font-weight: 500;
-            color: #374151;
-            white-space: nowrap;
-            margin-left: 0.25rem;
-          }
-
-          /* Enhanced Gantt Chart Styles - Simple Black & White */
-          .gantt-chart-enhanced {
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            margin-top: 1rem;
-            max-width: 100%;
-            width: 100%;
-            box-sizing: border-box;
-          }
-          
-          .gantt-sidebar-enhanced {
-            width: 350px;
-            min-width: 350px;
-            border-right: 2px solid #000000;
-            background: #ffffff;
-            display: flex;
-            flex-direction: column;
-          }
-          
-          .gantt-sidebar-header-enhanced {
-            display: grid;
-            grid-template-columns: 2fr 80px 80px;
-            gap: 0;
-            background: #000000;
-            font-weight: 600;
-            color: #ffffff;
-            border-bottom: 2px solid #000000;
-          }
-          
-          .task-header-cell, .duration-header-cell, .assignee-header-cell {
-            background: #000000;
-            padding: 0.75rem;
-            font-size: 0.8rem;
-            text-align: center;
-            border-right: 1px solid #ffffff;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #ffffff;
-          }
-          
-          .task-header-cell {
-            text-align: left;
-            padding-left: 1rem;
-          }
-          
-          .gantt-tasks-enhanced {
-            flex: 1;
-            overflow-y: auto;
-            min-height: 200px;
-          }
-          
-          .gantt-empty-state {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 200px;
-            color: #6b7280;
-          }
-          
-          .gantt-task-row-enhanced {
-            border-bottom: 1px solid #000000;
-            background: #ffffff;
-            transition: all 0.2s ease;
-          }
-          
-          .gantt-task-row-enhanced:hover {
-            background: #f0f0f0;
-          }
-          
-          .gantt-task-info-enhanced {
-            display: grid;
-            grid-template-columns: 2fr 80px 80px;
-            gap: 0;
-            align-items: center;
-            min-height: 60px;
-            padding: 0.5rem 0;
-          }
-          
-          .gantt-task-name-enhanced {
-            padding: 0 0.75rem !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 0.5rem !important;
-            flex: 1 !important;
-            overflow: visible !important;
-            word-wrap: break-word !important;
-            overflow-wrap: break-word !important;
-            word-break: break-word !important;
-            white-space: normal !important;
-            hyphens: auto !important;
-          }
-          
-          .task-title {
-            font-weight: 600 !important;
-            color: #000000 !important;
-            font-size: 0.85rem !important;
-            flex: 1 !important;
-            word-wrap: break-word !important;
-            overflow-wrap: break-word !important;
-            word-break: break-word !important;
-            white-space: normal !important;
-            hyphens: auto !important;
-            line-height: 1.3 !important;
-            max-width: 180px !important;
-          }
-          
-          .task-status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 2px;
-            border: 1px solid #9ca3af;
-            flex-shrink: 0;
-            position: relative;
-          }
-          
-          .task-status-indicator.status-todo { 
-            background: #ffffff; 
-            border-style: dashed;
-          }
-          .task-status-indicator.status-in_progress { 
-            background: #6b7280; 
-            border-radius: 50%;
-          }
-          .task-status-indicator.status-review { 
-            background: #374151;
-            border-radius: 2px;
-          }
-          .task-status-indicator.status-done { 
-            background: #111827;
-            border-radius: 2px;
-          }
-          
-          .priority-indicator {
-            width: 16px;
-            height: 2px;
-            flex-shrink: 0;
-            background: #d1d5db;
-            position: relative;
-          }
-          
-          .priority-indicator.priority-low { 
-            width: 8px;
-            background: #9ca3af;
-          }
-          .priority-indicator.priority-medium { 
-            width: 12px;
-            background: #6b7280;
-          }
-          .priority-indicator.priority-high { 
-            width: 16px;
-            background: #374151;
-          }
-          .priority-indicator.priority-urgent { 
-            width: 16px;
-            background: #111827;
-            height: 3px;
-          }
-          
-          .gantt-task-duration {
-            text-align: center;
-            font-size: 0.8rem;
-            color: #6b7280;
-            font-weight: 500;
-            padding: 0 0.5rem;
-          }
-          
-          .gantt-task-assignee {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0 0.5rem;
-          }
-          
-          .assignee-avatar-enhanced {
-            width: 20px;
-            height: 20px;
-            background: #f3f4f6;
-            border: 1px solid #9ca3af;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6rem;
-            font-weight: 700;
-            color: #374151;
-          }
-          
-          .unassigned {
-            color: #9ca3af;
-            font-size: 0.8rem;
-          }
-          
-          .gantt-timeline-enhanced {
-            flex: 1;
-            background: #ffffff;
-            display: flex;
-            flex-direction: column;
-            overflow-x: auto;
-            overflow-y: hidden;
-            max-width: 100%;
-            min-width: 0;
-            position: relative;
-            box-sizing: border-box;
-          }
-          
-          .gantt-timeline-header-enhanced {
-            border-bottom: 2px solid #000000;
-            background: #ffffff;
-          }
-          
-          .gantt-month-header {
-            background: #000000;
-            border-bottom: 2px solid #000000;
-            padding: 0.75rem 1rem;
-            text-align: center;
-          }
-          
-          .month-label {
-            font-weight: 600;
-            color: #ffffff;
-            font-size: 1rem;
-            letter-spacing: 0.05em;
-          }
-          
-          .gantt-week-headers {
-            display: flex;
-            background: #f0f0f0;
-            border-bottom: 2px solid #000000;
-            min-width: max-content;
-          }
-          
-          .week-header {
-            padding: 0.5rem;
-            text-align: center;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #000000;
-            border-right: 1px solid #000000;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            background: #f0f0f0;
-            min-width: 200px;
-            flex: 0 0 200px;
-          }
-          
-          .week-header:last-child {
-            border-right: none;
-          }
-          
-          .gantt-date-grid {
-            display: flex;
-            background: #ffffff;
-            min-width: max-content;
-          }
-          
-          .gantt-date-cell {
-            padding: 0.5rem 0.25rem;
-            text-align: center;
-            border-right: 1px solid #000000;
-            transition: background-color 0.2s ease;
-            min-width: 40px;
-            flex: 0 0 40px;
-          }
-          
-          .gantt-date-cell:last-child {
-            border-right: none;
-          }
-          
-          .gantt-date-cell.today {
-            background: #000000;
-            color: #ffffff;
-            font-weight: 700;
-          }
-          
-          .gantt-date-cell.weekend {
-            background: #f0f0f0;
-            opacity: 0.7;
-            color: #666666;
-          }
-          
-          .date-number {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #111827;
-            line-height: 1;
-          }
-          
-          .date-day {
-            font-size: 0.55rem;
-            color: #9ca3af;
-            text-transform: uppercase;
-            margin-top: 0.2rem;
-            letter-spacing: 0.05em;
-          }
-          
-          .gantt-grid-container {
-            flex: 1;
-            position: relative;
-            overflow-y: auto;
-            overflow-x: visible;
-            background: #ffffff;
-            width: 100%;
-          }
-          
-          .gantt-vertical-grid {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: grid;
-            grid-template-columns: repeat(30, 1fr);
-            pointer-events: none;
-            z-index: 1;
-          }
-          
-          .grid-line-vertical {
-            border-right: 1px solid #f3f4f6;
-            height: 100%;
-          }
-          
-          .grid-line-vertical:nth-child(7n) {
-            border-right: 1px solid #e5e7eb;
-          }
-          
-          .gantt-bars-enhanced {
-            position: relative;
-            z-index: 2;
-            padding: 0.5rem;
-            min-height: 200px;
-          }
-          
-          .gantt-bars-empty {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100px;
-            color: #6b7280;
-          }
-          
-          .gantt-bar-row-enhanced {
-            margin-bottom: 0.5rem;
-            height: 40px;
-            position: relative;
-          }
-          
-          .gantt-horizontal-grid-line {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            border-top: 1px solid #f3f4f6;
-            z-index: 1;
-          }
-          
-          .gantt-bar-enhanced {
-            height: 24px;
-            border-radius: 4px;
-            position: relative;
-            min-width: 60px;
-            border: 1px solid #d1d5db;
-            background: #f9fafb;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease;
-            cursor: pointer;
-            z-index: 3;
-            overflow: hidden;
-          }
-          
-          .gantt-bar-enhanced:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-color: #9ca3af;
-          }
-          
-          .gantt-bar-enhanced.status-todo {
-            background: #ffffff;
-            border-style: dashed;
-            border-color: #000000;
-            border-width: 2px;
-          }
-          
-          .gantt-bar-enhanced.status-in_progress {
-            background: #f0f0f0;
-            border-color: #000000;
-            border-width: 2px;
-          }
-          
-          .gantt-bar-enhanced.status-review {
-            background: #e0e0e0;
-            border-color: #000000;
-            border-width: 2px;
-          }
-          
-          .gantt-bar-enhanced.status-done {
-            background: #000000;
-            border-color: #000000;
-            border-width: 2px;
-          }
-          
-          .gantt-bar-enhanced.overdue {
-            border-color: #000000 !important;
-            background: #f0f0f0 !important;
-            border-width: 3px;
-            border-style: solid !important;
-          }
-          
-          .gantt-bar-content-enhanced {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 0.5rem;
-            position: relative;
-            z-index: 2;
-          }
-          
-          .gantt-bar-fill {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            border-radius: 2px;
-            background: repeating-linear-gradient(
-              45deg,
-              transparent,
-              transparent 2px,
-              rgba(0, 0, 0, 0.2) 2px,
-              rgba(0, 0, 0, 0.2) 4px
-            );
-            z-index: 1;
-          }
-          
-          .gantt-bar-text-enhanced {
-            font-size: 0.65rem;
-            font-weight: 600;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            white-space: normal;
-            hyphens: auto;
-            line-height: 1.2;
-            flex: 1;
-            z-index: 2;
-            position: relative;
-          }
-          
-          .gantt-bar-enhanced.status-done .gantt-bar-text-enhanced {
-            color: #ffffff;
-          }
-          
-          .gantt-bar-enhanced.status-todo .gantt-bar-text-enhanced,
-          .gantt-bar-enhanced.status-in_progress .gantt-bar-text-enhanced,
-          .gantt-bar-enhanced.status-review .gantt-bar-text-enhanced {
-            color: #000000;
-          }
-          
-          .gantt-bar-duration-enhanced {
-            font-size: 0.55rem;
-            font-weight: 500;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            white-space: normal;
-            hyphens: auto;
-            margin-left: 0.25rem;
-            z-index: 2;
-            position: relative;
-            padding: 0 0.2rem;
-            border-radius: 2px;
-            border: 1px solid #000000;
-            background: #ffffff;
-            color: #000000;
-          }
-          
-          .overdue-indicator {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            background: #111827;
-            color: #ffffff;
-            border-radius: 2px;
-            width: 12px;
-            height: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.5rem;
-            z-index: 4;
-            font-weight: 700;
-          }
-          
-          .gantt-legend {
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-top: 1.5rem;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-          }
-          
-          .legend-section h4 {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #000000;
-            margin: 0 0 0.75rem 0;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 2px solid #000000;
-            padding-bottom: 0.5rem;
-          }
-          
-          .legend-items {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-          }
-          
-          .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.75rem;
-            color: #000000;
-            padding: 0.25rem 0.5rem;
-            background: #ffffff;
-            border-radius: 4px;
-            border: 1px solid #000000;
-            font-weight: 500;
-            transition: all 0.2s ease;
-          }
-          
-          .legend-item:hover {
-            background: #f0f0f0;
-          }
-          
-          .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-            border: 1px solid #d1d5db;
-            flex-shrink: 0;
-          }
-          
-          .legend-priority-dot {
-            width: 12px;
-            height: 2px;
-            flex-shrink: 0;
-            background: #d1d5db;
-          }
-          
-          .progress-example {
-            width: 24px;
-            height: 8px;
-            background: #f3f4f6;
-            border-radius: 4px;
-            overflow: hidden;
-            position: relative;
-          }
-          
-          .progress-bar {
-            height: 100%;
-            border-radius: 4px;
-          }
-          
-          .overdue-example {
-            font-size: 0.8rem;
-          }
-
-          @media (max-width: 1200px) {
-            .board-grid {
-              grid-template-columns: repeat(2, 1fr);
-              gap: 0.75rem;
-            }
-            .timeline-stats {
-              grid-template-columns: repeat(2, 1fr);
-            }
-            .timeline-grid-header, .timeline-row {
-              grid-template-columns: 250px 1fr;
-            }
-            .gantt-sidebar {
-              width: 250px;
-            }
-          }
-          @media (max-width: 768px) {
-            .board-grid {
-              grid-template-columns: 1fr;
-              gap: 0.75rem;
-            }
-            .header {
-              padding: 1rem;
-            }
-            .main-content-area {
-              padding: 1rem;
-            }
-            .timeline-stats {
-              display: grid !important;
-              grid-template-columns: repeat(4, 1fr) !important;
-              gap: 0.5rem !important;
-              width: 100% !important;
-              margin-bottom: 1rem !important;
-            }
-            
-            .stat-card {
-              background: #ffffff !important;
-              border: 2px solid #000000 !important;
-              border-radius: 8px !important;
-              padding: 0.75rem 0.5rem !important;
-              text-align: center !important;
-              display: flex !important;
-              flex-direction: column !important;
-              align-items: center !important;
-              justify-content: center !important;
-              min-height: 60px !important;
-              box-shadow: none !important;
-            }
-            
-            .stat-label {
-              font-size: 0.65rem !important;
-              font-weight: 600 !important;
-              color: #6b7280 !important;
-              margin-bottom: 0.25rem !important;
-              text-transform: uppercase !important;
-              letter-spacing: 0.025em !important;
-              line-height: 1.2 !important;
-            }
-            
-            .stat-value {
-              font-size: 1.25rem !important;
-              font-weight: 700 !important;
-              color: #000000 !important;
-              margin: 0 !important;
-              line-height: 1 !important;
-            }
-            .timeline-grid-header, .timeline-row {
-              grid-template-columns: 1fr;
-            }
-            .timeline-task-info {
-              border-right: none;
-              border-bottom: 1px solid #e5e7eb;
-            }
-            .gantt-chart {
-              flex-direction: column;
-            }
-            .gantt-sidebar {
-              width: 100%;
-              border-right: none;
-              border-bottom: 2px solid #000000;
-            }
-            .gantt-chart-enhanced {
-              flex-direction: column;
-            }
-            .gantt-sidebar-enhanced {
-              width: 100%;
-              border-right: none;
-              border-bottom: 2px solid #000000;
-            }
-            .gantt-sidebar-header-enhanced {
-              display: grid !important;
-              grid-template-columns: 2fr 0.8fr 1.2fr 0.8fr 0.8fr !important;
-              gap: 0 !important;
-            }
-            .gantt-task-info-enhanced {
-              display: grid !important;
-              grid-template-columns: 2fr 0.8fr 1.2fr 0.8fr 0.8fr !important;
-              gap: 0 !important;
-            }
-            
-            .gantt-sidebar-enhanced {
-              width: 100% !important;
-              overflow-x: auto !important;
-              scrollbar-width: thin !important;
-              -ms-overflow-style: none !important;
-            }
-            
-            .gantt-sidebar-enhanced::-webkit-scrollbar {
-              height: 4px !important;
-            }
-            
-            .gantt-sidebar-enhanced::-webkit-scrollbar-track {
-              background: #f1f1f1 !important;
-            }
-            
-            .gantt-sidebar-enhanced::-webkit-scrollbar-thumb {
-              background: #888 !important;
-              border-radius: 2px !important;
-            }
-            .gantt-week-headers {
-              grid-template-columns: repeat(2, 1fr);
-            }
-            .gantt-legend {
-              grid-template-columns: 1fr;
-              gap: 1rem;
-            }
-          }
-          
-          /* Enhanced Mobile Responsive Styles */
-          @media (max-width: 768px) {
-            body {
-              overflow-x: hidden !important;
-            }
-            
-            .project-container {
-              flex-direction: column !important;
-              overflow-x: hidden !important;
-            }
-            
-            .main-content {
-              max-width: 100vw !important;
-              overflow-x: hidden !important;
-              width: 100% !important;
-            }
-            
-            .header {
-              padding: 1rem 0.75rem 0.5rem 0.75rem !important;
-              position: relative !important;
-              overflow-x: hidden !important;
-              border-bottom: 2px solid #000000 !important;
-              background: #ffffff !important;
-            }
-            
-            .header-content {
-              flex-direction: column !important;
-              gap: 1rem !important;
-              align-items: stretch !important;
-              margin-bottom: 0 !important;
-            }
-            
-            .header-title {
-              font-size: 1.25rem !important;
-              margin-bottom: 0.25rem !important;
-              text-align: center !important;
-              word-break: break-word !important;
-              line-height: 1.3 !important;
-              padding: 0 0.5rem !important;
-            }
-            
-            .header-subtitle {
-              font-size: 0.8rem !important;
-              margin-bottom: 0 !important;
-              text-align: center !important;
-              color: #666666 !important;
-            }
-            
-            .header-actions {
-              display: flex !important;
-              flex-direction: column !important;
-              gap: 0.75rem !important;
-              width: 100% !important;
-            }
-            
-            .action-buttons-grid {
-              display: grid !important;
-              grid-template-columns: repeat(3, 1fr) !important;
-              gap: 0.375rem !important;
-              width: 100% !important;
-              min-width: unset !important;
-            }
-            
-            .action-btn {
-              padding: 0.75rem 0.25rem !important;
-              font-size: 0.7rem !important;
-              gap: 0.25rem !important;
-              flex-direction: column !important;
-              min-height: 55px !important;
-              touch-action: manipulation !important;
-              -webkit-tap-highlight-color: transparent !important;
-              text-align: center !important;
-              justify-content: center !important;
-              align-items: center !important;
-              box-shadow: none !important;
-              border-radius: 6px !important;
-            }
-            
-            .action-btn svg {
-              width: 16px !important;
-              height: 16px !important;
-              margin-bottom: 0.125rem !important;
-            }
-            
-            .action-btn:hover {
-              transform: none !important;
-              box-shadow: none !important;
-            }
-            
-            .members-btn {
-              background: #ffffff !important;
-              border: 2px solid #000000 !important;
-              color: #000000 !important;
-            }
-            
-            .delete-btn {
-              background: #ffffff !important;
-              border: 2px solid #ef4444 !important;
-              color: #ef4444 !important;
-            }
-            
-            .add-task-btn {
-              background: #000000 !important;
-              color: #ffffff !important;
-              border: 2px solid #000000 !important;
-              font-weight: 600 !important;
-            }
-            
-            .view-toggle {
-              display: flex !important;
-              align-items: center !important;
-              width: 100% !important;
-              justify-content: space-between !important;
-              padding: 0.25rem !important;
-              background: #ffffff !important;
-              border: 2px solid #000000 !important;
-              border-radius: 8px !important;
-              margin-bottom: 0 !important;
-              overflow-x: auto !important;
-              scrollbar-width: none !important;
-              -ms-overflow-style: none !important;
-              box-shadow: none !important;
-            }
-            
-            .view-toggle::-webkit-scrollbar {
-              display: none !important;
-            }
-            
-            .view-btn {
-              flex: 1 !important;
-              padding: 0.5rem 0.25rem !important;
-              font-size: 0.65rem !important;
-              display: flex !important;
-              flex-direction: column !important;
-              align-items: center !important;
-              justify-content: center !important;
-              gap: 0.2rem !important;
-              min-height: 48px !important;
-              min-width: 58px !important;
-              white-space: nowrap !important;
-              border: none !important;
-              background: transparent !important;
-              color: #666666 !important;
-              border-radius: 4px !important;
-              transition: all 0.2s ease !important;
-              cursor: pointer !important;
-            }
-            
-            .view-btn svg {
-              width: 18px !important;
-              height: 18px !important;
-              margin-bottom: 0.125rem !important;
-            }
-            
-            .view-btn.active {
-              background: #000000 !important;
-              color: #ffffff !important;
-              transform: none !important;
-            }
-            
-            .view-btn:hover {
-              transform: none !important;
-            }
-            
-            .main-content-area {
-              padding: 0.75rem !important;
-              overflow-x: hidden !important;
-              max-width: 100vw !important;
-              box-sizing: border-box !important;
-              width: 100% !important;
-            }
-            
-            .timeline-view {
-              padding: 0 !important;
-              background: transparent !important;
-            }
-            
-            .timeline-header-controls {
-              padding: 0 !important;
-              margin-bottom: 1rem !important;
-              background: transparent !important;
-            }
-            
-            .timeline-grid {
-              background: #ffffff !important;
-              border: 2px solid #000000 !important;
-              border-radius: 12px !important;
-              overflow: hidden !important;
-              margin-bottom: 1rem !important;
-            }
-            
-            .timeline-grid-header {
-              background: #f9fafb !important;
-              border-bottom: 2px solid #000000 !important;
-              padding: 0.75rem !important;
-              font-weight: 700 !important;
-              font-size: 0.8rem !important;
-              text-transform: uppercase !important;
-              letter-spacing: 0.025em !important;
-            }
-            
-            .timeline-row {
-              border-bottom: 1px solid #e5e7eb !important;
-              padding: 0.75rem !important;
-              transition: all 0.2s ease !important;
-            }
-            
-            .timeline-row:hover {
-              background: #f9fafb !important;
-            }
-            
-            .timeline-row:last-child {
-              border-bottom: none !important;
-            }
-            
-            .timeline-task-info {
-              margin-bottom: 0.5rem !important;
-            }
-            
-            .task-name {
-              font-size: 0.9rem !important;
-              font-weight: 600 !important;
-              color: #000000 !important;
-              margin-bottom: 0.375rem !important;
-              line-height: 1.3 !important;
-            }
-            
-            .task-details {
-              display: flex !important;
-              flex-wrap: wrap !important;
-              gap: 0.375rem !important;
-              align-items: center !important;
-            }
-            
-            .task-status-badge {
-              padding: 0.25rem 0.5rem !important;
-              border-radius: 4px !important;
-              font-size: 0.65rem !important;
-              font-weight: 600 !important;
-              text-transform: uppercase !important;
-              letter-spacing: 0.025em !important;
-              border: 1px solid #000000 !important;
-              background: #ffffff !important;
-              color: #000000 !important;
-            }
-            
-            .task-assignee {
-              display: flex !important;
-              align-items: center !important;
-              gap: 0.25rem !important;
-              font-size: 0.75rem !important;
-              color: #6b7280 !important;
-            }
-            
-            .assignee-avatar-sm {
-              width: 16px !important;
-              height: 16px !important;
-              border-radius: 50% !important;
-              background: #f3f4f6 !important;
-              border: 1px solid #000000 !important;
-              display: flex !important;
-              align-items: center !important;
-              justify-content: center !important;
-              font-size: 0.6rem !important;
-              font-weight: 600 !important;
-              color: #000000 !important;
-            }
-            
-            .task-priority {
-              padding: 0.25rem 0.5rem !important;
-              border-radius: 4px !important;
-              font-size: 0.65rem !important;
-              font-weight: 600 !important;
-              text-transform: uppercase !important;
-              letter-spacing: 0.025em !important;
-              border: 1px solid #000000 !important;
-              background: #ffffff !important;
-              color: #000000 !important;
-            }
-            
-            .timeline-chart {
-              margin-top: 0.5rem !important;
-            }
-            
-            .timeline-bar-container {
-              position: relative !important;
-              background: #f3f4f6 !important;
-              border: 1px solid #e5e7eb !important;
-              border-radius: 6px !important;
-              overflow: hidden !important;
-              height: 24px !important;
-              margin-bottom: 0.375rem !important;
-            }
-            
-            .timeline-bar {
-              height: 100% !important;
-              position: relative !important;
-              border-radius: 6px !important;
-              background: #e5e7eb !important;
-              transition: all 0.3s ease !important;
-            }
-            
-            .timeline-progress {
-              height: 100% !important;
-              border-radius: 6px !important;
-              transition: all 0.3s ease !important;
-            }
-            
-            .timeline-dates {
-              display: flex !important;
-              justify-content: space-between !important;
-              align-items: center !important;
-              font-size: 0.7rem !important;
-              color: #6b7280 !important;
-            }
-            
-            .start-date {
-              font-weight: 500 !important;
-            }
-            
-            .due-date {
-              font-weight: 500 !important;
-            }
-            
-            .due-date.overdue {
-              color: #ef4444 !important;
-              font-weight: 600 !important;
-            }
-            
-            .info-card {
-              margin: 1rem 0 !important;
-              padding: 0.875rem !important;
-              background: #ffffff !important;
-              border: 2px solid #000000 !important;
-              border-radius: 8px !important;
-            }
-            
-            .info-card h4 {
-              font-size: 0.85rem !important;
-              font-weight: 600 !important;
-              color: #000000 !important;
-              margin: 0 0 0.375rem 0 !important;
-            }
-            
-            .info-card p {
-              font-size: 0.75rem !important;
-              color: #6b7280 !important;
-              margin: 0 !important;
-              line-height: 1.4 !important;
-            }
-            
-            .view-description {
-              padding: 0.875rem !important;
-              margin-bottom: 1rem !important;
-              border-radius: 8px !important;
-              overflow-wrap: break-word !important;
-              background: #ffffff !important;
-              border: 2px solid #000000 !important;
-              box-shadow: none !important;
-            }
-            
-            .view-description h3 {
-              font-size: 1rem !important;
-              margin-bottom: 0.5rem !important;
-              color: #000000 !important;
-              font-weight: 600 !important;
-            }
-            
-            .view-description p {
-              font-size: 0.8rem !important;
-              line-height: 1.4 !important;
-              color: #6b7280 !important;
-              margin: 0 !important;
-            }
-            
-            .board-view {
-              display: flex !important;
-              flex-direction: column !important;
-              gap: 1rem !important;
-              width: 100% !important;
-              overflow-x: hidden !important;
-            }
-            
-            .board-grid {
-              display: grid !important;
-              grid-template-columns: 1fr !important;
-              gap: 1rem !important;
-              width: 100% !important;
-              overflow-x: hidden !important;
-              min-height: auto !important;
-            }
-            
-            .status-column {
-              padding: 0.875rem !important;
-              min-height: auto !important;
-              width: 100% !important;
-              box-sizing: border-box !important;
-              background: #ffffff !important;
-              border: 2px solid #000000 !important;
-              border-radius: 12px !important;
-              box-shadow: none !important;
-            }
-            
-            .status-header {
-              display: flex !important;
-              align-items: center !important;
-              justify-content: space-between !important;
-              margin-bottom: 0.875rem !important;
-              padding-bottom: 0.75rem !important;
-              border-bottom: 2px solid #f3f4f6 !important;
-            }
-            
-            .status-title {
-              font-size: 0.95rem !important;
-              font-weight: 700 !important;
-              color: #000000 !important;
-            }
-            
-            .status-count {
-              background: #f3f4f6 !important;
-              border: 2px solid #000000 !important;
-              padding: 0.2rem 0.6rem !important;
-              border-radius: 20px !important;
-              font-size: 0.7rem !important;
-              font-weight: 700 !important;
-              color: #000000 !important;
-              min-width: 20px !important;
-              text-align: center !important;
-            }
-            
-            .tasks-list {
-              display: flex !important;
-              flex-direction: column !important;
-              gap: 0.75rem !important;
-              min-height: 200px !important;
-            }
-            
-            .task-card {
-              background: #ffffff !important;
-              border: 2px solid #e5e7eb !important;
-              border-radius: 8px !important;
-              padding: 0.875rem !important;
-              margin-bottom: 0 !important;
-              cursor: grab !important;
-              transition: all 0.3s ease !important;
-              position: relative !important;
-              overflow: hidden !important;
-              min-height: 60px !important;
-              touch-action: manipulation !important;
-              -webkit-tap-highlight-color: transparent !important;
-            }
-            
-            .task-card:hover {
-              transform: translateY(-2px) !important;
-              box-shadow: 0 4px 12px -3px rgba(0, 0, 0, 0.1) !important;
-              border-color: #000000 !important;
-            }
-            
-            .task-header {
-              margin-bottom: 0.5rem !important;
-            }
-            
-            .task-title {
-              font-size: 0.9rem !important;
-              line-height: 1.3 !important;
-              word-wrap: break-word !important;
-              overflow-wrap: break-word !important;
-              word-break: break-word !important;
-              white-space: normal !important;
-              hyphens: auto !important;
-              max-width: 100% !important;
-              font-weight: 600 !important;
-              color: #000000 !important;
-              margin: 0 !important;
-            }
-            
-            .task-meta-item {
-              display: flex !important;
-              align-items: center !important;
-              gap: 0.375rem !important;
-              padding: 0.375rem 0.5rem !important;
-              font-size: 0.75rem !important;
-              border-radius: 4px !important;
-              background: #f9fafb !important;
-              border: 1px solid #e5e7eb !important;
-              color: #6b7280 !important;
-              margin-top: 0.5rem !important;
-            }
-            
-            .assignee-avatar {
-              width: 18px !important;
-              height: 18px !important;
-              font-size: 0.6rem !important;
-              background: #f3f4f6 !important;
-              border: 1px solid #000000 !important;
-              border-radius: 50% !important;
-              display: flex !important;
-              align-items: center !important;
-              justify-content: center !important;
-              font-weight: 600 !important;
-              color: #000000 !important;
-            }
-            
-            .empty-state {
-              display: flex !important;
-              flex-direction: column !important;
-              align-items: center !important;
-              justify-content: center !important;
-              padding: 2rem 1rem !important;
-              text-align: center !important;
-              color: #9ca3af !important;
-              font-style: italic !important;
-              min-height: 120px !important;
-            }
-            
-            .empty-state p {
-              margin: 0 !important;
-              font-size: 0.875rem !important;
-            }
-            
-            .project-stats {
-              display: none !important;
-            }
-            
-            .stat-item {
-              display: none !important;
-            }
-            
-            .members-display {
-              display: none !important;
-            }
-          }
-        `
-      }} />
+    return groups;
+  }, [filteredTasks]);
+  
+  // Auto-expand latest month with all its status groups on first load
+  useEffect(() => {
+    if (expandedMonths.length === 0 && Object.keys(tasksByMonth).length > 0) {
+      // Get the latest month (first after sorting by date descending)
+      const sortedMonths = Object.keys(tasksByMonth).sort((a, b) => {
+        if (a === 'No Due Date') return 1;
+        if (b === 'No Due Date') return -1;
+        return new Date(b).getTime() - new Date(a).getTime();
+      });
+      const latestMonth = sortedMonths[0];
       
-      <div className="project-container">
-        <div className="main-content">
-          <header className="header">
-            <div className="header-content">
-                <div>
-                <h1 className="header-title" style={{
-                  wordWrap: 'break-word',
-                  overflowWrap: 'break-word', 
-                  whiteSpace: 'normal',
-                  lineHeight: '1.2',
-                  maxWidth: '100%',
-                  hyphens: 'auto'
-                }}>{project.name}</h1>
-                <p className="header-subtitle">{project.project_type} • {project.status}</p>
+      // Expand the month and all its status groups
+      const statusKeys = TASK_STATUSES.map(s => `${latestMonth}-${s.value}`);
+      setExpandedMonths([latestMonth, ...statusKeys]);
+    }
+  }, [tasksByMonth]);
+
+  // Fetch subtasks, attachments, comments and activity when task is selected
+  useEffect(() => {
+    const fetchTaskDetails = async () => {
+      if (!selectedTask) {
+        setSubtasks([]);
+        setActivityLog([]);
+        setAttachments([]);
+        setComments([]);
+        return;
+      }
+
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        
+        // Fetch all data in parallel
+        const [subtasksRes, activityRes, attachmentsRes, commentsRes] = await Promise.all([
+          supabase.from('task_subtasks').select('*').eq('task_id', selectedTask.id).order('position'),
+          supabase.from('task_activity_log').select('*').eq('task_id', selectedTask.id).order('created_at', { ascending: false }).limit(20),
+          supabase.from('task_attachment_links').select('*').eq('task_id', selectedTask.id).order('created_at', { ascending: false }),
+          supabase.from('task_comments').select(`
+            id,
+            task_id,
+            user_id,
+            comment,
+            created_at,
+            auth_user!task_comments_user_id_fkey(name)
+          `).eq('task_id', selectedTask.id).order('created_at', { ascending: false })
+        ]);
+        
+        setSubtasks(subtasksRes.data || []);
+        setActivityLog(activityRes.data || []);
+        setAttachments(attachmentsRes.data || []);
+        
+        // Transform comments to include user_name
+        const transformedComments = (commentsRes.data || []).map((c: any) => ({
+          ...c,
+          user_name: c.auth_user?.name || 'User',
+          comment_text: c.comment
+        }));
+        setComments(transformedComments);
+      } catch (error) {
+        // Error fetching task details
+      }
+    };
+
+    fetchTaskDetails();
+  }, [selectedTask]);
+
+  const addSubtask = async () => {
+    if (!newSubtask.trim() || !selectedTask) return;
+    
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data, error } = await supabase
+        .from('task_subtasks')
+        .insert([{
+          task_id: selectedTask.id,
+          title: newSubtask.trim(),
+          created_by_id: user?.id,
+          position: subtasks.length
+        }])
+        .select()
+        .single();
+      
+      if (!error && data) {
+        setSubtasks([...subtasks, data]);
+        setNewSubtask('');
+      }
+    } catch (error) {
+      // Error adding subtask
+    }
+  };
+
+  const toggleSubtask = async (subtaskId: number, isCompleted: boolean) => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      await supabase
+        .from('task_subtasks')
+        .update({ 
+          is_completed: !isCompleted,
+          completed_by_id: !isCompleted ? user?.id : null,
+          completed_at: !isCompleted ? new Date().toISOString() : null
+        })
+        .eq('id', subtaskId);
+      
+      setSubtasks(subtasks.map(st => 
+        st.id === subtaskId ? { ...st, is_completed: !isCompleted } : st
+      ));
+    } catch (error) {
+      // Error toggling subtask
+    }
+  };
+
+  const addAttachmentLink = async () => {
+    if (!newAttachmentUrl.trim() || !selectedTask) return;
+    
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data, error } = await supabase
+        .from('task_attachment_links')
+        .insert([{
+          task_id: selectedTask.id,
+          project_id: selectedTask.project_id,
+          user_id: user?.id,
+          user_name: user?.name || 'User',
+          attachment_url: newAttachmentUrl.trim(),
+          attachment_name: newAttachmentName.trim() || 'Link'
+        }])
+        .select()
+        .single();
+      
+      if (!error && data) {
+        setAttachments([data, ...attachments]);
+        setNewAttachmentUrl('');
+        setNewAttachmentName('');
+      }
+    } catch (error) {
+      // Error adding attachment
+    }
+  };
+
+  // Create notification for task updates
+  const createNotification = async (taskId: number, type: string, message: string, oldStatus?: string, newStatus?: string) => {
+    if (!user?.id || !selectedTask) return;
+    
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      
+      // Get all users who should be notified (only report_to users, not assignees)
+      const notifyUserIds = new Set<number>();
+      
+      // Only add report_to users - exclude current user
+      if (selectedTask.report_to_ids && Array.isArray(selectedTask.report_to_ids)) {
+        selectedTask.report_to_ids.forEach((id: number) => {
+          if (id !== user.id) notifyUserIds.add(id);
+        });
+      }
+      
+      // Create notifications for each user
+      const notifications = Array.from(notifyUserIds).map(recipientId => ({
+        task_id: taskId,
+        project_id: selectedTask.project_id,
+        recipient_id: recipientId,
+        sender_id: user.id,
+        notification_type: type,
+        message: message,
+        task_name: selectedTask.name,
+        task_status: newStatus || selectedTask.status,
+        old_status: oldStatus,
+        new_status: newStatus,
+      }));
+      
+      if (notifications.length > 0) {
+        await supabase.from('task_notifications').insert(notifications);
+      }
+    } catch (error) {
+      console.error('Error creating notification:', error);
+    }
+  };
+
+  const addComment = async () => {
+    if (!newComment.trim() || !selectedTask) return;
+    
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data, error } = await supabase
+        .from('task_comments')
+        .insert({
+          task_id: selectedTask.id,
+          user_id: user?.id,
+          comment: newComment.trim()
+        })
+        .select()
+        .single();
+      
+      if (!error && data) {
+        setComments([{ ...data, user_name: user?.name || 'User' }, ...comments]);
+        setNewComment('');
+        
+        // Send notification
+        await createNotification(
+          selectedTask.id,
+          'comment_added',
+          `${user?.name || 'Someone'} commented on task: ${selectedTask.name}`
+        );
+      } else {
+        console.error('Comment error:', error);
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
+
+  const saveTaskEdit = async () => {
+    if (!selectedTask || !editTaskForm.name.trim()) return;
+    
+    const oldStatus = selectedTask.status;
+    const newStatus = editTaskForm.status;
+    
+    try {
+      await taskService.updateTask(selectedTask.id, {
+        name: editTaskForm.name.trim(),
+        description: editTaskForm.description.trim(),
+        priority: editTaskForm.priority,
+        status: editTaskForm.status,
+        due_date: editTaskForm.due_date || null
+      });
+      
+      // Update local state
+      setTasks(tasks.map(t => t.id === selectedTask.id ? {
+        ...t,
+        name: editTaskForm.name.trim(),
+        description: editTaskForm.description.trim(),
+        priority: editTaskForm.priority,
+        status: editTaskForm.status,
+        due_date: editTaskForm.due_date || null
+      } : t));
+      
+      setSelectedTask({
+        ...selectedTask,
+        name: editTaskForm.name.trim(),
+        description: editTaskForm.description.trim(),
+        priority: editTaskForm.priority,
+        status: editTaskForm.status,
+        due_date: editTaskForm.due_date || null
+      });
+      
+      // Send notification if status changed
+      if (oldStatus !== newStatus) {
+        const statusMessages: Record<string, string> = {
+          'backlog': 'moved to backlog',
+          'in_progress': 'started working on',
+          'done': 'completed',
+          'archived': 'archived'
+        };
+        const action = statusMessages[newStatus] || `changed status to ${newStatus}`;
+        await createNotification(
+          selectedTask.id,
+          'status_changed',
+          `${user?.name || 'Someone'} ${action} task: ${selectedTask.name}`,
+          oldStatus,
+          newStatus
+        );
+      }
+      
+      setIsEditingTask(false);
+    } catch (error) {
+      alert('Error updating task');
+    }
+  };
+
+  const startEditingTask = () => {
+    if (!selectedTask) return;
+    setEditTaskForm({
+      name: selectedTask.name || '',
+      description: selectedTask.description || '',
+      priority: selectedTask.priority || 'low',
+      status: selectedTask.status || 'todo',
+      due_date: selectedTask.due_date ? selectedTask.due_date.split('T')[0] : ''
+    });
+    setIsEditingTask(true);
+  };
+
+  // Fetch available users to add as members
+  const fetchAvailableUsers = async () => {
+    if (!project) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('auth_user')
+        .select('id, name, email')
+        .order('name');
+      
+      if (!error && data) {
+        // Filter out users who are already members
+        const currentMemberIds = project.members?.map(m => m.id) || [];
+        const available = data.filter(u => !currentMemberIds.includes(u.id)).map(u => ({
+          ...u,
+          role: 'Member' // Default role for display
+        }));
+        setAvailableUsers(available);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  // Add member to project
+  const addMember = async () => {
+    if (!selectedUserId || !project) return;
+    
+    try {
+      // Add member using the API
+      await projectService.addProjectMember(project.id, selectedUserId);
+      
+      // Refresh project data to get updated members
+      await fetchProject();
+      
+      setShowAddMemberModal(false);
+      setSelectedUserId(null);
+      setNewMemberRole('Member');
+      setUserSearchQuery('');
+    } catch (err) {
+      console.error('Error adding member:', err);
+      alert('Failed to add member. Please try again.');
+    }
+  };
+
+  // Remove member from project
+  const removeMember = async (userId: number) => {
+    if (!project) return;
+    
+    if (!confirm('Remove this member from the project?')) return;
+    
+    try {
+      // Remove member using the API
+      await projectService.removeProjectMember(project.id, userId);
+      
+      // Refresh project data to get updated members
+      await fetchProject();
+    } catch (err) {
+      console.error('Error removing member:', err);
+      alert('Failed to remove member. Please try again.');
+    }
+  };
+
+  // Leave project (current user)
+  const leaveProject = async () => {
+    if (!project || !user) return;
+    
+    if (!confirm('Are you sure you want to leave this project?')) return;
+    
+    try {
+      // Remove current user using the API
+      await projectService.removeProjectMember(project.id, user.id);
+      
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (err) {
+      console.error('Error leaving project:', err);
+      alert('Failed to leave project. Please try again.');
+    }
+  };
+
+  // Delete project (admin/owner only)
+  const deleteProject = async () => {
+    if (!project || !user) return;
+    
+    setDeletingProject(true);
+    try {
+      // First delete all project members
+      await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', project.id);
+      
+      // Then delete all tasks
+      await supabase
+        .from('projects_task')
+        .delete()
+        .eq('project_id', project.id);
+      
+      // Finally delete the project
+      const { error } = await supabase
+        .from('projects_project')
+        .delete()
+        .eq('id', project.id);
+      
+      if (error) throw error;
+      
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (err) {
+      console.error('Error deleting project:', err);
+      alert('Failed to delete project. Please try again.');
+    }
+    setDeletingProject(false);
+  };
+
+  // Check if current user is owner/admin of the project
+  const isProjectOwner = () => {
+    if (!project?.members || !user) return false;
+    const currentMember = project.members.find(m => m.id === user.id);
+    return currentMember?.role === 'owner' || currentMember?.role === 'admin';
+  };
+
+  if (authLoading || isLoading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '40px', height: '40px', border: '4px solid rgba(16, 185, 129, 0.2)', borderTop: '4px solid #10B981', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } }` }} />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !project) return null;
+
+    return (
+    <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex' }}>
+      {/* Sidebar */}
+      <Sidebar projects={allProjects} onCreateProject={() => {}} />
+      
+      {/* Main Content */}
+      <div className="page-main" style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', display: 'flex', flexDirection: 'column', background: '#0D0D0D' }}>
+        {/* Project Title Header */}
+        <div style={{ padding: isMobile ? '1rem' : '1.25rem 1.5rem', borderBottom: '1px solid #1F1F1F' }}>
+          <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', marginBottom: '1rem', gap: isMobile ? '1rem' : '0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: isMobile ? '100%' : 'auto' }}>
+              <div style={{ width: isMobile ? '36px' : '40px', height: isMobile ? '36px' : '40px', borderRadius: '0.5rem', background: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FolderIcon style={{ width: isMobile ? '18px' : '20px', height: isMobile ? '18px' : '20px', color: '#10B981' }} />
               </div>
-              
-              <div className="header-actions">
-                <div className="action-buttons-grid">
-                  <button
-                    onClick={() => setShowMembersModal(true)}
-                    className="action-btn members-btn"
-                  >
-                    <UserIcon style={{ width: '16px', height: '16px' }} />
-                    Members
-                  </button>
-                  
-                  <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="action-btn delete-btn"
-                  >
-                    <TrashIcon style={{ width: '16px', height: '16px' }} />
-                    Delete
-                  </button>
-                  
+              <h1 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>{project.name}</h1>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: isMobile ? '100%' : 'auto' }}>
+n              {/* Team Members Button - Avatar Style */}
+                <button
+                  onClick={() => setShowProjectMembers(true)}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  background: 'transparent', 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                <div style={{ display: 'flex' }}>
+                  <AvatarGroup users={project.members || []} max={3} size="md" />
+                    </div>
+                </button>
                   <button
                     onClick={() => setShowCreateTask(true)}
-                    className="action-btn add-task-btn"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#3B82F6', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 500, fontSize: '0.875rem', cursor: 'pointer', transition: 'background 0.2s', width: isMobile ? '100%' : 'auto', justifyContent: 'center' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#2563EB'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#3B82F6'}
                   >
                     <PlusIcon style={{ width: '16px', height: '16px' }} />
-                    Add Task
+                New Task
                   </button>
+                  
+                  {/* Delete Project Button */}
+                  {(
+                    <button
+                      onClick={() => setShowDeleteProject(true)}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem', 
+                        padding: '0.5rem 1rem', 
+                        background: 'transparent', 
+                        color: '#EF4444', 
+                        border: '1px solid #EF4444', 
+                        borderRadius: '0.5rem', 
+                        fontWeight: 500, 
+                        fontSize: '0.875rem', 
+                        cursor: 'pointer', 
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#EF4444';
+                        e.currentTarget.style.color = '#FFFFFF';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = '#EF4444';
+                      }}
+                    >
+                      <TrashIcon style={{ width: '16px', height: '16px' }} />
+                      Delete
+                    </button>
+                  )}
+            </div>
+              </div>
+              
+          {/* View Tabs and Search */}
+          <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '0.75rem' : '0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: '#1A1A1A', borderRadius: '0.5rem', padding: '0.25rem', width: isMobile ? '100%' : 'auto', overflowX: 'auto' }}>
+              {[
+                { id: 'kanban', label: 'Kanban', icon: Squares2X2Icon },
+                { id: 'list', label: 'List', icon: ListBulletIcon },
+                { id: 'gantt', label: 'Gantt', icon: ChartBarIcon },
+                { id: 'calendar', label: 'Calendar', icon: CalIcon },
+                { id: 'growth', label: 'Growth Map', icon: MapIcon }
+              ].map((view) => (
+                  <button
+                  key={view.id}
+                  onClick={() => {
+                    setSelectedView(view.id as any);
+                    setSelectedTab(view.id as any);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    background: selectedView === view.id ? '#2D2D2D' : 'transparent',
+                    color: selectedView === view.id ? '#FFFFFF' : '#71717A',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selectedView !== view.id) e.currentTarget.style.color = '#FFFFFF';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedView !== view.id) e.currentTarget.style.color = '#71717A';
+                  }}
+                >
+                  <view.icon style={{ width: '16px', height: '16px' }} />
+                  {view.label}
+                  </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: isMobile ? '100%' : 'auto' }}>
+              <div style={{ position: 'relative', flex: isMobile ? 1 : 'none' }}>
+                <MagnifyingGlassIcon style={{ width: '16px', height: '16px', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#52525B', pointerEvents: 'none' }} />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ width: isMobile ? '100%' : '200px', paddingLeft: '2.25rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.5rem', fontSize: '0.875rem', color: '#FFFFFF', outline: 'none', transition: 'border 0.2s' }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                />
+              </div>
+                  <button
+                onClick={() => setShowFilterPanel(!showFilterPanel)}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: showFilterPanel ? '#10B981' : '#1A1A1A', border: '1px solid', borderColor: showFilterPanel ? '#10B981' : '#2D2D2D', borderRadius: '0.5rem', fontSize: '0.875rem', color: showFilterPanel ? '#FFFFFF' : '#A1A1AA', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}
+              >
+                <AdjustmentsHorizontalIcon style={{ width: '16px', height: '16px' }} />
+                {!isMobile && 'Filter'}
+                {(filters.status.length > 0 || filters.priority.length > 0 || filters.assignee.length > 0 || filters.tags.length > 0) && (
+                  <span style={{ width: '18px', height: '18px', background: '#EF4444', color: '#FFFFFF', fontSize: '0.7rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
+                    {filters.status.length + filters.priority.length + filters.assignee.length + filters.tags.length}
+                  </span>
+                )}
+                  </button>
+                </div>
+          </div>
+
+          {/* Filter Panel - Improved UI */}
+          {showFilterPanel && (
+            <div style={{ margin: '1rem 1.5rem 0', padding: '1.5rem', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '1rem', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+              <div style={{ display: 'flex', gap: '2rem' }}>
+                {/* Status Filter */}
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Status</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {TASK_STATUSES.map(status => (
+                      <label 
+                        key={status.value} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.75rem', 
+                          cursor: 'pointer',
+                          padding: '0.5rem 0.75rem',
+                          borderRadius: '0.5rem',
+                          background: filters.status.includes(status.value) ? '#1F1F1F' : 'transparent',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => { if (!filters.status.includes(status.value)) e.currentTarget.style.background = '#1A1A1A'; }}
+                        onMouseLeave={(e) => { if (!filters.status.includes(status.value)) e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={filters.status.includes(status.value)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFilters({ ...filters, status: [...filters.status, status.value] });
+                            } else {
+                              setFilters({ ...filters, status: filters.status.filter(s => s !== status.value) });
+                            }
+                          }}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: status.color }}
+                        />
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: status.color }} />
+                        <span style={{ fontSize: '0.875rem', color: '#E5E5E5' }}>{status.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="view-toggle">
-                  <button
-                    onClick={() => setViewMode('board')}
-                    className={`view-btn ${viewMode === 'board' ? 'active' : ''}`}
-                    title="Board View"
-                  >
-                    <Squares2X2Icon style={{ width: '16px', height: '16px' }} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-                    title="List View"
-                  >
-                    <ListBulletIcon style={{ width: '16px', height: '16px' }} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('timeline')}
-                    className={`view-btn ${viewMode === 'timeline' ? 'active' : ''}`}
-                    title="Timeline View"
-                  >
-                    <ClockIcon style={{ width: '16px', height: '16px' }} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('gantt')}
-                    className={`view-btn ${viewMode === 'gantt' ? 'active' : ''}`}
-                    title="Gantt Chart"
-                  >
-                    <ChartBarIcon style={{ width: '16px', height: '16px' }} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('todo')}
-                    className={`view-btn ${viewMode === 'todo' ? 'active' : ''}`}
-                    title="To Do List"
-                  >
-                    <ClipboardDocumentListIcon style={{ width: '16px', height: '16px' }} />
-                  </button>
+                {/* Priority Filter */}
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Priority</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {[
+                      { value: 'low', color: '#22C55E' },
+                      { value: 'medium', color: '#F59E0B' },
+                      { value: 'high', color: '#EF4444' },
+                      { value: 'urgent', color: '#DC2626' }
+                    ].map(priority => (
+                      <label 
+                        key={priority.value} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.75rem', 
+                          cursor: 'pointer',
+                          padding: '0.5rem 0.75rem',
+                          borderRadius: '0.5rem',
+                          background: filters.priority.includes(priority.value) ? '#1F1F1F' : 'transparent',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => { if (!filters.priority.includes(priority.value)) e.currentTarget.style.background = '#1A1A1A'; }}
+                        onMouseLeave={(e) => { if (!filters.priority.includes(priority.value)) e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={filters.priority.includes(priority.value)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFilters({ ...filters, priority: [...filters.priority, priority.value] });
+                            } else {
+                              setFilters({ ...filters, priority: filters.priority.filter(p => p !== priority.value) });
+                            }
+                          }}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: priority.color }}
+                        />
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: priority.color }} />
+                        <span style={{ fontSize: '0.875rem', color: '#E5E5E5', textTransform: 'capitalize' }}>{priority.value}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Assignee Filter */}
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Assignee</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
+                    {project.members?.map((member, i) => (
+                      <label 
+                        key={member.id} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.75rem', 
+                          cursor: 'pointer',
+                          padding: '0.5rem 0.75rem',
+                          borderRadius: '0.5rem',
+                          background: filters.assignee.includes(member.id) ? '#1F1F1F' : 'transparent',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => { if (!filters.assignee.includes(member.id)) e.currentTarget.style.background = '#1A1A1A'; }}
+                        onMouseLeave={(e) => { if (!filters.assignee.includes(member.id)) e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={filters.assignee.includes(member.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFilters({ ...filters, assignee: [...filters.assignee, member.id] });
+                            } else {
+                              setFilters({ ...filters, assignee: filters.assignee.filter(a => a !== member.id) });
+                            }
+                          }}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#3B82F6' }}
+                        />
+                        <UserAvatar user={member} size="sm" />
+                        <span style={{ fontSize: '0.875rem', color: '#E5E5E5' }}>{member.name}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
+
+              {/* Clear Filters Button */}
+              {(filters.status.length > 0 || filters.priority.length > 0 || filters.assignee.length > 0 || filters.tags.length > 0) && (
+                  <button
+                  onClick={() => setFilters({ status: [], priority: [], assignee: [], tags: [] })}
+                  style={{ marginTop: '1.25rem', padding: '0.625rem 1.25rem', background: '#EF4444', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', transition: 'background 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#DC2626'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#EF4444'}
+                  >
+                  Clear All Filters
+                  </button>
+              )}
             </div>
-            
-            <div className="project-stats">
-              <div className="stat-item">
-                <CheckCircleIcon style={{ width: '16px', height: '16px' }} />
-                {project.completed_task_count} / {project.task_count} tasks completed
+          )}
+                </div>
+
+        {/* Main Content - Multiple Views */}
+        <div style={{ flex: 1, padding: isMobile ? '1rem' : '1.5rem', overflowX: 'auto', background: '#0D0D0D' }}>
+          {selectedView === 'calendar' ? (
+            // Calendar View
+            <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', padding: '1.5rem' }}>
+              <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+                  {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </h3>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button style={{ padding: '0.5rem', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#FFFFFF', cursor: 'pointer' }}>←</button>
+                  <button style={{ padding: '0.5rem', background: '#2D2D2D', border: 'none', borderRadius: '0.375rem', color: '#FFFFFF', cursor: 'pointer' }}>→</button>
+                </div>
               </div>
-              <div className="stat-item members-display">
-                <UserIcon style={{ width: '16px', height: '16px' }} />
-                <div className="members-avatars">
-                  {(project.members || []).slice(0, 5).map((member, index) => (
-                    <div 
-                      key={member.id} 
-                      className="member-avatar"
-                      title={member.name}
-                      style={{ marginLeft: index > 0 ? '-8px' : '0' }}
-                    >
-                      {member.name.charAt(0).toUpperCase()}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: '#2D2D2D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} style={{ padding: '0.75rem', background: '#141414', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#71717A' }}>
+                    {day}
+                  </div>
+                ))}
+                {Array.from({ length: 35 }, (_, i) => {
+                  const dayTasks = filteredTasks.filter(t => {
+                    if (!t.due_date) return false;
+                    const taskDate = new Date(t.due_date).getDate();
+                    return taskDate === i - 2; // Sample - needs proper calendar logic
+                  });
+                  return (
+                    <div key={i} style={{ minHeight: '100px', padding: '0.5rem', background: '#1A1A1A', borderTop: i > 6 ? '1px solid #2D2D2D' : 'none' }}>
+                      <div style={{ fontSize: '0.8125rem', color: '#71717A', marginBottom: '0.375rem' }}>{i + 1}</div>
+                      {dayTasks.slice(0, 2).map(task => (
+                        <div key={task.id} style={{ fontSize: '0.75rem', color: '#FFFFFF', background: '#0D0D0D', padding: '0.25rem 0.375rem', borderRadius: '0.25rem', marginBottom: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', borderLeft: '2px solid', borderLeftColor: TASK_STATUSES.find(s => s.value === task.status)?.color || '#71717A' }}>
+                          {task.name}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                  {(project.members || []).length > 5 && (
-                    <div className="member-avatar more-members" title={`+${(project.members || []).length - 5} more members`}>
-                      +{(project.members || []).length - 5}
+                  );
+                })}
+              </div>
+            </div>
+          ) : selectedView === 'gantt' ? (
+            // Gantt Chart View - Calendar Style
+            <div style={{ display: 'flex', gap: '1rem', height: '100%' }}>
+              {/* Main Gantt Area */}
+              <div style={{ flex: 1, background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                {/* Gantt Header */}
+              <div style={{ padding: '1rem 1.5rem', background: '#141414', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {/* View Mode Toggle */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0D0D0D', padding: '0.25rem', borderRadius: '0.5rem' }}>
+                    {(['week', 'month'] as const).map(mode => (
+                      <button
+                        key={mode}
+                        onClick={() => setGanttViewMode(mode)}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          background: ganttViewMode === mode ? '#3B82F6' : 'transparent',
+                          border: 'none',
+                          borderRadius: '0.375rem',
+                          color: ganttViewMode === mode ? '#FFFFFF' : '#71717A',
+                          fontSize: '0.8125rem',
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          textTransform: 'capitalize'
+                        }}
+                      >
+                        {mode}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Navigation */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => {
+                        const d = new Date(ganttStartDate);
+                        if (ganttViewMode === 'week') d.setDate(d.getDate() - 7);
+                        else d.setMonth(d.getMonth() - 1);
+                        setGanttStartDate(d);
+                      }}
+                      style={{ width: '36px', height: '36px', background: '#2D2D2D', border: 'none', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#3D3D3D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                    >
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  </button>
+                  <button
+                    onClick={() => setGanttStartDate(new Date())}
+                      style={{ padding: '0.5rem 1rem', background: '#10B981', border: 'none', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={() => {
+                        const d = new Date(ganttStartDate);
+                        if (ganttViewMode === 'week') d.setDate(d.getDate() + 7);
+                        else d.setMonth(d.getMonth() + 1);
+                        setGanttStartDate(d);
+                      }}
+                      style={{ width: '36px', height: '36px', background: '#2D2D2D', border: 'none', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#3D3D3D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                    >
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </button>
+                    <div style={{ padding: '0.5rem 1rem', background: '#2D2D2D', borderRadius: '0.5rem', marginLeft: '0.5rem' }}>
+                      <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>
+                        {ganttStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      </span>
+                    </div>
+                </div>
+              </div>
+
+                {/* Gantt Content */}
+                <div style={{ flex: 1, overflow: 'auto' }}>
+                  {ganttViewMode === 'week' ? (
+                    // Week View - Days as rows, hours as columns
+                    <div style={{ display: 'flex', minHeight: '100%' }}>
+                      {/* Day Labels Column */}
+                      <div style={{ width: '100px', flexShrink: 0, background: '#141414', borderRight: '1px solid #2D2D2D' }}>
+                        <div style={{ height: '48px', borderBottom: '1px solid #2D2D2D' }} />
+                        {Array.from({ length: 7 }, (_, i) => {
+                          const date = new Date(ganttStartDate);
+                          date.setDate(date.getDate() - date.getDay() + i);
+                          const isToday = date.toDateString() === new Date().toDateString();
+                          const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                          return (
+                            <div key={i} style={{ height: '80px', padding: '0.75rem', borderBottom: '1px solid #2D2D2D', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: isToday ? '#3B82F610' : 'transparent' }}>
+                              <span style={{ color: isToday ? '#3B82F6' : '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{dayNames[i]}</span>
+                              <span style={{ color: isToday ? '#3B82F6' : '#71717A', fontSize: '0.75rem' }}>{date.getDate()}/{date.getMonth() + 1}</span>
+                  </div>
+                          );
+                        })}
+                </div>
+                      
+                      {/* Time Grid */}
+                      <div style={{ flex: 1, minWidth: '800px' }}>
+                        {/* Hour Headers */}
+                        <div style={{ display: 'flex', height: '48px', borderBottom: '1px solid #2D2D2D', background: '#141414' }}>
+                          {Array.from({ length: 12 }, (_, i) => {
+                            const hour = 7 + i;
+                      return (
+                              <div key={i} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRight: '1px solid #2D2D2D' }}>
+                                <span style={{ color: '#71717A', fontSize: '0.75rem', fontWeight: 500 }}>{hour}:00</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                        
+                        {/* Day Rows with Tasks */}
+                        {Array.from({ length: 7 }, (_, dayIdx) => {
+                          const date = new Date(ganttStartDate);
+                          date.setDate(date.getDate() - date.getDay() + dayIdx);
+                          const isToday = date.toDateString() === new Date().toDateString();
+                          const dayTasks = filteredTasks.filter(t => {
+                            if (!t.due_date) return false;
+                            const taskDate = new Date(t.due_date);
+                            return taskDate.toDateString() === date.toDateString();
+                          });
+                          
+                          const barColors = ['#06B6D4', '#F97316', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444'];
+                          
+                      return (
+                            <div key={dayIdx} style={{ display: 'flex', height: '80px', borderBottom: '1px solid #2D2D2D', position: 'relative', background: isToday ? '#3B82F608' : 'transparent' }}>
+                              {Array.from({ length: 12 }, (_, i) => (
+                                <div key={i} style={{ flex: 1, borderRight: '1px solid #1F1F1F' }} />
+                              ))}
+                              
+                              {/* Tasks for this day */}
+                              {dayTasks.map((task, taskIdx) => {
+                                const barColor = barColors[taskIdx % barColors.length];
+                                const leftPos = 10 + (taskIdx % 3) * 25;
+                                const width = 40 + (taskIdx % 2) * 20;
+                                
+                                return (
+                                  <div
+                                    key={task.id}
+                                    onClick={() => setSelectedTask(task)}
+                                    style={{
+                                      position: 'absolute',
+                                      top: '50%',
+                                      transform: 'translateY(-50%)',
+                                      left: `${leftPos}%`,
+                                      width: `${width}%`,
+                                      height: '40px',
+                                      background: barColor,
+                                      borderRadius: '0.5rem',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      padding: '0 0.75rem',
+                                      gap: '0.5rem',
+                                      cursor: 'pointer',
+                                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                                      zIndex: taskIdx + 1,
+                                      transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)'; e.currentTarget.style.zIndex = '100'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(-50%)'; e.currentTarget.style.zIndex = String(taskIdx + 1); }}
+                                  >
+                                    {task.assignees?.[0] && (
+                                      <UserAvatar user={task.assignees[0]} size="sm" />
+                                    )}
+                                    <span style={{ color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</span>
+                        </div>
+                      );
+                    })}
+                              
+                              {/* Today indicator line */}
+                              {isToday && (
+                                <div style={{ position: 'absolute', left: `${((new Date().getHours() - 7) / 12) * 100}%`, top: 0, bottom: 0, width: '2px', background: '#EF4444', zIndex: 50 }}>
+                                  <div style={{ position: 'absolute', top: '-6px', left: '50%', transform: 'translateX(-50%)', width: '12px', height: '12px', borderRadius: '50%', background: '#EF4444' }} />
+                  </div>
+                              )}
+                </div>
+                          );
+                        })}
+              </div>
+                    </div>
+                  ) : (
+                    // Month View - Elux Space Timeline Style (dates horizontal, tasks floating)
+                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '1rem' }}>
+                      {/* Date Headers - Horizontal Timeline */}
+                      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 0, marginBottom: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #2D2D2D' }}>
+                        {(() => {
+                          const today = new Date();
+                          const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
+                          const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+                          
+                          return Array.from({ length: daysInMonth }, (_, i) => {
+                            const dayNum = i + 1;
+                            const date = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), dayNum);
+                            const dayOfWeek = date.getDay();
+                            const isToday = dayNum === today.getDate() && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                            
+                            return (
+                              <div key={i} style={{ 
+                                flex: 1,
+                                minWidth: '40px',
+                                display: 'flex', 
+                                flexDirection: 'column', 
+                                alignItems: 'center',
+                                gap: '0.25rem'
+                              }}>
+                                <span style={{ color: isWeekend ? '#52525B' : '#71717A', fontSize: '0.6875rem', fontWeight: 500 }}>
+                                  {dayNames[dayOfWeek]}
+                                </span>
+                                <span style={{ 
+                                  color: isToday ? '#FFFFFF' : isWeekend ? '#52525B' : '#A1A1AA', 
+                                  fontSize: '0.8125rem', 
+                                  fontWeight: isToday ? 700 : 500,
+                                  background: isToday ? '#3B82F6' : 'transparent',
+                                  width: '28px',
+                                  height: '28px',
+                                  borderRadius: '50%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}>
+                                  {dayNum}
+                                </span>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                      
+                      {/* Task Timeline Area */}
+                      <div style={{ flex: 1, position: 'relative', minHeight: '400px', background: '#141414', borderRadius: '0.75rem', overflow: 'hidden' }}>
+                        {/* Today indicator line */}
+                        {(() => {
+                          const today = new Date();
+                          const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
+                          const isCurrentMonth = ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                          if (!isCurrentMonth) return null;
+                          const leftPos = ((today.getDate() - 0.5) / daysInMonth) * 100;
+                          return (
+                            <div style={{ position: 'absolute', left: `${leftPos}%`, top: 0, bottom: 0, width: '2px', background: '#3B82F6', zIndex: 100 }}>
+                              <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', background: '#3B82F6', color: '#FFFFFF', fontSize: '0.625rem', padding: '0.125rem 0.375rem', borderRadius: '0.25rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                {today.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        
+                        {/* Grid lines */}
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', pointerEvents: 'none' }}>
+                          {(() => {
+                            const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
+                            return Array.from({ length: daysInMonth }, (_, i) => (
+                              <div key={i} style={{ flex: 1, minWidth: '40px', borderRight: '1px solid #1F1F1F' }} />
+                            ));
+                          })()}
+                        </div>
+                        
+                        {/* Floating Task Bars */}
+                        {(() => {
+                          const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
+                          const barColors = ['#10B981', '#F97316', '#8B5CF6', '#EC4899', '#06B6D4', '#F59E0B', '#EF4444', '#3B82F6'];
+                          
+                          // Get tasks for this month
+                          const monthTasks = filteredTasks.filter(t => {
+                            if (!t.due_date && !t.start_date) return false;
+                            const taskDate = t.due_date ? new Date(t.due_date) : new Date(t.start_date!);
+                            return taskDate.getMonth() === ganttStartDate.getMonth() && taskDate.getFullYear() === ganttStartDate.getFullYear();
+                          });
+                          
+                          // Position tasks to avoid overlap
+                          const taskPositions: { task: typeof monthTasks[0]; row: number; startDay: number; endDay: number }[] = [];
+                          monthTasks.forEach((task, idx) => {
+                            const endDate = task.due_date ? new Date(task.due_date) : new Date(task.start_date!);
+                            const startDate = task.start_date ? new Date(task.start_date) : new Date(endDate.getTime() - 3 * 24 * 60 * 60 * 1000);
+                            const startDay = Math.max(1, startDate.getMonth() === ganttStartDate.getMonth() ? startDate.getDate() : 1);
+                            const endDay = Math.min(daysInMonth, endDate.getMonth() === ganttStartDate.getMonth() ? endDate.getDate() : daysInMonth);
+                            
+                            // Find available row
+                            let row = 0;
+                            while (taskPositions.some(tp => tp.row === row && !(endDay < tp.startDay || startDay > tp.endDay))) {
+                              row++;
+                            }
+                            taskPositions.push({ task, row, startDay, endDay });
+                          });
+                          
+                          return taskPositions.map(({ task, row, startDay, endDay }, idx) => {
+                            const barColor = barColors[idx % barColors.length];
+                            const leftPos = ((startDay - 1) / daysInMonth) * 100;
+                            const width = Math.max(((endDay - startDay + 1) / daysInMonth) * 100, 5);
+                            const topPos = 20 + row * 60;
+                            
+                            return (
+                              <div
+                                key={task.id}
+                                onClick={() => setSelectedTask(task)}
+                                style={{
+                                  position: 'absolute',
+                                  top: `${topPos}px`,
+                                  left: `${leftPos}%`,
+                                  width: `${width}%`,
+                                  minWidth: '80px',
+                                  height: '44px',
+                                  background: barColor,
+                                  borderRadius: '9999px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  padding: '0 0.75rem',
+                                  gap: '0.5rem',
+                                  cursor: 'pointer',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                  zIndex: idx + 1,
+                                  transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.zIndex = '200'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.25)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.zIndex = String(idx + 1); e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'; }}
+                              >
+                                <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                                  {task.name}
+                                </span>
+                                {/* Assignee avatars */}
+                                <div style={{ display: 'flex', marginLeft: 'auto', flexShrink: 0 }}>
+                                  <AvatarGroup users={task.assignees || []} max={3} size="sm" />
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                        
+                        {/* Empty state */}
+                        {filteredTasks.filter(t => {
+                          if (!t.due_date && !t.start_date) return false;
+                          const taskDate = t.due_date ? new Date(t.due_date) : new Date(t.start_date!);
+                          return taskDate.getMonth() === ganttStartDate.getMonth() && taskDate.getFullYear() === ganttStartDate.getFullYear();
+                        }).length === 0 && (
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ color: '#52525B', fontSize: '0.875rem' }}>No tasks this month</span>
+                          </div>
+                  )}
+                </div>
                     </div>
                   )}
                 </div>
-                <span className="members-count">{(project.members || []).length} members</span>
+              </div>
+
+              {/* Right Sidebar - Mini Calendar */}
+              <div style={{ width: '260px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Mini Calendar */}
+                <div style={{ background: '#1A1A1A', borderRadius: '1rem', padding: '1rem', border: '1px solid #2D2D2D' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <button onClick={() => { const d = new Date(ganttStartDate); d.setMonth(d.getMonth() - 1); setGanttStartDate(d); }} style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: '0.25rem' }}>
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{ganttStartDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                    <button onClick={() => { const d = new Date(ganttStartDate); d.setMonth(d.getMonth() + 1); setGanttStartDate(d); }} style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: '0.25rem' }}>
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem', marginBottom: '0.5rem' }}>
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                      <div key={i} style={{ textAlign: 'center', fontSize: '0.625rem', color: '#52525B', fontWeight: 600 }}>{d}</div>
+                    ))}
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem' }}>
+                    {(() => {
+                      const monthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+                      const startDay = monthStart.getDay();
+                      const daysInMonth = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0).getDate();
+                      const today = new Date();
+                      
+                      return Array.from({ length: 42 }, (_, i) => {
+                        const dayNum = i - startDay + 1;
+                        const isValid = dayNum > 0 && dayNum <= daysInMonth;
+                        const isToday = isValid && dayNum === today.getDate() && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                        
+                    return (
+                          <div key={i} style={{
+                            width: '28px',
+                            height: '28px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.75rem',
+                            color: isToday ? '#FFFFFF' : isValid ? '#A1A1AA' : '#3D3D3D',
+                            background: isToday ? '#3B82F6' : 'transparent',
+                            borderRadius: '0.375rem',
+                            fontWeight: isToday ? 600 : 400,
+                            cursor: isValid ? 'pointer' : 'default'
+                          }}>
+                            {isValid ? dayNum : ''}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+                
+                {/* Upcoming Tasks */}
+                <div style={{ background: '#1A1A1A', borderRadius: '1rem', padding: '1rem', border: '1px solid #2D2D2D', flex: 1 }}>
+                  <h4 style={{ color: '#71717A', fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Upcoming</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+                    {filteredTasks.filter(t => t.due_date && new Date(t.due_date) >= new Date()).slice(0, 5).map((task, i) => {
+                      const colors = ['#06B6D4', '#F97316', '#8B5CF6', '#EC4899', '#10B981'];
+                      return (
+                        <div key={task.id} onClick={() => setSelectedTask(task)} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#252525'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                          <div style={{ width: '4px', height: '32px', background: colors[i % colors.length], borderRadius: '2px' }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>{task.name.length > 20 ? task.name.substring(0, 20) + '...' : task.name}</div>
+                            <div style={{ color: '#71717A', fontSize: '0.6875rem' }}>{new Date(task.due_date!).toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  </div>
+                </div>
               </div>
             </div>
-        </header>
+          ) : selectedView === 'list' ? (
+            // List View - Grouped by Month, then by Status within each month
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {Object.entries(tasksByMonth).sort(([monthA], [monthB]) => {
+                    // Sort: Latest months first, then No Due Date last
+                    if (monthA === 'No Due Date') return 1;
+                    if (monthB === 'No Due Date') return -1;
+                    return new Date(monthB).getTime() - new Date(monthA).getTime();
+              }).map(([month, monthTasks], monthIndex) => {
+                const isMonthExpanded = expandedMonths.includes(month);
+                    
+                // Status breakdown for this month
+                    const statusCounts = TASK_STATUSES.map(status => ({
+                      ...status,
+                      count: monthTasks.filter(t => t.status === status.value).length
+                    })).filter(s => s.count > 0);
+                    
+                    return (
+                  <div key={month} style={{ background: '#1A1A1A', borderRadius: '0.75rem', overflow: 'hidden', border: '1px solid #2D2D2D' }}>
+                    {/* Month Header */}
+                    <div 
+                              onClick={() => {
+                        if (isMonthExpanded) {
+                                  setExpandedMonths(expandedMonths.filter(m => m !== month));
+                                } else {
+                                  setExpandedMonths([...expandedMonths, month]);
+                                }
+                              }}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        padding: '1rem 1.25rem', 
+                        cursor: 'pointer',
+                        borderBottom: isMonthExpanded ? '1px solid #2D2D2D' : 'none',
+                        background: '#141414'
+                      }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <svg style={{ width: '18px', height: '18px', color: '#71717A', transform: isMonthExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                </svg>
+                        <CalIcon style={{ width: '20px', height: '20px', color: '#3B82F6' }} />
+                                <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 600 }}>{month}</span>
+                        <span style={{ 
+                          padding: '0.25rem 0.625rem', 
+                          background: '#2D2D2D', 
+                          borderRadius: '0.375rem', 
+                          fontSize: '0.75rem', 
+                          color: '#A1A1AA', 
+                          fontWeight: 600 
+                        }}>
+                                  {monthTasks.length} {monthTasks.length === 1 ? 'task' : 'tasks'}
+                                </span>
+                </div>
 
-      {error && (
-            <div style={{ padding: '2rem 2rem 0 2rem' }}>
-              <div className="error-message">
-                {error}
-          </div>
-        </div>
-      )}
-
-          <main className="main-content-area">
-        {viewMode === 'board' && (
-          <div className="board-view">
-            <div className="view-description">
-              <h3>Board View</h3>
-              <p>Kanban-style board with drag-and-drop functionality. Organize tasks by status and track progress visually across columns.</p>
+                      {/* Status breakdown badges */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                {statusCounts.map(status => (
+                                  <div key={status.value} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color }} />
+                                    <span style={{ fontSize: '0.8125rem', color: '#A1A1AA', fontWeight: 500 }}>
+                                      {status.count} {status.label}
+                                    </span>
+              </div>
+                                ))}
             </div>
-            
-              <div className="board-grid">
+              </div>
+
+                    {/* Expanded Month Content - Status Groups */}
+                    {isMonthExpanded && (
+                      <div style={{ padding: '0' }}>
+                        {TASK_STATUSES.map((status) => {
+                          const statusTasks = monthTasks.filter(t => t.status === status.value);
+                          if (statusTasks.length === 0) return null;
+                          
+                          const statusKey = `${month}-${status.value}`;
+                          const isStatusExpanded = expandedMonths.includes(statusKey);
+                          
+                                      return (
+                            <div key={status.value} style={{ borderBottom: '1px solid #2D2D2D' }}>
+                              {/* Status Sub-Header */}
+                              <div 
+                                onClick={() => {
+                                  if (isStatusExpanded) {
+                                    setExpandedMonths(expandedMonths.filter(m => m !== statusKey));
+                                  } else {
+                                    setExpandedMonths([...expandedMonths, statusKey]);
+                                  }
+                                }}
+                                style={{ 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'space-between',
+                                  padding: '0.75rem 1.25rem 0.75rem 2.5rem', 
+                                  cursor: 'pointer',
+                                  background: '#0D0D0D'
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                                  <svg style={{ width: '14px', height: '14px', color: '#52525B', transform: isStatusExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                  <span style={{ color: status.color, fontSize: '0.875rem', fontWeight: 600 }}>{status.label}</span>
+                                  <span style={{ 
+                                    padding: '0.125rem 0.5rem', 
+                                    background: `${status.color}20`, 
+                                    borderRadius: '0.375rem', 
+                                    fontSize: '0.6875rem', 
+                                    color: status.color, 
+                                    fontWeight: 600 
+                                  }}>
+                                    {statusTasks.length}
+                                        </span>
+                                  </div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setShowCreateTask(true); }}
+                                  style={{ 
+                                    width: '22px', 
+                                    height: '22px', 
+                                    background: 'transparent', 
+                                    border: 'none', 
+                                    color: '#52525B', 
+                                    cursor: 'pointer', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    borderRadius: '0.25rem',
+                                    transition: 'all 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = '#2D2D2D'; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.color = '#52525B'; e.currentTarget.style.background = 'transparent'; }}
+                                >
+                                  <PlusIcon style={{ width: '14px', height: '14px' }} />
+                            </button>
+                              </div>
+
+                              {/* Status Tasks Table */}
+                              {isStatusExpanded && (
+                                <>
+                                  {/* Table Header */}
+                                  <div style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: '1.5fr 1.5fr 160px 120px 100px 80px 80px',
+                                    padding: '0.75rem 1.5rem',
+                                    background: '#0A0A0A',
+                                    borderBottom: '1px solid #1F1F1F',
+                                    gap: '1rem'
+                                  }}>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      Task Name
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      Description
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      Due Date
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      Type
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      Assignee
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center' }}>
+                                      Priority
+                                    </div>
+                                    <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      Actions
+                                    </div>
+                                  </div>
+
+                                  {/* Task Rows */}
+                                  {statusTasks.map((task) => {
+                                    const tags = task.tags_list || (task.tags ? task.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
+                                    const taskType = tags.length > 0 ? tags[0] : 'General';
+                                    const typeColor = taskType.toLowerCase().includes('dashboard') ? '#3B82F6' : 
+                                                     taskType.toLowerCase().includes('mobile') ? '#8B5CF6' : 
+                                                     taskType.toLowerCase().includes('api') ? '#EC4899' : '#71717A';
+                                    
+                                    return (
+                                      <div 
+                            key={task.id}
+                            onClick={() => setSelectedTask(task)}
+                                        style={{ 
+                                          display: 'grid', 
+                                          gridTemplateColumns: '1.5fr 1.5fr 160px 120px 100px 80px 80px',
+                                          padding: '0.875rem 1.5rem',
+                                          borderBottom: '1px solid #1F1F1F',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.15s',
+                                          gap: '1rem',
+                                          alignItems: 'center'
+                                        }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                                      >
+                                        {/* Task Name */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color, flexShrink: 0 }} />
+                                          <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {task.name}
+                                          </span>
+                    </div>
+
+                                        {/* Description */}
+                                        <div style={{ color: '#71717A', fontSize: '0.8125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                          {task.description || '-'}
+                    </div>
+
+                                        {/* Due Date */}
+                                        <div style={{ color: '#A1A1AA', fontSize: '0.8125rem' }}>
+                                          {task.due_date ? (
+                                            new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                          ) : (
+                                            <span style={{ color: '#52525B' }}>No date</span>
+                                          )}
+                </div>
+
+                                        {/* Type */}
+                                        <div>
+                                          <span style={{ 
+                                            padding: '0.25rem 0.625rem', 
+                                            borderRadius: '9999px', 
+                                            fontSize: '0.6875rem', 
+                                            fontWeight: 500,
+                                            backgroundColor: `${typeColor}20`,
+                                            color: typeColor
+                                          }}>
+                                            {taskType}
+                              </span>
+              </div>
+
+                                        {/* Assignee */}
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                              {task.assignees && task.assignees.length > 0 ? (
+                                            <AvatarGroup users={task.assignees} max={3} size="sm" />
+                              ) : (
+                                            <span style={{ color: '#52525B', fontSize: '0.8125rem' }}>-</span>
+                                          )}
+            </div>
+
+                                        {/* Priority */}
+                                        <div>
+                                          <span style={{ 
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.375rem',
+                                            padding: '0.25rem 0.5rem',
+                                            borderRadius: '9999px',
+                                            fontSize: '0.6875rem',
+                                            fontWeight: 500,
+                                            backgroundColor: task.priority === 'high' ? '#EF444420' : 
+                                                             task.priority === 'medium' ? '#F59E0B20' : '#22C55E20',
+                                            color: task.priority === 'high' ? '#EF4444' : 
+                                                   task.priority === 'medium' ? '#F59E0B' : '#22C55E'
+                                          }}>
+                                            <span style={{ 
+                                              width: '6px', 
+                                              height: '6px', 
+                                              borderRadius: '50%', 
+                                              backgroundColor: task.priority === 'high' ? '#EF4444' : 
+                                                               task.priority === 'medium' ? '#F59E0B' : '#22C55E'
+                                            }} />
+                                            {task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Low'}
+                              </span>
+              </div>
+
+                                        {/* Edit & Delete Buttons */}
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.375rem' }}>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedTask(task);
+                                            }}
+                                            style={{ 
+                                              width: '30px', 
+                                              height: '30px', 
+                                              background: '#1F1F1F', 
+                                              border: '1px solid #2D2D2D', 
+                                              color: '#71717A', 
+                                              cursor: 'pointer',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              borderRadius: '0.5rem',
+                                              transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#3B82F6'; e.currentTarget.style.borderColor = '#3B82F6'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#71717A'; e.currentTarget.style.borderColor = '#2D2D2D'; }}
+                                            title="Edit task"
+                                          >
+                                            <PencilIcon style={{ width: '14px', height: '14px' }} />
+                              </button>
+                                          <button
+                                            onClick={async (e) => {
+                                              e.stopPropagation();
+                                              if (confirm('Delete this task?')) {
+                                                try {
+                                                  await taskService.deleteTask(task.id);
+                                                  setTasks(tasks.filter(t => t.id !== task.id));
+                                                  fetchProject();
+                                                } catch (error) {
+                                                  alert('Error deleting task');
+                                                }
+                                              }
+                                            }}
+                                            style={{ 
+                                              width: '30px', 
+                                              height: '30px', 
+                                              background: '#1F1F1F', 
+                                              border: '1px solid #2D2D2D', 
+                                              color: '#71717A', 
+                                              cursor: 'pointer',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              borderRadius: '0.5rem',
+                                              transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.borderColor = '#EF4444'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#71717A'; e.currentTarget.style.borderColor = '#2D2D2D'; }}
+                                            title="Delete task"
+                                          >
+                                            <TrashIcon style={{ width: '14px', height: '14px' }} />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </>
+                              )}
+                            </div>
+                    );
+                  })}
+                  
+                        {/* Add Task Button */}
+                        <div style={{ padding: '0.75rem 1.25rem 0.75rem 2.5rem', background: '#0D0D0D' }}>
+                      <button
+                        onClick={() => setShowCreateTask(true)}
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '0.5rem', 
+                              color: '#52525B', 
+                              background: 'none', 
+                              border: 'none', 
+                              cursor: 'pointer', 
+                              fontSize: '0.8125rem', 
+                              fontWeight: 500,
+                              transition: 'color 0.2s'
+                            }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                            onMouseLeave={(e) => e.currentTarget.style.color = '#52525B'}
+                      >
+                            <PlusIcon style={{ width: '14px', height: '14px' }} />
+                        Add task
+                      </button>
+          </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : selectedView === 'kanban' ? (
+            // Kanban Board View
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, minmax(280px, 1fr))', gap: '1.25rem', maxWidth: '100%' }}>
             {TASK_STATUSES.map((status) => {
-              const statusTasks = getTasksByStatus(status.value);
+              const statusTasks = filteredTasks.filter(t => t.status === status.value);
+              
               return (
                     <div 
                       key={status.value} 
-                      className={`status-column ${dragOverColumn === status.value ? 'drag-over' : ''}`}
+                  style={{ width: '100%', minWidth: isMobile ? '100%' : '280px', display: 'flex', flexDirection: 'column', transition: 'all 0.2s', borderRadius: '0.75rem', border: dragOverColumn === status.value ? '2px solid #10B981' : '2px solid transparent' }}
                       onDragOver={(e) => handleDragOver(e, status.value)}
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, status.value)}
                     >
-                      <div className="status-header">
-                        <div className="status-title-wrapper">
-                          <h3 className="status-title">{status.label}</h3>
-                        </div>
-                        <span className="status-count">
+                  {/* Column Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', padding: '0 0.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: status.color }} />
+                      <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{status.label}</span>
+                      <span style={{ padding: '0.125rem 0.5rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA', fontWeight: 600 }}>
                       {statusTasks.length}
                     </span>
                   </div>
-                  
-                      <div className="tasks-list">
-                        {statusTasks.length === 0 ? (
-                          <div className="empty-state">
-                            <p>No tasks yet</p>
+                    <button 
+                      onClick={() => setShowCreateTask(true)}
+                      style={{ width: '24px', height: '24px', background: 'none', border: 'none', color: '#52525B', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.25rem', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = '#52525B'}
+                    >
+                      <PlusIcon style={{ width: '20px', height: '20px' }} />
+                    </button>
                           </div>
-                        ) : (
-                          statusTasks.map((task) => {
-                      const priorityConfig = getPriorityConfig(task.priority);
-                            const daysUntilDue = getDaysUntilDue(task.due_date);
-                      const overdue = isOverdue(task.due_date);
+
+                  {/* Tasks */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minHeight: '200px' }}>
+                    {statusTasks.map((task) => {
+                      const taskTags = task.tags_list || (task.tags ? task.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []);
+                      const subtasksTotal = 4;
+                      const subtasksCompleted = Math.floor(Math.random() * 5);
+                      const progress = (subtasksCompleted / subtasksTotal) * 100;
+                      
+                      // Get vibrant color for this task based on status/priority
+                      const getTaskColor = () => {
+                        const colorMap: Record<string, { bg: string; text: string }> = {
+                          'backlog': { bg: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', text: '#FFFFFF' },
+                          'in_progress': { bg: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)', text: '#FFFFFF' },
+                          'done': { bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', text: '#FFFFFF' },
+                          'archived': { bg: 'linear-gradient(135deg, #52525B 0%, #3F3F46 100%)', text: '#FFFFFF' },
+                        };
+                        
+                        // Use status for color, fallback to priority
+                        if (colorMap[task.status]) return colorMap[task.status];
+                        
+                        // Fallback colors by priority
+                        if (task.priority === 'high') return { bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', text: '#FFFFFF' };
+                        if (task.priority === 'medium') return { bg: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)', text: '#FFFFFF' };
+                        return { bg: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)', text: '#FFFFFF' };
+                      };
+                      
+                      const taskColor = getTaskColor();
                       
                       return (
                         <div
                           key={task.id}
-                                className={`task-card ${draggedTask?.id === task.id ? 'dragging' : ''}`}
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, task)}
-                                onDragEnd={() => setDraggedTask(null)}
-                                onClick={(e) => handleTaskClick(task, e)}
-                              >
-                                <div className="task-header">
-                                  <h4 className="task-title">{task.name}</h4>
-                          </div>
-                              
-                              {((task.assignees && task.assignees.length > 0) || task.assignee) && (
-                                    <div className="task-meta-item" style={{ marginTop: '0.5rem' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                    {task.assignees && task.assignees.length > 0 ? (
-                                      <>
-                                        {task.assignees.slice(0, 3).map((assignee, index) => (
-                                          <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                            <div className="assignee-avatar" style={{ 
-                                              width: '24px', 
-                                              height: '24px',
-                                              fontSize: '0.7rem',
-                                              marginLeft: index > 0 ? '-8px' : '0',
-                                              zIndex: task.assignees.length - index,
+                          onClick={() => setSelectedTask(task)}
+                          style={{ 
+                            background: taskColor.bg,
+                            border: 'none',
+                            borderRadius: '14px', 
+                            padding: '14px 16px', 
+                            cursor: 'pointer', 
+                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', 
                                               position: 'relative',
-                                              border: '2px solid #ffffff'
-                                            }}>
-                                              {assignee.name.charAt(0).toUpperCase()}
-                                            </div>
-                                            {index === 0 && task.assignees.length === 1 && (
-                                              <span style={{ fontSize: '0.8rem' }}>{assignee.name}</span>
-                                            )}
-                                          </div>
-                                        ))}
-                                        {task.assignees.length > 3 && (
-                                          <div style={{ 
-                                            width: '24px', 
-                                            height: '24px',
-                                            borderRadius: '50%',
-                                            background: '#6b7280',
-                                            color: '#ffffff',
+                            minHeight: '150px',
+                            maxHeight: '150px',
                                             display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            fontSize: '0.6rem',
-                                            fontWeight: '600',
-                                            marginLeft: '-8px',
-                                            border: '2px solid #ffffff'
-                                          }}>
-                                            +{task.assignees.length - 3}
-                                          </div>
-                                        )}
-                                        {task.assignees.length > 1 && (
-                                          <span style={{ fontSize: '0.75rem', color: '#6b7280', marginLeft: '0.25rem' }}>
-                                            {task.assignees.length} assignees
-                                          </span>
-                                        )}
-                                      </>
-                                    ) : task.assignee ? (
-                                      <>
-                                      <div className="assignee-avatar">
-                                        {task.assignee.name.charAt(0).toUpperCase()}
-                                      </div>
-                                      <span>{task.assignee.name}</span>
-                                      </>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              )}
-                        </div>
-                      );
-                          })
-                        )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-                                </div>
-                              )}
-                              
-        {viewMode === 'list' && (
-          <div className="list-view">
-            <div className="view-description">
-              <h3>List View</h3>
-              <p>View all tasks in a sortable table format with advanced filtering options. Perfect for detailed task management and bulk operations.</p>
-            </div>
-            
-            <div style={{ background: '#ffffff', border: '2px solid #000000', borderRadius: '12px', padding: '2rem' }}>
-              <div style={{ textAlign: 'center', color: '#6b7280', padding: '3rem' }}>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#000000', margin: '0 0 1rem 0' }}>List View Coming Soon!</h3>
-                <p style={{ fontSize: '1rem', margin: '0' }}>Table view with sorting and filtering will be available here.</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {viewMode === 'timeline' && (
-          <div className="timeline-view">
-            <div className="view-description" style={{
-              background: '#FEF7ED',
-              padding: '2rem',
-              borderRadius: '20px',
-              border: '1px solid #FED7AA',
-              marginBottom: '2.5rem',
-              boxShadow: '0 4px 16px rgba(251, 146, 60, 0.08)'
-            }}>
-              <h3 style={{ 
-                fontSize: '1.5rem', 
-                fontWeight: '700', 
-                color: '#EA580C', 
-                margin: '0 0 0.75rem 0',
-                letterSpacing: '-0.025em'
-              }}>Timeline View</h3>
-              <p style={{ 
-                color: '#78716C', 
-                margin: '0', 
-                lineHeight: '1.6',
-                fontSize: '1rem',
-                fontWeight: '500'
-              }}>Track task progress over time with visual progress bars. See start dates, due dates, completion status, and identify overdue tasks at a glance.</p>
-                                    </div>
-            
-            <div className="timeline-header-controls" style={{ marginBottom: '2.5rem' }}>
-              <div className="timeline-stats" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '1.5rem',
-                width: '100%',
-                maxWidth: '1400px',
-                margin: '0 auto'
-              }}>
-                <div className="stat-card" style={{
-                  background: '#FEF3C7',
-                  padding: '2rem 1.5rem',
-                  borderRadius: '20px',
-                  border: '1px solid #F59E0B',
-                  textAlign: 'center',
-                  boxShadow: '0 4px 16px rgba(245, 158, 11, 0.12)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  cursor: 'pointer',
-                  flex: '1',
-                  minWidth: '160px',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(245, 158, 11, 0.24)';
-                  e.currentTarget.style.background = '#FEF3C7';
-                  e.currentTarget.style.borderColor = '#F59E0B';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(245, 158, 11, 0.12)';
-                  e.currentTarget.style.background = '#FEF3C7';
-                  e.currentTarget.style.borderColor = '#F59E0B';
-                }}>
-                  <svg 
-                    style={{
-                      position: 'absolute',
-                      top: '1rem',
-                      right: '1rem',
-                      width: '20px',
-                      height: '20px',
-                      opacity: 0.6
-                    }}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="3" y="3" width="7" height="7" />
-                    <rect x="14" y="3" width="7" height="7" />
-                    <rect x="3" y="14" width="7" height="7" />
-                    <rect x="14" y="14" width="7" height="7" />
-                  </svg>
-                  <div className="stat-value" style={{
-                    fontSize: '2.5rem',
-                    fontWeight: '800',
-                    color: '#92400E',
-                    marginBottom: '0.5rem',
-                    lineHeight: '1'
-                  }}>{tasks.length}</div>
-                  <div className="stat-label" style={{
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: '#78350F',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>Total Tasks</div>
-                </div>
-                
-                <div className="stat-card" style={{
-                  background: '#D1FAE5',
-                  padding: '2rem 1.5rem',
-                  borderRadius: '20px',
-                  border: '1px solid #10B981',
-                  textAlign: 'center',
-                  boxShadow: '0 4px 16px rgba(16, 185, 129, 0.12)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  cursor: 'pointer',
-                  flex: '1',
-                  minWidth: '160px',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(16, 185, 129, 0.24)';
-                  e.currentTarget.style.background = '#A7F3D0';
-                  e.currentTarget.style.borderColor = '#10B981';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.12)';
-                  e.currentTarget.style.background = '#D1FAE5';
-                  e.currentTarget.style.borderColor = '#10B981';
-                }}>
-                  <svg 
-                    style={{
-                      position: 'absolute',
-                      top: '1rem',
-                      right: '1rem',
-                      width: '20px',
-                      height: '20px',
-                      opacity: 0.6
-                    }}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                  <div className="stat-value" style={{
-                    fontSize: '2.5rem',
-                    fontWeight: '800',
-                    color: '#047857',
-                    marginBottom: '0.5rem',
-                    lineHeight: '1'
-                  }}>{tasks.filter(t => t.status === 'done').length}</div>
-                  <div className="stat-label" style={{
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: '#064E3B',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>Completed</div>
-                </div>
-                
-                <div className="stat-card" style={{
-                  background: '#DBEAFE',
-                  padding: '2rem 1.5rem',
-                  borderRadius: '20px',
-                  border: '1px solid #3B82F6',
-                  textAlign: 'center',
-                  boxShadow: '0 4px 16px rgba(59, 130, 246, 0.12)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  cursor: 'pointer',
-                  flex: '1',
-                  minWidth: '160px',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(59, 130, 246, 0.24)';
-                  e.currentTarget.style.background = '#BFDBFE';
-                  e.currentTarget.style.borderColor = '#3B82F6';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(59, 130, 246, 0.12)';
-                  e.currentTarget.style.background = '#DBEAFE';
-                  e.currentTarget.style.borderColor = '#3B82F6';
-                }}>
-                  <svg 
-                    style={{
-                      position: 'absolute',
-                      top: '1rem',
-                      right: '1rem',
-                      width: '20px',
-                      height: '20px',
-                      opacity: 0.6
-                    }}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                  <div className="stat-value" style={{
-                    fontSize: '2.5rem',
-                    fontWeight: '800',
-                    color: '#1E40AF',
-                    marginBottom: '0.5rem',
-                    lineHeight: '1'
-                  }}>{tasks.filter(t => t.status === 'in_progress').length}</div>
-                  <div className="stat-label" style={{
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: '#1E3A8A',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>In Progress</div>
-                </div>
-                
-                <div className="stat-card" style={{
-                  background: '#FEE2E2',
-                  padding: '2rem 1.5rem',
-                  borderRadius: '20px',
-                  border: '1px solid #EF4444',
-                  textAlign: 'center',
-                  boxShadow: '0 4px 16px rgba(239, 68, 68, 0.12)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  cursor: 'pointer',
-                  flex: '1',
-                  minWidth: '160px',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(239, 68, 68, 0.24)';
-                  e.currentTarget.style.background = '#FECACA';
-                  e.currentTarget.style.borderColor = '#EF4444';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(239, 68, 68, 0.12)';
-                  e.currentTarget.style.background = '#FEE2E2';
-                  e.currentTarget.style.borderColor = '#EF4444';
-                }}>
-                  <svg 
-                    style={{
-                      position: 'absolute',
-                      top: '1rem',
-                      right: '1rem',
-                      width: '20px',
-                      height: '20px',
-                      opacity: 0.6
-                    }}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12" y2="16" />
-                  </svg>
-                  <div className="stat-value" style={{
-                    fontSize: '2.5rem',
-                    fontWeight: '800',
-                    color: '#DC2626',
-                    marginBottom: '0.5rem',
-                    lineHeight: '1'
-                  }}>{tasks.filter(t => isOverdue(t.due_date)).length}</div>
-                  <div className="stat-label" style={{
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: '#991B1B',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>Overdue</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="timeline-grid" style={{
-              background: '#FFFFFF',
-              border: '1px solid #F3F4F6',
-              borderRadius: '20px',
-              overflow: 'hidden',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)'
-            }}>
-              <div className="timeline-grid-header" style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 2fr',
-                background: '#FEF3C7',
-                color: '#92400E',
-                fontWeight: '700',
-                padding: '1.5rem',
-                borderBottom: '1px solid #FED7AA'
-              }}>
-                <div className="timeline-task-column" style={{ 
-                  fontSize: '1rem',
-                  letterSpacing: '0.05em',
-                  fontWeight: '800'
-                }}>Task Details</div>
-                <div className="timeline-chart-column" style={{ 
-                  fontSize: '1rem',
-                  letterSpacing: '0.05em',
-                  fontWeight: '800'
-                }}>Progress Timeline</div>
-              </div>
-              
-              <div className="timeline-grid-body" style={{
-                padding: '0'
-              }}>
-                {tasks.length === 0 ? (
-                  <div style={{ 
-                    padding: '4rem 3rem', 
-                    textAlign: 'center', 
-                    color: '#78716C',
-                    background: '#FEFDFB'
-                  }}>
-                    <div style={{
-                      fontSize: '3rem',
-                      marginBottom: '1rem'
-                    }}>📅</div>
-                    <div style={{
-                      fontSize: '1.25rem',
-                      fontWeight: '700',
-                      marginBottom: '0.75rem',
-                      color: '#57534E'
-                    }}>No tasks available</div>
-                    <div style={{ 
-                      fontSize: '1rem',
-                      fontWeight: '500',
-                      lineHeight: '1.5'
-                    }}>Create your first task to see the beautiful timeline visualization</div>
-                  </div>
-                ) : (
-                  sortTasks(tasks).map((task) => {
-                    const startDate = task.start_date ? new Date(task.start_date) : new Date();
-                    const dueDate = task.due_date ? new Date(task.due_date) : null;
-                    const progress = task.status === 'done' ? 100 : 
-                                   task.status === 'review' ? 80 :
-                                   task.status === 'in_progress' ? 50 : 10;
-                    
-                    return (
-                      <div key={task.id} className="timeline-row" style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 2fr',
-                        borderBottom: '1px solid #F3F4F6',
-                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                        cursor: 'pointer',
-                        background: 'transparent'
-                      }} 
-                      onClick={(e) => handleTaskClick(task, e)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#FEF7ED';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(251, 146, 60, 0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}>
-                        <div className="timeline-task-info" style={{
-                          padding: '2rem 1.5rem',
-                          borderRight: '1px solid #F3F4F6'
-                        }}>
-                          <div className="task-name" style={{
-                            fontSize: '1.125rem',
-                            fontWeight: '700',
-                            color: '#57534E',
-                            marginBottom: '1rem',
-                            letterSpacing: '-0.025em',
-                            lineHeight: '1.4'
-                          }}>{task.name}</div>
-                          <div className="task-details" style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '0.875rem',
-                            alignItems: 'center'
-                          }}>
-                            <span className={`task-status-badge status-${task.status}`} style={{
-                              padding: '0.5rem 1rem',
-                              borderRadius: '16px',
-                              fontSize: '0.75rem',
-                              fontWeight: '700',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.05em',
-                              background: task.status === 'done' ? '#D1FAE5' : 
-                                         task.status === 'in_progress' ? '#DBEAFE' : 
-                                         task.status === 'review' ? '#FEF3C7' : '#FEE2E2',
-                              color: task.status === 'done' ? '#047857' : 
-                                     task.status === 'in_progress' ? '#1E40AF' : 
-                                     task.status === 'review' ? '#92400E' : '#DC2626',
-                              border: `2px solid ${task.status === 'done' ? '#10B981' : 
-                                                  task.status === 'in_progress' ? '#3B82F6' : 
-                                                  task.status === 'review' ? '#F59E0B' : '#EF4444'}`,
-                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
-                            }}>
-                              {TASK_STATUSES.find(s => s.value === task.status)?.label}
-                            </span>
-                            {((task.assignees && task.assignees.length > 0) || task.assignee) && (
-                              <span className="task-assignee" style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '0.5rem',
-                                fontSize: '0.875rem',
-                                color: '#78716C',
-                                fontWeight: '600'
-                              }}>
-                                {task.assignees && task.assignees.length > 0 ? (
-                                  <>
-                                    {task.assignees.slice(0, 2).map((assignee, index) => (
-                                      <div key={assignee.id} className="assignee-avatar-sm" style={{ 
-                                        width: '28px',
-                                        height: '28px',
-                                        borderRadius: '50%',
-                                        background: index === 0 ? '#F59E0B' : '#3B82F6',
-                                        color: '#FFFFFF',
-                                        fontSize: '0.75rem',
-                                        fontWeight: '700',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginLeft: index > 0 ? '-10px' : '0',
-                                        zIndex: task.assignees.length - index,
-                                        position: 'relative',
-                                        border: '3px solid #FFFFFF',
-                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                                      }}>
-                                        {assignee.name.charAt(0).toUpperCase()}
-                                      </div>
-                                    ))}
-                                    {task.assignees.length > 2 && (
-                                      <div className="assignee-avatar-sm" style={{ 
-                                        width: '28px',
-                                        height: '28px',
-                                        borderRadius: '50%',
-                                        background: '#10B981',
-                                        color: '#FFFFFF',
-                                        fontSize: '0.75rem',
-                                        fontWeight: '700',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginLeft: '-10px',
-                                        border: '3px solid #FFFFFF',
-                                        zIndex: 1,
-                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                                      }}>
-                                        +{task.assignees.length - 2}
-                                      </div>
-                                    )}
-                                    <span style={{ fontSize: '0.875rem', marginLeft: '0.5rem', color: '#57534E', fontWeight: '600' }}>
-                                      {task.assignees.length === 1 ? task.assignees[0].name : `${task.assignees.length} assignees`}
-                                    </span>
-                                  </>
-                                ) : task.assignee ? (
-                                  <>
-                                    <div className="assignee-avatar-sm" style={{
-                                      width: '28px',
-                                      height: '28px',
-                                      borderRadius: '50%',
-                                      background: '#F59E0B',
-                                      color: '#FFFFFF',
-                                      fontSize: '0.75rem',
-                                      fontWeight: '700',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      border: '3px solid #FFFFFF',
-                                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                                    }}>
-                                  {task.assignee.name.charAt(0).toUpperCase()}
-                                </div>
-                                    <span style={{ color: '#57534E', fontWeight: '600' }}>{task.assignee.name}</span>
-                                  </>
-                                ) : null}
-                              </span>
-                            )}
-                            <span className={`task-priority priority-${task.priority}`} style={{
-                              padding: '0.5rem 1rem',
-                              borderRadius: '16px',
-                              fontSize: '0.75rem',
-                              fontWeight: '700',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.05em',
-                              background: task.priority === 'urgent' ? '#FEE2E2' : 
-                                         task.priority === 'high' ? '#FEF3C7' : 
-                                         task.priority === 'medium' ? '#DBEAFE' : '#F9FAFB',
-                              color: task.priority === 'urgent' ? '#DC2626' : 
-                                     task.priority === 'high' ? '#92400E' : 
-                                     task.priority === 'medium' ? '#1E40AF' : '#6B7280',
-                              border: `2px solid ${task.priority === 'urgent' ? '#EF4444' : 
-                                                  task.priority === 'high' ? '#F59E0B' : 
-                                                  task.priority === 'medium' ? '#3B82F6' : '#D1D5DB'}`,
-                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
-                            }}>
-                              {task.priority}
-                            </span>
-                          </div>
-                                </div>
-
-                        <div className="timeline-chart" style={{
-                          padding: '2rem 1.5rem'
-                        }}>
-                          <div className="timeline-bar-container" style={{
-                            marginBottom: '1.5rem'
-                          }}>
-                            <div style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              marginBottom: '1rem'
-                            }}>
-                              <span style={{
-                                fontSize: '0.875rem',
-                                fontWeight: '600',
-                                color: '#57534E'
-                              }}>{progress}% Complete</span>
-                            </div>
-                            <div 
-                              className="timeline-bar"
-                                      style={{
-                                width: '100%',
-                                height: '4px',
-                                background: '#F3F4F6',
-                                overflow: 'hidden',
-                                position: 'relative'
+                            flexDirection: 'column',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+                          }}
+                          onMouseEnter={(e) => { 
+                            e.currentTarget.style.transform = 'translateY(-3px)'; 
+                            e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.35)';
+                          }}
+                          onMouseLeave={(e) => { 
+                            e.currentTarget.style.transform = 'translateY(0)'; 
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.25)';
+                          }}
+                        >
+                          {/* Header with Checkbox and Delete Button */}
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Toggle task completion
                               }}
-                            >
-                              <div 
-                                className="timeline-progress"
-                                style={{ 
-                                  width: `${Math.max(progress, 5)}%`,
-                                  height: '100%',
-                                  background: task.status === 'done' ? '#10B981' : 
-                                             task.status === 'in_progress' ? '#3B82F6' : 
-                                             task.status === 'review' ? '#F59E0B' : '#F59E0B',
-                                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                                  position: 'relative'
-                                }}
-                              />
-                            </div>
-                            <div className="timeline-dates" style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              fontSize: '0.75rem',
-                              marginTop: '1rem',
-                              color: '#78716C'
-                            }}>
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                              }}>
-                                <span style={{ fontWeight: '600' }}>Start:</span>
-                                <span>{startDate.toLocaleDateString()}</span>
-                              </div>
-                              {dueDate && (
-                                <div style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.5rem'
-                                }}>
-                                  <span style={{ fontWeight: '600' }}>Due:</span>
-                                  <span style={{
-                                    color: isOverdue(task.due_date) ? '#DC2626' : '#78716C',
-                                    fontWeight: isOverdue(task.due_date) ? '600' : 'normal'
-                                  }}>{dueDate.toLocaleDateString()}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                                </div>
-                        </div>
-                      );
-                          })
-                        )}
-                  </div>
-            </div>
-            
-            <div className="timeline-info" style={{ marginTop: '2.5rem' }}>
-              <div className="info-card" style={{ 
-                background: '#FEF7ED', 
-                border: '1px solid #FED7AA', 
-                borderRadius: '20px', 
-                padding: '2rem', 
-                boxShadow: '0 4px 16px rgba(251, 146, 60, 0.08)'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  marginBottom: '1rem'
-                }}>
-                  <svg 
-                    style={{
-                      width: '24px',
-                      height: '24px',
-                      opacity: 0.6
-                    }}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="12" y1="20" x2="12" y2="10" />
-                    <line x1="18" y1="20" x2="18" y2="4" />
-                    <line x1="6" y1="20" x2="6" y2="16" />
-                  </svg>
-                  <h4 style={{ 
-                    fontSize: '1.125rem', 
-                    fontWeight: '800', 
-                    color: '#EA580C', 
-                    margin: '0',
-                    letterSpacing: '-0.025em'
-                  }}>Progress Guide</h4>
-                </div>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)',
-                  gap: '1rem',
-                  marginBottom: '1.5rem',
-                  maxWidth: '1400px',
-                  margin: '0 auto'
-                }}>
-                  <div style={{
-                    background: '#FFFFFF',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    borderLeft: '4px solid #F59E0B'
-                  }}>
-                    <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#57534E', marginBottom: '0.25rem' }}>Planning</div>
-                    <div style={{ fontSize: '1.125rem', color: '#92400E', fontWeight: '700' }}>10%</div>
-                  </div>
-                  <div style={{
-                    background: '#FFFFFF',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    borderLeft: '4px solid #3B82F6'
-                  }}>
-                    <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#57534E', marginBottom: '0.25rem' }}>In Progress</div>
-                    <div style={{ fontSize: '1.125rem', color: '#1E40AF', fontWeight: '700' }}>50%</div>
-                  </div>
-                  <div style={{
-                    background: '#FFFFFF',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    borderLeft: '4px solid #F59E0B'
-                  }}>
-                    <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#57534E', marginBottom: '0.25rem' }}>Review</div>
-                    <div style={{ fontSize: '1.125rem', color: '#92400E', fontWeight: '700' }}>80%</div>
-                  </div>
-                  <div style={{
-                    background: '#FFFFFF',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    borderLeft: '4px solid #10B981'
-                  }}>
-                    <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#57534E', marginBottom: '0.25rem' }}>Complete</div>
-                    <div style={{ fontSize: '1.125rem', color: '#047857', fontWeight: '700' }}>100%</div>
-                  </div>
-                </div>
-                <p style={{ 
-                  fontSize: '0.925rem', 
-                  margin: '0', 
-                  color: '#78716C', 
-                  lineHeight: '1.6',
-                  fontWeight: '500',
-                  textAlign: 'center'
-                }}>
-                  Tasks are automatically color-coded by status. Overdue items are highlighted with a red border for immediate attention.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {viewMode === 'gantt' && (
-          <div className="gantt-view">
-            {/* Header Section */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              marginBottom: '2rem',
-              borderBottom: '2px solid #E5E7EB',
-              paddingBottom: '1rem',
-              background: '#ffffff'
-            }}>
-              <div>
-                <h1 style={{ 
-                  fontSize: '2rem', 
-                  fontWeight: 'bold', 
-                  margin: '0', 
-                  color: '#000000'
-                }}>
-                  Gantt Chart
-                </h1>
-                <p style={{ fontSize: '1rem', color: '#666666', margin: '0.5rem 0 0 0' }}>
-                  {project?.name || 'Project'} • {ganttView === 'task' ? 'Task Management' : 'Timeline Visualization'}
-                </p>
-              </div>
-              
-              {/* Tab Navigation */}
-              <div style={{ 
-                display: 'flex', 
-                gap: '0.5rem',
-                background: '#F9FAFB',
-                borderRadius: '8px',
-                padding: '0.25rem',
-                border: '2px solid #E5E7EB'
-              }}>
-                <button
-                  onClick={() => setGanttView('task')}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    border: 'none',
-                    background: ganttView === 'task' ? '#000000' : 'transparent',
-                    color: ganttView === 'task' ? '#FFFFFF' : '#374151',
-                    borderRadius: '6px',
-                    fontWeight: '600',
-                    fontSize: '0.875rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    letterSpacing: '0.025em'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (ganttView !== 'task') {
-                      e.currentTarget.style.background = '#E5E7EB';
-                      e.currentTarget.style.color = '#000000';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (ganttView !== 'task') {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = '#374151';
-                    }
-                  }}
-                >
-                  Tasks
-                </button>
-                <button
-                  onClick={() => setGanttView('gantt')}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    border: 'none',
-                    background: ganttView === 'gantt' ? '#000000' : 'transparent',
-                    color: ganttView === 'gantt' ? '#FFFFFF' : '#374151',
-                    borderRadius: '6px',
-                    fontWeight: '600',
-                    fontSize: '0.875rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    letterSpacing: '0.025em'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (ganttView !== 'gantt') {
-                      e.currentTarget.style.background = '#E5E7EB';
-                      e.currentTarget.style.color = '#000000';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (ganttView !== 'gantt') {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = '#374151';
-                    }
-                  }}
-                >
-                  Gantt Chart
-                </button>
-              </div>
-            </div>
-
-            {/* Tasks Tab Content - Gantt Left Sidebar */}
-            {ganttView === 'task' && (
-              <div>
-            
-                <div className="gantt-sidebar-enhanced" style={{ 
-                  width: '100%', 
-                  maxWidth: 'none',
-                  background: '#ffffff',
-                  border: '2px solid #E5E7EB',
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  marginBottom: '2rem'
-                }}>
-                  <div className="gantt-sidebar-header-enhanced" style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '2fr 0.8fr 1.2fr 0.8fr 0.8fr',
-                    background: '#F9FAFB', 
-                    border: 'none',
-                    borderBottom: '1px solid #E5E7EB',
-                    minWidth: '100%',
-                    width: '100%'
-                  }}>
-                    <div style={{ 
-                      padding: '1rem 1rem', 
-                      fontWeight: '700', 
-                      color: '#374151', 
-                      fontSize: '0.875rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      borderRight: '1px solid #E5E7EB',
-                      textAlign: 'left',
-                      letterSpacing: '0.025em'
-                    }}>
-                      TASK
-                </div>
-                    <div style={{ 
-                      padding: '1rem 0.5rem', 
-                      fontWeight: '700', 
-                      color: '#374151', 
-                      fontSize: '0.875rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRight: '1px solid #E5E7EB',
-                      textAlign: 'center',
-                      letterSpacing: '0.025em'
-                    }}>
-                      DURATION
-              </div>
-                    <div style={{ 
-                      padding: '1rem 0.5rem', 
-                      fontWeight: '700', 
-                      color: '#374151', 
-                      fontSize: '0.875rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRight: '1px solid #E5E7EB',
-                      textAlign: 'center',
-                      letterSpacing: '0.025em'
-                    }}>
-                      ASSIGNEE
-            </div>
-                    <div style={{ 
-                      padding: '1rem 0.5rem', 
-                      fontWeight: '700', 
-                      color: '#374151', 
-                      fontSize: '0.875rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRight: '1px solid #E5E7EB',
-                      textAlign: 'center',
-                      letterSpacing: '0.025em'
-                    }}>
-                      STATUS
-                </div>
-                    <div style={{ 
-                      padding: '1rem 0.5rem', 
-                      fontWeight: '700', 
-                      color: '#374151', 
-                      fontSize: '0.875rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                      letterSpacing: '0.025em'
-                    }}>
-                      PRIORITY
-                    </div>
-                  </div>
-                                     <div className="gantt-tasks-enhanced" style={{ 
-                     background: '#ffffff',
-                     border: 'none',
-                     overflow: 'hidden'
-                   }}>
-                  {tasks.length === 0 ? (
-                       <div className="gantt-empty-state" style={{
-                         padding: '3rem',
-                         textAlign: 'center',
-                         color: '#6b7280',
-                         background: '#f9fafb'
-                       }}>
-                         <p style={{ margin: '0', fontSize: '1.1rem' }}>No tasks available</p>
-                         <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Create your first task to get started!</p>
-                    </div>
-                  ) : (
-                    sortTasks(tasks).map((task) => {
-                      const taskStartDate = task.start_date ? new Date(task.start_date) : new Date();
-                      const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-                      const durationInDays = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (24 * 60 * 60 * 1000)));
-                      
-                      return (
-                          <div 
-                            key={task.id} 
-                            className="gantt-task-row-enhanced"
-                            onClick={(e) => handleTaskClick(task, e)}
-                            style={{ 
-                              cursor: 'pointer', 
-                              transition: 'all 0.2s ease',
-                              borderBottom: '1px solid #E5E7EB'
-                            }}
-                            onMouseOver={(e) => {
-                              e.currentTarget.style.backgroundColor = '#F8FAFC';
-                              e.currentTarget.style.transform = 'translateY(-1px)';
-                              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
-                            }}
-                            onMouseOut={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                              e.currentTarget.style.transform = 'translateY(0)';
-                              e.currentTarget.style.boxShadow = 'none';
-                            }}
-                          >
-                                                         <div className="gantt-task-info-enhanced" style={{ 
-                               display: 'grid',
-                               gridTemplateColumns: '2fr 0.8fr 1.2fr 0.8fr 0.8fr',
-                               width: '100%',
-                               background: '#ffffff',
-                               minHeight: '50px'
-                             }}>
-                               <div className="gantt-task-name-enhanced" style={{ 
-                                 display: 'flex', 
-                                 flexDirection: 'column', 
-                                 gap: '0.25rem',
-                                 padding: '1rem 1rem',
-                                 borderRight: '1px solid #E5E7EB',
-                                 justifyContent: 'center'
-                               }}>
-                                 <span className="task-title" style={{ 
-                                   fontWeight: '600', 
-                                   color: '#1F2937', 
-                                   fontSize: '0.875rem', 
-                                   lineHeight: '1.3',
-                                   wordWrap: 'break-word',
-                                   overflowWrap: 'break-word',
-                                   wordBreak: 'break-word',
-                                   whiteSpace: 'normal',
-                                   hyphens: 'auto',
-                                   maxWidth: '100%'
-                                 }}>{task.name}</span>
-                                 {task.description && (
-                                   <span style={{ fontSize: '0.75rem', color: '#6B7280', lineHeight: '1.3' }}>
-                                     {task.description.substring(0, 30)}{task.description.length > 30 ? '...' : ''}
-                                     </span>
-                                   )}
-                               </div>
-                               <div className="gantt-task-duration" style={{ 
-                                 display: 'flex', 
-                                 alignItems: 'center', 
-                                 justifyContent: 'center', 
-                                 fontWeight: '600',
-                                 fontSize: '0.875rem',
-                                 color: '#374151',
-                                 borderRight: '1px solid #E5E7EB',
-                                 padding: '1rem 0.5rem'
-                               }}>
-                                 {durationInDays}d
-                               </div>
-                               <div className="gantt-task-assignee" style={{ 
-                                 display: 'flex', 
-                                 alignItems: 'center', 
-                                 justifyContent: 'center',
-                                 gap: '0.5rem',
-                                 padding: '1rem 0.5rem',
-                                 borderRight: '1px solid #E5E7EB'
-                               }}>
-                              {task.assignee ? (
-                                   <>
-                                     <div className="assignee-avatar-enhanced" style={{
-                                       width: '24px',
-                                       height: '24px',
-                                       borderRadius: '50%',
-                                       background: '#F3F4F6',
-                                       color: '#374151',
-                                       border: '2px solid #E5E7EB',
-                                       display: 'flex',
-                                       alignItems: 'center',
-                                       justifyContent: 'center',
-                                       fontSize: '0.75rem',
-                                       fontWeight: '600'
-                                     }}>
-                                  {task.assignee.name.charAt(0).toUpperCase()}
-                                </div>
-                                     <span style={{ fontSize: '0.75rem', color: '#374151', fontWeight: '500' }}>{task.assignee.name.split(' ')[0]}</span>
-                                   </>
-                              ) : (
-                                   <span className="unassigned" style={{ color: '#9CA3AF', fontStyle: 'italic', fontSize: '0.75rem' }}>Unassigned</span>
-                              )}
-                            </div>
-                               <div style={{ 
-                                 display: 'flex', 
-                                 alignItems: 'center', 
-                                 justifyContent: 'center',
-                                 borderRight: '1px solid #E5E7EB',
-                                 padding: '1rem 0.5rem'
-                               }}>
-                                 <span style={{
-                                   padding: '0.25rem 0.5rem',
-                                   borderRadius: '6px',
-                                   fontSize: '0.75rem',
-                                   fontWeight: '600',
-                                   background: getStatusConfig(task.status).color,
-                                   color: '#1F2937',
-                                   border: '1px solid #E5E7EB',
-                                   textTransform: 'capitalize',
-                                   letterSpacing: '0.025em'
-                                 }}>
-                                   {TASK_STATUSES.find(s => s.value === task.status)?.label || task.status}
-                                 </span>
-                               </div>
-                               <div style={{ 
-                                 display: 'flex', 
-                                 alignItems: 'center', 
-                                 justifyContent: 'center',
-                                 padding: '1rem 0.5rem'
-                               }}>
-                                 <span style={{
-                                   padding: '0.25rem 0.5rem',
-                                   borderRadius: '6px',
-                                   fontSize: '0.75rem',
-                                   fontWeight: '600',
-                                   background: getPriorityConfig(task.priority).color + '20',
-                                   color: getPriorityConfig(task.priority).color,
-                                   border: '1px solid ' + getPriorityConfig(task.priority).color + '40',
-                                   textTransform: 'capitalize',
-                                   letterSpacing: '0.025em'
-                                 }}>
-                                   {task.priority}
-                                 </span>
-                               </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-              </div>
-            )}
-
-            {/* Gantt Chart Tab Content - Timeline Only */}
-            {ganttView === 'gantt' && (
-              <div>
-            
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '1.5rem',
-                  padding: '1rem',
-                  background: '#F9FAFB',
-                  border: '2px solid #E5E7EB',
-                  borderRadius: '12px'
-                }}>
-                  <button style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.75rem 1.5rem',
-                    background: '#ffffff',
-                    color: '#374151',
-                    border: '2px solid #E5E7EB',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#F3F4F6';
-                    e.currentTarget.style.borderColor = '#D1D5DB';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#ffffff';
-                    e.currentTarget.style.borderColor = '#E5E7EB';
-                  }}>
-                    <AdjustmentsHorizontalIcon style={{ width: '16px', height: '16px' }} />
-                    Filters
-                  </button>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1rem',
-                    background: '#ffffff',
-                    padding: '0.5rem',
-                    borderRadius: '8px',
-                    border: '2px solid #E5E7EB'
-                  }}>
-                    <button 
-                      onClick={handlePreviousYear}
-                      style={{
-                        padding: '0.5rem',
-                        background: 'transparent',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#374151',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#F3F4F6';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
-                    </button>
-                    <span style={{
-                      fontSize: '1rem',
-                      fontWeight: '600',
-                      color: '#1F2937',
-                      minWidth: '140px',
-                      textAlign: 'center'
-                    }}>
-                      {timelineStartDate.getFullYear()}
-                    </span>
-                    <button 
-                      onClick={handleNextYear}
-                      style={{
-                        padding: '0.5rem',
-                        background: 'transparent',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#374151',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#F3F4F6';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      <ChevronRightIcon style={{ width: '16px', height: '16px' }} />
-                    </button>
-                  </div>
-                </div>
-
-            <div className="gantt-chart-enhanced" style={{
-              width: '100%',
-              maxWidth: '100%',
-              overflow: 'visible',
-              background: '#ffffff',
-              borderRadius: '12px',
-              border: '2px solid #E5E7EB',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}>
-
-
-              <div className="gantt-timeline-enhanced" style={{ 
-                width: '100%', 
-                maxWidth: '100%',
-                overflowX: 'auto',
-                overflowY: 'hidden',
-                boxSizing: 'border-box',
-                scrollbarWidth: 'thin',
-                background: '#ffffff'
-              }}>
-                                  <div className="gantt-timeline-header-enhanced" style={{ minWidth: '2600px' }}>
-                    <div className="gantt-year-header" style={{
-                      background: '#F9FAFB',
-                      padding: '0.75rem 1rem',
-                      borderBottom: '1px solid #E5E7EB',
-                      textAlign: 'left',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '1rem'
-                    }}>
-                      <div className="year-label" style={{
-                        fontSize: '1rem',
-                        fontWeight: '700',
-                        color: '#1F2937'
-                      }}>{getProjectStartDate().getFullYear()}</div>
-                      <div style={{
-                        fontSize: '0.75rem',
-                        color: '#6B7280',
-                        fontWeight: '500'
-                      }}>
-                        52 weeks • January to December
-                      </div>
-                    </div>
-                    <div className="gantt-week-headers" style={{ display: 'flex', width: '2600px' }}>
-                      {Array.from({ length: 52 }, (_, weekIndex) => {
-                        const weekNumber = weekIndex + 1;
-                        const weekStartDate = getWeekStartDate(getProjectStartDate().getFullYear(), weekNumber);
-                      
-                                              // Check if this week contains current date
-                        const currentDate = new Date();
-                        const weekEndDate = new Date(weekStartDate);
-                        weekEndDate.setDate(weekStartDate.getDate() + 6);
-                        const isCurrentWeek = currentDate >= weekStartDate && currentDate <= weekEndDate;
-                        
-                        return (
-                          <div key={weekIndex} className="week-header" style={{ 
-                            width: '50px',
-                            minWidth: '50px',
-                            padding: '0.5rem 0.25rem',
-                            borderRight: weekIndex < 51 ? '1px solid #E5E7EB' : 'none',
-                            fontWeight: isCurrentWeek ? '700' : '600',
-                            textAlign: 'center',
-                            background: isCurrentWeek 
-                              ? 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)' 
-                              : weekIndex % 2 === 0 ? '#F9FAFB' : '#ffffff',
-                            boxSizing: 'border-box',
-                            color: isCurrentWeek ? '#ffffff' : '#374151',
-                            fontSize: '0.75rem',
-                            transition: 'all 0.3s ease',
-                            cursor: 'pointer',
-                            borderRadius: isCurrentWeek ? '6px' : '0',
-                            boxShadow: isCurrentWeek ? '0 2px 8px rgba(59, 130, 246, 0.3)' : 'none'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isCurrentWeek) {
-                              e.currentTarget.style.background = 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)';
-                              e.currentTarget.style.transform = 'translateY(-1px)';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isCurrentWeek) {
-                              e.currentTarget.style.background = weekIndex % 2 === 0 ? '#F9FAFB' : '#ffffff';
-                              e.currentTarget.style.transform = 'translateY(0)';
-                            }
-                          }}
-                          >
-                            <div style={{ 
-                              marginBottom: '0.25rem',
-                              textShadow: isCurrentWeek ? '0 1px 2px rgba(0, 0, 0, 0.1)' : 'none'
-                            }}>
-                              W{weekNumber}
-                            </div>
-                            <div style={{ 
-                              fontSize: '0.6rem', 
-                              color: isCurrentWeek ? 'rgba(255, 255, 255, 0.9)' : '#6B7280', 
-                              fontWeight: '400',
-                              textShadow: isCurrentWeek ? '0 1px 2px rgba(0, 0, 0, 0.1)' : 'none'
-                            }}>
-                              {weekStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            </div>
-                          </div>
-                        );
-                    })}
-                  </div>
-                </div>
-                
-                <div className="gantt-grid-container" style={{ 
-                  minWidth: '2600px',
-                  position: 'relative',
-                  minHeight: tasks.length > 0 ? `${tasks.length * 65}px` : '200px',
-                  background: '#ffffff'
-                }}>
-                  <div className="gantt-vertical-grid" style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '2600px',
-                    height: '100%',
-                    pointerEvents: 'none',
-                    zIndex: 1
-                  }}>
-                    {Array.from({ length: 53 }, (_, i) => (
-                      <div key={i} className="grid-line-vertical" style={{
-                        position: 'absolute',
-                        left: `${(i * 50)}px`,
-                        top: 0,
-                        height: '100%',
-                        width: '1px',
-                        background: i === 0 || i === 52 ? '#D1D5DB' : '#F3F4F6'
-                      }}></div>
-                    ))}
-                  </div>
-                  
-                  <div className="gantt-bars-enhanced" style={{ 
-                    minWidth: '2600px',
-                    position: 'relative',
-                    zIndex: 2
-                  }}>
-                    {tasks.length === 0 ? (
-                      <div className="gantt-bars-empty" style={{
-                        padding: '3rem',
-                        textAlign: 'center',
-                        color: '#6B7280',
-                        background: '#F9FAFB',
-                        borderRadius: '8px',
-                        margin: '2rem'
-                      }}>
-                        <p style={{ margin: '0', fontSize: '1.1rem', fontWeight: '600' }}>No tasks available</p>
-                        <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Create your first task to see it on the timeline!</p>
-                      </div>
-                    ) : (
-                      sortTasks(tasks).map((task, taskIndex) => {
-                        const taskStartDate = task.start_date ? new Date(task.start_date) : new Date();
-                        const taskDueDate = task.due_date ? new Date(task.due_date) : new Date(taskStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-                        const durationInWeeks = Math.max(1, Math.ceil((taskDueDate.getTime() - taskStartDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
-                        
-                        // Calculate position relative to year start
-                        const taskStartWeek = getWeekNumber(taskStartDate);
-                        
-                        // Calculate width and position for 52-week timeline
-                        const barWidth = Math.min((durationInWeeks * 50), 52 * 50 - 50); // 50px per week
-                        const barLeft = Math.max(0, (taskStartWeek - 1) * 50); // 50px per week
-                        
-
-                        
-                        const statusConfig = getStatusConfig(task.status);
-                        const isOverdueTask = isOverdue(task.due_date);
-                        
-                                                  return (
-                            <div key={task.id} className="gantt-bar-row-enhanced" style={{
-                              position: 'relative',
-                              height: '65px',
-                              borderBottom: '1px solid #F3F4F6',
-                              background: taskIndex % 2 === 0 ? '#FAFBFC' : '#ffffff'
-                            }}>
-                              {/* Task Bar */}
-                              <div 
-                                className={`gantt-bar-enhanced status-${task.status} ${isOverdueTask ? 'overdue' : ''}`}
-                                style={{
-                                  width: `${barWidth}px`,
-                                  left: `${barLeft}px`,
-                                  position: 'absolute',
-                                  height: '40px',
-                                  background: getTaskBgColor(task.status),
-                                  border: `2px solid ${getTaskColor(task.status)}`,
-                                  borderRadius: '10px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                  padding: '0 0.75rem',
-                                  overflow: 'hidden'
-                                }}
-                                title={`${task.name}\nStart: ${taskStartDate.toLocaleDateString()}\nDue: ${taskDueDate.toLocaleDateString()}\nDuration: ${durationInWeeks} weeks\nStatus: ${TASK_STATUSES.find(s => s.value === task.status)?.label}\nAssignee: ${task.assignee?.name || task.assignees?.map(a => a.name).join(', ') || 'Unassigned'}`}
-                                onClick={(e) => handleTaskClick(task, e)}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
-                                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.2)';
-                                  e.currentTarget.style.zIndex = '10';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                                  e.currentTarget.style.zIndex = '2';
-                                }}
-                              >
-                                {/* Task Content */}
-                                <div style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  width: '100%',
-                                  gap: '0.5rem'
-                                }}>
-                                  {/* Left side - Task name and assignee */}
-                                  <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    flex: 1,
-                                    minWidth: 0
-                                  }}>
-                                    {/* Assignee Avatar */}
-                                    {(task.assignee || task.assignees?.[0]) && (
-                                      <div style={{
-                                        width: '24px',
-                                        height: '24px',
-                                        borderRadius: '50%',
-                                        background: '#ffffff',
-                                        border: '2px solid rgba(255, 255, 255, 0.3)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '0.75rem',
-                                        fontWeight: '700',
-                                        color: getTaskColor(task.status),
-                                        flexShrink: 0
-                                      }}>
-                                        {(task.assignee?.name || task.assignees?.[0]?.name || 'U').charAt(0).toUpperCase()}
-                                      </div>
-                                    )}
-                                    
-                                    {/* Task Name */}
-                                    <span style={{
-                                      color: '#ffffff',
-                                      fontSize: '0.875rem',
-                                      fontWeight: '600',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                      whiteSpace: 'nowrap',
-                                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
-                                    }}>
-                                      {task.name}
-                                    </span>
-                                  </div>
-                                  
-                                  {/* Right side - Duration */}
-                                  <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.25rem',
-                                    flexShrink: 0
-                                  }}>
-                                    <span style={{
-                                      fontSize: '0.75rem',
-                                      fontWeight: '600',
-                                      color: 'rgba(255, 255, 255, 0.9)',
-                                      background: 'rgba(255, 255, 255, 0.2)',
-                                      padding: '0.125rem 0.375rem',
-                                      borderRadius: '4px',
-                                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
-                                    }}>
-                                      {durationInWeeks}w
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                      })
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="gantt-legend">
-              <div className="legend-section">
-                <h4>Status Legend</h4>
-                <div className="legend-items">
-                  <div className="legend-item">
-                    <div 
-                      className="legend-color" 
-                      style={{ backgroundColor: '#ffffff', borderStyle: 'dashed' }}
-                    ></div>
-                    <span>To Do</span>
-                  </div>
-                  <div className="legend-item">
-                    <div 
-                      className="legend-color" 
-                      style={{ backgroundColor: '#f3f4f6' }}
-                    ></div>
-                    <span>In Progress</span>
-                  </div>
-                  <div className="legend-item">
-                    <div 
-                      className="legend-color" 
-                      style={{ backgroundColor: '#e5e7eb' }}
-                    ></div>
-                    <span>Review</span>
-                  </div>
-                  <div className="legend-item">
-                    <div 
-                      className="legend-color" 
-                      style={{ backgroundColor: '#d1d5db' }}
-                    ></div>
-                    <span>Done</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="legend-section">
-                <h4>Priority Legend</h4>
-                <div className="legend-items">
-                  <div className="legend-item">
-                    <div 
-                      className="legend-priority-dot" 
-                      style={{ width: '8px', backgroundColor: '#9ca3af' }}
-                    ></div>
-                    <span>Low</span>
-                  </div>
-                  <div className="legend-item">
-                    <div 
-                      className="legend-priority-dot" 
-                      style={{ width: '12px', backgroundColor: '#6b7280' }}
-                    ></div>
-                    <span>Medium</span>
-                  </div>
-                  <div className="legend-item">
-                    <div 
-                      className="legend-priority-dot" 
-                      style={{ width: '16px', backgroundColor: '#374151' }}
-                    ></div>
-                    <span>High</span>
-                  </div>
-                  <div className="legend-item">
-                    <div 
-                      className="legend-priority-dot" 
-                      style={{ width: '16px', height: '3px', backgroundColor: '#111827' }}
-                    ></div>
-                    <span>Urgent</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="legend-section">
-                <h4>Progress Indicators</h4>
-                <div className="legend-items">
-                  <div className="legend-item">
-                    <div className="progress-example">
-                      <div className="progress-bar" style={{ 
-                        width: '50%', 
-                        background: 'repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(0, 0, 0, 0.2) 1px, rgba(0, 0, 0, 0.2) 2px)' 
-                      }}></div>
-                    </div>
-                    <span>Task Progress</span>
-                  </div>
-                  <div className="legend-item">
-                    <div style={{ 
-                      width: '12px', 
-                      height: '12px', 
-                      background: '#111827', 
-                      color: '#ffffff', 
-                      borderRadius: '2px', 
-                      fontSize: '0.5rem', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      fontWeight: '700'
-                    }}>!</div>
-                    <span>Overdue Task</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {viewMode === 'todo' && (
-          <div className="todo-view">
-            <div className="view-description">
-              <h3>To Do List</h3>
-              <p>Advanced to-do list for quick task management. Add, edit, and organize todos with priorities, categories, and due dates.</p>
-            </div>
-            
-            <div className="todo-container">
-              <TodoListComponent projectId={Number(params?.id)} projectMembers={project.members} />
-            </div>
-          </div>
-        )}
-      </main>
-
-      {showCreateTask && (
-            <div className="modal-overlay" style={{ 
-              position: 'fixed', 
-              inset: 0, 
-              background: 'rgba(0, 0, 0, 0.8)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              padding: '1rem', 
-              zIndex: 50 
-            }}>
-              <div className="modal-content" style={{ 
-                background: '#ffffff', 
-                border: '2px solid #000000', 
-                padding: '2rem', 
-                width: '100%', 
-                maxWidth: '800px', 
-                borderRadius: '12px', 
-                maxHeight: '90vh', 
-                overflowY: 'auto', 
-                overflowX: 'hidden',
-                boxSizing: 'border-box',
-                WebkitOverflowScrolling: 'touch'
-              }}>
-                <h2 className="modal-title">Create New Task</h2>
-                <form onSubmit={handleCreateTask} style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: '1.5rem' 
-                }}>
-                                      <div className="form-group">
-                      <label className="form-label">Task Name</label>
-                <input
-                  type="text"
-                  required
-                        className="form-input"
-                        placeholder="Enter task name..."
-                  value={newTask.name}
-                  onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
-                />
-              </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Description</label>
-                <textarea
-                        className="form-textarea"
-                  rows={3}
-                        placeholder="Describe what needs to be done..."
-                  value={newTask.description}
-                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                />
-              </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Priority</label>
-                      <select
-                        className="form-select"
-                        value={newTask.priority}
-                        onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-                      >
-                        {PRIORITY_LEVELS.map(priority => (
-                          <option key={priority.value} value={priority.value}>
-                            {priority.icon} {priority.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Assignees</label>
-                      <div style={{ 
-                        border: '2px solid #e5e7eb', 
-                        borderRadius: '8px', 
-                        padding: '0.75rem',
-                        background: '#ffffff',
-                        minHeight: '120px',
-                        maxHeight: '200px',
-                        overflowY: 'auto'
-                      }}>
-                        {project.members.length === 0 ? (
-                          <div style={{ color: '#6b7280', fontStyle: 'italic', textAlign: 'center', padding: '1rem' }}>
-                            No team members available
-                          </div>
-                        ) : (
-                          project.members.map(member => (
-                            <label 
-                              key={member.id} 
-                              style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '0.5rem',
-                                padding: '0.5rem',
+                              style={{
+                                width: '18px',
+                                height: '18px',
+                                borderRadius: '5px',
+                                border: '2px solid rgba(255,255,255,0.9)',
+                                background: 'rgba(255,255,255,0.15)',
                                 cursor: 'pointer',
-                                borderRadius: '4px',
-                                transition: 'background-color 0.2s ease',
-                                marginBottom: '0.25rem'
+                                flexShrink: 0,
+                                marginTop: '2px',
                               }}
-                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
-                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={newTask.assignee_ids.includes(member.id)}
-                                onChange={(e) => {
-                                  console.log('Checkbox clicked for member:', member.name, 'Checked:', e.target.checked);
-                                  console.log('Current assignee_ids:', newTask.assignee_ids);
-                                  
-                                  if (e.target.checked) {
-                                    const newAssigneeIds = [...newTask.assignee_ids, member.id];
-                                    console.log('Adding member, new assignee_ids:', newAssigneeIds);
-                                    setNewTask({ 
-                                      ...newTask, 
-                                      assignee_ids: newAssigneeIds
-                                    });
-                                  } else {
-                                    const newAssigneeIds = newTask.assignee_ids.filter(id => id !== member.id);
-                                    console.log('Removing member, new assignee_ids:', newAssigneeIds);
-                                    setNewTask({ 
-                                      ...newTask, 
-                                      assignee_ids: newAssigneeIds
-                                    });
-                                  }
-                                }}
-                                style={{ 
-                                  marginRight: '0.5rem',
-                                  accentColor: '#000000',
-                                  transform: 'scale(1.2)'
-                                }}
-                              />
-                              <div style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '50%',
-                                background: newTask.assignee_ids.includes(member.id) ? '#000000' : '#f3f4f6',
-                                color: newTask.assignee_ids.includes(member.id) ? '#ffffff' : '#000000',
-                                border: '2px solid #000000',
+                            />
+                            <h3 style={{ 
+                              color: '#FFFFFF', 
+                              fontWeight: 600, 
+                              fontSize: '14px', 
+                              lineHeight: 1.4, 
+                              margin: 0, 
+                              flex: 1,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                            }}>{task.name}</h3>
+                            {/* Delete Button */}
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (!confirm('Are you sure you want to delete this task?')) return;
+                                  try {
+                                    await taskService.deleteTask(task.id);
+                                  await fetchProject();
+                                } catch (err) {
+                                  console.error('Error deleting task:', err);
+                                  alert('Failed to delete task');
+                                }
+                              }}
+                              style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: 'rgba(239, 68, 68, 0.2)',
+                                color: '#EF4444',
+                                cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: '0.875rem',
-                                fontWeight: '600'
-                              }}>
-                                {member.name.charAt(0).toUpperCase()}
-                              </div>
+                                flexShrink: 0,
+                                transition: 'all 0.2s',
+                                opacity: 0.8,
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#EF4444';
+                                e.currentTarget.style.color = '#FFFFFF';
+                                e.currentTarget.style.opacity = '1';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                                e.currentTarget.style.color = '#EF4444';
+                                e.currentTarget.style.opacity = '0.8';
+                              }}
+                            >
+                              <TrashIcon style={{ width: '14px', height: '14px' }} />
+                            </button>
+                          </div>
+            
+                          {/* Date */}
+                          {task.due_date && (
+                            <div style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '6px', 
+                              marginBottom: '10px',
+                              color: 'rgba(255,255,255,0.85)',
+                              fontSize: '12px',
+                              fontWeight: 500,
+                            }}>
+                              <CalIcon style={{ width: '14px', height: '14px' }} />
+                              {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </div>
+                          )}
+
+                          {/* Priority Badge */}
+                          {task.priority && (
+                            <div style={{ marginBottom: '12px' }}>
                               <span style={{ 
-                                fontSize: '0.9rem', 
-                                fontWeight: '500',
-                                color: newTask.assignee_ids.includes(member.id) ? '#000000' : '#374151'
+                                padding: '4px 10px', 
+                                borderRadius: '6px', 
+                                fontSize: '11px', 
+                                fontWeight: 600,
+                                background: 'rgba(255,255,255,0.2)',
+                                color: '#FFFFFF',
+                                textTransform: 'capitalize',
                               }}>
-                        {member.name}
+                                {task.priority} priority
                               </span>
-                            </label>
-                          ))
+                  </div>
+                          )}
+
+                          {/* Spacer */}
+                          <div style={{ flex: 1 }} />
+                
+                          {/* Footer with Assignee */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                            <AvatarGroup users={task.assignees || []} max={3} size="sm" />
+                                    </div>
+                </div>
+                      );
+                    })}
+
+                    {/* Empty State */}
+                    {statusTasks.length === 0 && (
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '150px', border: '2px dashed #2D2D2D', borderRadius: '0.75rem', background: 'transparent' }}>
+                        <span style={{ color: '#52525B', fontSize: '0.875rem' }}>No tasks</span>
+                </div>
+                    )}
+
+                    {/* Add New Task Button */}
+                    <button
+                      onClick={() => {
+                        setNewTaskColumn(status.value);
+                        setShowCreateTask(true);
+                      }}
+                    style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        background: 'transparent',
+                        border: '1px dashed #2D2D2D',
+                        borderRadius: '0.5rem',
+                        color: '#71717A',
+                  cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        marginTop: '0.5rem'
+                }}
+                onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#1A1A1A';
+                        e.currentTarget.style.borderColor = '#3D3D3D';
+                        e.currentTarget.style.color = '#FFFFFF';
+                }}
+                onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.borderColor = '#2D2D2D';
+                        e.currentTarget.style.color = '#71717A';
+                      }}
+                    >
+                      <PlusIcon style={{ width: '16px', height: '16px' }} />
+                      Add New Task
+                    </button>
+                </div>
+                </div>
+              );
+            })}
+            </div>
+          ) : (
+            // Growth Map View - Team Member Focus
+            <div style={{ display: 'flex', gap: '1.5rem', height: '100%', padding: '0.5rem' }}>
+              {/* Left Panel - Project Info & Team Groups */}
+              <div style={{ width: '220px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Project Card */}
+                <div style={{ background: 'linear-gradient(135deg, #1F1F1F 0%, #141414 100%)', borderRadius: '1rem', padding: '1.25rem', border: '1px solid #2D2D2D' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '0.75rem', background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <FolderIcon style={{ width: '22px', height: '22px', color: '#FFFFFF' }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 600, margin: 0 }}>{project.name}</h3>
+                      <p style={{ color: '#71717A', fontSize: '0.6875rem', margin: '0.25rem 0 0' }}>Project tasks overview</p>
+                    </div>
+                  </div>
+                  
+                  <p style={{ color: '#52525B', fontSize: '0.625rem', marginBottom: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>Team members</p>
+                  <AvatarGroup users={project.members || []} max={4} size="sm" />
+            </div>
+
+                {/* In Progress Section */}
+                {(() => {
+                  const monthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+                  const monthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
+                  const isTaskInMonth = (t: Task) => {
+                    const due = t.due_date ? new Date(t.due_date) : null;
+                    const start = t.start_date ? new Date(t.start_date) : null;
+                    if (due && due >= monthStart && due <= monthEnd) return true;
+                    if (start && start >= monthStart && start <= monthEnd) return true;
+                    if (start && due && start <= monthEnd && due >= monthStart) return true;
+                    return false;
+                  };
+                  const monthInProgress = tasks.filter(t => t.status === 'in_progress' && isTaskInMonth(t));
+                  const monthCompleted = tasks.filter(t => t.status === 'done' && isTaskInMonth(t));
+                  const monthTodo = tasks.filter(t => t.status === 'todo' && isTaskInMonth(t));
+                  
+                  return (
+                    <>
+                      <div style={{ background: '#141414', borderRadius: '0.75rem', padding: '0.875rem', border: '1px solid #2D2D2D' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: monthInProgress.length > 0 ? '0.625rem' : 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
+                            <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>In Progress</span>
+                          </div>
+                          <span style={{ color: '#3B82F6', fontSize: '0.75rem', fontWeight: 600 }}>{monthInProgress.length}</span>
+                        </div>
+                        {monthInProgress.length > 0 && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                            {monthInProgress.slice(0, 2).map(task => (
+                              <div key={task.id} onClick={() => setSelectedTask(task)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem', borderRadius: '0.375rem', cursor: 'pointer', background: '#1A1A1A', transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#252525'} onMouseLeave={(e) => e.currentTarget.style.background = '#1A1A1A'}>
+                                <div style={{ width: '24px', height: '24px', borderRadius: '0.375rem', background: '#2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', color: '#A1A1AA' }}>{task.name.charAt(0)}</div>
+                                <span style={{ color: '#A1A1AA', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{task.name}</span>
+                              </div>
+                            ))}
+                                </div>
+                              )}
+                      </div>
+
+                      {/* Completed Section */}
+                      <div style={{ background: '#141414', borderRadius: '0.75rem', padding: '0.875rem', border: '1px solid #2D2D2D' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
+                            <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>Completed</span>
+                          </div>
+                          <span style={{ color: '#10B981', fontSize: '0.75rem', fontWeight: 600 }}>{monthCompleted.length}</span>
+              </div>
+            </div>
+
+                      {/* To Do Section */}
+                      <div style={{ background: '#141414', borderRadius: '0.75rem', padding: '0.875rem', border: '1px solid #2D2D2D' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444' }} />
+                            <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>To Do</span>
+                          </div>
+                          <span style={{ color: '#EF4444', fontSize: '0.75rem', fontWeight: 600 }}>{monthTodo.length}</span>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* Main Growth Map Timeline */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                  <div>
+                    <h2 style={{ color: '#FFFFFF', fontSize: '1.375rem', fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>My growth map</h2>
+                    <p style={{ color: '#52525B', fontSize: '0.8125rem', margin: '0.25rem 0 0' }}>Track your team progress for the month</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button 
+                      onClick={() => {
+                        const d = new Date(ganttStartDate);
+                        d.setMonth(d.getMonth() - 1);
+                        setGanttStartDate(d);
+                      }}
+                      style={{ width: '36px', height: '36px', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#71717A', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#71717A'; }}
+                    >
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
+                      <CalIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
+                      <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500 }}>
+                        {ganttStartDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const d = new Date(ganttStartDate);
+                        d.setMonth(d.getMonth() + 1);
+                        setGanttStartDate(d);
+                      }}
+                      style={{ width: '36px', height: '36px', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#71717A', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#71717A'; }}
+                    >
+                      <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Team Member Timeline with Progress Bars */}
+                <div style={{ flex: 1, background: '#141414', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #1F1F1F', overflow: 'auto' }}>
+                  {/* Week Headers */}
+                  <div style={{ display: 'flex', marginBottom: '1.25rem', paddingLeft: '200px' }}>
+                    {['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'].map((week, i) => {
+                      const today = new Date();
+                      const weekOfMonth = Math.ceil(today.getDate() / 7);
+                      const isCurrentWeek = i + 1 === weekOfMonth && ganttStartDate.getMonth() === today.getMonth() && ganttStartDate.getFullYear() === today.getFullYear();
+                      
+                      return (
+                        <div key={week} style={{ flex: 1, textAlign: 'center', position: 'relative' }}>
+                          <span style={{ color: isCurrentWeek ? '#10B981' : '#52525B', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{week}</span>
+                          {isCurrentWeek && (
+                            <div style={{ position: 'absolute', top: '1.75rem', left: '50%', transform: 'translateX(-50%)', width: '2px', height: 'calc(100vh - 400px)', background: 'linear-gradient(180deg, #EF4444 0%, transparent 100%)', zIndex: 10 }}>
+                              <div style={{ position: 'absolute', top: '-0.625rem', left: '50%', transform: 'translateX(-50%)', padding: '0.25rem 0.5rem', background: '#10B981', borderRadius: '0.25rem', color: '#FFF', fontSize: '0.5625rem', fontWeight: 600, whiteSpace: 'nowrap', textTransform: 'uppercase' }}>Today</div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Team Member Rows with Progress */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {project.members?.map((member, memberIdx) => {
+                      const memberColors = ['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#06B6D4', '#84CC16'];
+                      const memberColor = memberColors[memberIdx % memberColors.length];
+                      
+                      // Get tasks for this member in the CURRENT SELECTED MONTH only
+                      const monthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+                      const monthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
+                      
+                      const allMemberTasks = tasks.filter(t => {
+                        // Must be assigned to this member
+                        if (!t.assignees?.some(a => a.id === member.id)) return false;
+                        
+                        // Check if task falls within the selected month
+                        const dueDate = t.due_date ? new Date(t.due_date) : null;
+                        const startDate = t.start_date ? new Date(t.start_date) : null;
+                        
+                        // Task is in month if due date is in month, or start date is in month, or spans the month
+                        if (dueDate && dueDate >= monthStart && dueDate <= monthEnd) return true;
+                        if (startDate && startDate >= monthStart && startDate <= monthEnd) return true;
+                        if (startDate && dueDate && startDate <= monthEnd && dueDate >= monthStart) return true;
+                        
+                        return false;
+                      });
+                      const completedTasks = allMemberTasks.filter(t => t.status === 'done').length;
+                      const totalTasks = allMemberTasks.length;
+                      const completionPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                      
+                      return (
+                        <div key={member.id} style={{ display: 'flex', alignItems: 'center', padding: '0.75rem 0', borderBottom: memberIdx < (project.members?.length || 0) - 1 ? '1px solid #1F1F1F' : 'none' }}>
+                          {/* Member info */}
+                          <div style={{ width: '200px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.75rem', paddingRight: '1rem' }}>
+                            <UserAvatar user={member} size="lg" />
+                            <div style={{ overflow: 'hidden' }}>
+                              <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {member.name.length > 12 ? member.name.substring(0, 12) + '...' : member.name}
+                              </span>
+                              <span style={{ color: '#52525B', fontSize: '0.6875rem' }}>{completedTasks}/{totalTasks} done</span>
+                            </div>
+                          </div>
+                          
+                          {/* Progress Bar - Full width like previous UI */}
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{ flex: 1, height: '32px', background: '#1F1F1F', borderRadius: '9999px', overflow: 'hidden', position: 'relative' }}>
+                              {/* Filled Progress */}
+                              <div style={{ 
+                                position: 'absolute',
+                                left: 0,
+                                top: 0,
+                                height: '100%', 
+                                width: `${completionPercent}%`, 
+                                background: `linear-gradient(90deg, ${memberColor} 0%, ${memberColor}AA 100%)`,
+                                borderRadius: '9999px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                paddingLeft: '0.75rem',
+                                transition: 'width 0.5s ease'
+                              }}>
+                                {completionPercent > 15 && (
+                                  <span style={{ color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 600 }}>{completionPercent}% Complete</span>
+                                )}
+                              </div>
+                              {/* Show percentage outside if bar is too small */}
+                              {completionPercent <= 15 && completionPercent > 0 && (
+                                <span style={{ position: 'absolute', left: `calc(${completionPercent}% + 0.5rem)`, top: '50%', transform: 'translateY(-50%)', color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 500 }}>{completionPercent}%</span>
+                              )}
+                              {completionPercent === 0 && (
+                                <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#52525B', fontSize: '0.75rem' }}>No tasks completed</span>
+                              )}
+                            </div>
+                            
+                            {/* Percentage Badge */}
+                            <div style={{ 
+                              minWidth: '48px',
+                              padding: '0.375rem 0.625rem',
+                              background: completionPercent >= 80 ? '#10B98120' : completionPercent >= 50 ? '#F59E0B20' : completionPercent > 0 ? '#3B82F620' : '#2D2D2D',
+                              borderRadius: '9999px',
+                              textAlign: 'center'
+                            }}>
+                              <span style={{ 
+                                color: completionPercent >= 80 ? '#10B981' : completionPercent >= 50 ? '#F59E0B' : completionPercent > 0 ? '#3B82F6' : '#52525B',
+                                fontSize: '0.8125rem',
+                                fontWeight: 700
+                              }}>
+                                {completionPercent}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Panel - Overview & Reminders */}
+              <div style={{ width: '220px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Overview Card */}
+                <div style={{ background: 'linear-gradient(135deg, #1F1F1F 0%, #141414 100%)', borderRadius: '1rem', padding: '1.25rem', border: '1px solid #2D2D2D' }}>
+                  <h4 style={{ color: '#52525B', fontSize: '0.625rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.375rem' }}>Overview</h4>
+                  <p style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600, marginBottom: '1rem' }}>{project.name}</p>
+                  
+                  {/* Progress Ring - Current Month Only */}
+                  {(() => {
+                    // Filter tasks for current selected month
+                    const overviewMonthStart = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth(), 1);
+                    const overviewMonthEnd = new Date(ganttStartDate.getFullYear(), ganttStartDate.getMonth() + 1, 0);
+                    
+                    const monthTasks = tasks.filter(t => {
+                      const dueDate = t.due_date ? new Date(t.due_date) : null;
+                      const startDate = t.start_date ? new Date(t.start_date) : null;
+                      if (dueDate && dueDate >= overviewMonthStart && dueDate <= overviewMonthEnd) return true;
+                      if (startDate && startDate >= overviewMonthStart && startDate <= overviewMonthEnd) return true;
+                      if (startDate && dueDate && startDate <= overviewMonthEnd && dueDate >= overviewMonthStart) return true;
+                      return false;
+                    });
+                    
+                    const monthDone = monthTasks.filter(t => t.status === 'done').length;
+                    const monthInProgress = monthTasks.filter(t => t.status === 'in_progress').length;
+                    const totalMonthTasks = Math.max(monthTasks.length, 1);
+                    
+                    return (
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                        <div style={{ position: 'relative', width: '120px', height: '120px' }}>
+                          <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#1F1F1F" strokeWidth="10" />
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" strokeWidth="10" 
+                              strokeDasharray={`${(monthDone / totalMonthTasks) * 251.2} 251.2`} 
+                              strokeLinecap="round" />
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#F59E0B" strokeWidth="10" 
+                              strokeDasharray={`${(monthInProgress / totalMonthTasks) * 251.2} 251.2`}
+                              strokeDashoffset={`${-(monthDone / totalMonthTasks) * 251.2}`}
+                              strokeLinecap="round" />
+                          </svg>
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ color: '#FFFFFF', fontSize: '1.5rem', fontWeight: 700 }}>
+                              {Math.round((monthDone / totalMonthTasks) * 100)}%
+                            </span>
+                            <span style={{ color: '#52525B', fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Complete</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* Legend */}
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', fontSize: '0.6875rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
+                      <span style={{ color: '#71717A' }}>Done</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F59E0B' }} />
+                      <span style={{ color: '#71717A' }}>Active</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reminder Card */}
+                <div style={{ background: '#141414', borderRadius: '1rem', padding: '1.25rem', border: '1px solid #2D2D2D', flex: 1 }}>
+                  <h4 style={{ color: '#52525B', fontSize: '0.625rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1rem' }}>Reminder</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                    {tasks.filter(t => t.status !== 'done' && t.due_date).slice(0, 4).map((task, i) => {
+                      const taskColors = ['#86EFAC', '#FDE047', '#FDA4AF', '#A5B4FC'];
+                      return (
+                        <div key={task.id} onClick={() => setSelectedTask(task)} style={{ cursor: 'pointer', padding: '0.625rem', borderRadius: '0.5rem', background: '#1A1A1A', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#252525'} onMouseLeave={(e) => e.currentTarget.style.background = '#1A1A1A'}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '0.375rem', background: taskColors[i % taskColors.length], display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.6875rem', fontWeight: 600, color: '#000' }}>{task.name.charAt(0)}</div>
+                            <div style={{ flex: 1, overflow: 'hidden' }}>
+                              <p style={{ color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 500, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.name}</p>
+                              <p style={{ color: '#3B82F6', fontSize: '0.6875rem', margin: '0.125rem 0 0', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No date'}
+                                <svg style={{ width: '10px', height: '10px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Team Members Modal */}
+      {showProjectMembers && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }} onClick={() => setShowProjectMembers(false)}>
+          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '32rem', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D' }}>
+              <div>
+                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Team Members</h2>
+                <p style={{ fontSize: '0.8125rem', color: '#71717A', margin: '0.25rem 0 0' }}>{project.members?.length || 0} members in this project</p>
+              </div>
+              <button
+                onClick={() => setShowProjectMembers(false)}
+                style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+              </button>
+            </div>
+            
+            {/* Members List */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {project.members?.map((member, i) => {
+                  const memberTasks = tasks.filter(t => t.assignees?.some(a => a.id === member.id));
+                  const completedTasks = memberTasks.filter(t => t.status === 'done').length;
+                  const isEditing = editingMemberId === member.id;
+                  const roleOptions = ['Admin', 'Manager', 'Member', 'Developer', 'Designer', 'QA', 'Viewer'];
+                  
+                  return (
+                    <div 
+                      key={member.id}
+                      style={{ 
+                        padding: '1rem',
+                        background: isEditing ? '#1F1F1F' : '#141414',
+                        borderRadius: '0.75rem',
+                        border: isEditing ? '1px solid #3B82F6' : '1px solid #2D2D2D',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {/* Avatar */}
+                        <UserAvatar user={member} size="lg" />
+                        
+                        {/* Info */}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                            <span style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 500 }}>{member.name}</span>
+                            {!isEditing && (
+                              <span style={{ 
+                                padding: '0.125rem 0.5rem', 
+                                background: member.role === 'admin' || member.role === 'Admin' ? '#3B82F620' : 
+                                           member.role === 'Manager' ? '#8B5CF620' : '#71717A20', 
+                                borderRadius: '0.25rem', 
+                                fontSize: '0.6875rem', 
+                                color: member.role === 'admin' || member.role === 'Admin' ? '#3B82F6' : 
+                                       member.role === 'Manager' ? '#8B5CF6' : '#71717A',
+                                fontWeight: 500,
+                                textTransform: 'capitalize'
+                              }}>
+                                {member.role || 'Member'}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ color: '#71717A', fontSize: '0.8125rem' }}>{member.email}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', fontSize: '0.75rem' }}>
+                            <span style={{ color: '#A1A1AA' }}>{memberTasks.length} tasks</span>
+                            <span style={{ color: '#10B981' }}>{completedTasks} done</span>
+                          </div>
+                        </div>
+                        
+                        {/* Actions */}
+                        {!isEditing && (
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingMemberId(member.id);
+                                setEditingMemberRole(member.role || 'Member');
+                              }}
+                              style={{ 
+                                padding: '0.5rem 0.875rem', 
+                                background: '#2D2D2D', 
+                                border: 'none', 
+                                borderRadius: '0.5rem', 
+                                color: '#A1A1AA', 
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.375rem'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#3B82F6'; e.currentTarget.style.color = '#FFFFFF'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                            >
+                              <PencilIcon style={{ width: '14px', height: '14px' }} />
+                              Edit
+                            </button>
+                            {member.id !== user?.id && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeMember(member.id);
+                                }}
+                                style={{ 
+                                  padding: '0.5rem 0.875rem', 
+                                  background: '#2D2D2D', 
+                                  border: 'none', 
+                                  borderRadius: '0.5rem', 
+                                  color: '#A1A1AA', 
+                                  fontSize: '0.75rem',
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.375rem'
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#EF4444'; e.currentTarget.style.color = '#FFFFFF'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                              >
+                                <TrashIcon style={{ width: '14px', height: '14px' }} />
+                                Remove
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
-                      {newTask.assignee_ids.length > 0 && (
-                        <div style={{ 
-                          marginTop: '0.5rem', 
-                          padding: '0.75rem', 
-                          background: newTask.assignee_ids.length > 1 ? '#dcfce7' : '#f0f9ff', 
-                          border: newTask.assignee_ids.length > 1 ? '2px solid #16a34a' : '1px solid #3b82f6', 
-                          borderRadius: '6px',
-                          fontSize: '0.9rem',
-                          color: newTask.assignee_ids.length > 1 ? '#15803d' : '#1e40af',
-                          fontWeight: '600'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            {newTask.assignee_ids.length > 1 && <span style={{ fontSize: '1.2rem' }}>✅</span>}
-                            <strong>
-                              {newTask.assignee_ids.length} assignee{newTask.assignee_ids.length === 1 ? '' : 's'} selected
-                              {newTask.assignee_ids.length > 1 && ' (Multiple assignees!)'}
-                            </strong>
+                      
+                      {/* Edit Mode - Role Selection */}
+                      {isEditing && (
+                        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #2D2D2D' }}>
+                          <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Select Role
+                          </label>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                            {roleOptions.map(role => (
+                              <button
+                                key={role}
+                                onClick={() => { setEditingMemberRole(role); setCustomRoleInput(''); }}
+                                style={{
+                                  padding: '0.5rem 0.875rem',
+                                  background: editingMemberRole === role ? '#3B82F6' : '#2D2D2D',
+                                  border: editingMemberRole === role ? '1px solid #3B82F6' : '1px solid #3D3D3D',
+                                  borderRadius: '0.5rem',
+                                  color: editingMemberRole === role ? '#FFFFFF' : '#A1A1AA',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => { if (editingMemberRole !== role) { e.currentTarget.style.background = '#3D3D3D'; e.currentTarget.style.color = '#FFFFFF'; }}}
+                                onMouseLeave={(e) => { if (editingMemberRole !== role) { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}}
+                              >
+                                {role}
+                              </button>
+                            ))}
                           </div>
-                          <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', opacity: 0.8 }}>
-                            Selected: {project.members.filter(m => newTask.assignee_ids.includes(m.id)).map(m => m.name).join(', ')}
+                          
+                          {/* Custom Role Input */}
+                          <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', marginBottom: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              Or enter custom role
+                            </label>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <input
+                                type="text"
+                                value={customRoleInput}
+                                onChange={(e) => setCustomRoleInput(e.target.value)}
+                                placeholder="e.g. Product Owner, Scrum Master..."
+                                style={{
+                                  flex: 1,
+                                  padding: '0.625rem 0.875rem',
+                                  background: '#141414',
+                                  border: '1px solid #3D3D3D',
+                                  borderRadius: '0.5rem',
+                                  color: '#FFFFFF',
+                                  fontSize: '0.8125rem',
+                                  outline: 'none'
+                                }}
+                                onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                                onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                              />
+                              <button
+                                onClick={() => {
+                                  if (customRoleInput.trim()) {
+                                    setEditingMemberRole(customRoleInput.trim());
+                                  }
+                                }}
+                                disabled={!customRoleInput.trim()}
+                                style={{
+                                  padding: '0.625rem 1rem',
+                                  background: customRoleInput.trim() ? '#3B82F6' : '#2D2D2D',
+                                  border: 'none',
+                                  borderRadius: '0.5rem',
+                                  color: customRoleInput.trim() ? '#FFFFFF' : '#52525B',
+                                  fontSize: '0.8125rem',
+                                  fontWeight: 500,
+                                  cursor: customRoleInput.trim() ? 'pointer' : 'not-allowed',
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                Apply
+                              </button>
+                            </div>
+                            {editingMemberRole && !roleOptions.includes(editingMemberRole) && (
+                              <p style={{ color: '#10B981', fontSize: '0.75rem', marginTop: '0.375rem' }}>
+                                Custom role selected: {editingMemberRole}
+                              </p>
+                            )}
+                          </div>
+                          
+                          {/* Action Buttons */}
+                          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={() => {
+                                setEditingMemberId(null);
+                                setEditingMemberRole('');
+                                setCustomRoleInput('');
+                              }}
+                              style={{
+                                padding: '0.5rem 1rem',
+                                background: 'transparent',
+                                border: '1px solid #3D3D3D',
+                                borderRadius: '0.5rem',
+                                color: '#A1A1AA',
+                                fontSize: '0.8125rem',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#71717A'; e.currentTarget.style.color = '#FFFFFF'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  // Note: Role updates are not currently supported in the backend
+                                  // To change a role, remove and re-add the member
+                                  alert('Role updates are not yet supported. To change a member\'s role, please remove them and add them back with the new role.');
+                                  
+                                  setEditingMemberId(null);
+                                  setEditingMemberRole('');
+                                  setCustomRoleInput('');
+                                } catch (err) {
+                                  console.error('Error updating role:', err);
+                                  alert('Failed to update role. Please try again.');
+                                }
+                              }}
+                              style={{
+                                padding: '0.5rem 1.25rem',
+                                background: '#10B981',
+                                border: 'none',
+                                borderRadius: '0.5rem',
+                                color: '#FFFFFF',
+                                fontSize: '0.8125rem',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
+                            >
+                              Save Role
+                            </button>
                           </div>
                         </div>
                       )}
-                </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Start Date</label>
-                      <input
-                        type="date"
-                        className="form-input"
-                        value={newTask.start_date}
-                        onChange={(e) => setNewTask({ ...newTask, start_date: e.target.value })}
-                      />
                     </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Due Date</label>
-                      <input
-                        type="date"
-                        className="form-input"
-                  value={newTask.due_date}
-                        onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                      />
+                  );
+                })}
               </div>
+            </div>
+            
+            {/* Footer */}
+            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #2D2D2D', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button
+                onClick={() => {
+                  fetchAvailableUsers();
+                  setShowAddMemberModal(true);
+                }}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem', 
+                  padding: '0.625rem 1rem', 
+                  background: 'transparent', 
+                  border: '1px solid #3B82F6', 
+                  borderRadius: '0.5rem', 
+                  color: '#3B82F6', 
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#3B82F6'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#3B82F6'; }}
+              >
+                <PlusIcon style={{ width: '16px', height: '16px' }} />
+                Add Member
+              </button>
+              <button
+                onClick={leaveProject}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem', 
+                  padding: '0.625rem 1rem', 
+                  background: 'transparent', 
+                  border: '1px solid #EF4444', 
+                  borderRadius: '0.5rem', 
+                  color: '#EF4444', 
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#EF4444'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#EF4444'; }}
+              >
+                Leave Project
+              </button>
+              <button
+                onClick={() => setShowProjectMembers(false)}
+                style={{ 
+                  padding: '0.625rem 1.25rem', 
+                  background: '#2D2D2D', 
+                  border: 'none', 
+                  borderRadius: '0.5rem', 
+                  color: '#FFFFFF', 
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#3D3D3D'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-                    <div className="form-group">
-                      <label className="form-label">Duration (minutes)</label>
-                      <input
-                        type="number"
-                        min="5"
-                        step="5"
-                        className="form-input"
-                        placeholder="30"
-                        value={newTask.duration}
-                        onChange={(e) => setNewTask({ ...newTask, duration: parseInt(e.target.value) || 30 })}
-                      />
-                      <small style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
-                        Estimated time to complete this task
-                      </small>
-              </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Tags</label>
+      {/* Add Member Modal */}
+      {showAddMemberModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }} onClick={() => setShowAddMemberModal(false)}>
+          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '28rem', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }} onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D' }}>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Add Team Member</h2>
+              <p style={{ fontSize: '0.8125rem', color: '#71717A', margin: '0.25rem 0 0' }}>Select a user to add to this project</p>
+            </div>
+            
+            {/* Content */}
+            <div style={{ padding: '1.5rem' }}>
+              {/* User Search */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Search User
+                </label>
                 <input
                   type="text"
-                        className="form-input"
-                        placeholder="frontend, urgent, bug (comma-separated)"
-                  value={newTask.tags}
-                  onChange={(e) => setNewTask({ ...newTask, tags: e.target.value })}
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  placeholder="Type user name..."
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: '#141414',
+                    border: '1px solid #3D3D3D',
+                    borderRadius: '0.5rem',
+                    color: '#FFFFFF',
+                    fontSize: '0.875rem',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
                 />
-              </div>
-
-                  <div className="button-group" style={{ 
-                    display: 'flex', 
-                    gap: '1rem', 
-                    marginTop: '0', 
-                    paddingTop: '1rem', 
-                    borderTop: '1px solid #e5e7eb' 
+                
+                {/* Filtered Users List */}
+                {userSearchQuery && (
+                  <div style={{ 
+                    marginTop: '0.5rem', 
+                    maxHeight: '200px', 
+                    overflowY: 'auto',
+                    background: '#141414',
+                    border: '1px solid #2D2D2D',
+                    borderRadius: '0.5rem',
+                    padding: '0.5rem'
                   }}>
+                    {availableUsers
+                      .filter(u => u.name.toLowerCase().includes(userSearchQuery.toLowerCase()))
+                      .slice(0, 10)
+                      .map(user => (
+                        <div
+                          key={user.id}
+                          onClick={() => {
+                            setSelectedUserId(user.id);
+                            setUserSearchQuery(user.name);
+                          }}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            borderRadius: '0.375rem',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s',
+                            background: selectedUserId === user.id ? '#3B82F6' : 'transparent',
+                            color: selectedUserId === user.id ? '#FFFFFF' : '#E4E4E7',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (selectedUserId !== user.id) {
+                              e.currentTarget.style.background = '#2D2D2D';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (selectedUserId !== user.id) {
+                              e.currentTarget.style.background = 'transparent';
+                            }
+                          }}
+                        >
+                          <div style={{ fontWeight: 500 }}>{user.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#71717A', marginTop: '0.125rem' }}>{user.email}</div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
+              </div>
+              
+              {/* Role Selection */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, color: '#71717A', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Assign Role
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {['Admin', 'Manager', 'Member', 'Developer', 'Designer', 'QA', 'Viewer'].map(role => (
+                    <button
+                      key={role}
+                      onClick={() => setNewMemberRole(role)}
+                      style={{
+                        padding: '0.5rem 0.875rem',
+                        background: newMemberRole === role ? '#3B82F6' : '#2D2D2D',
+                        border: newMemberRole === role ? '1px solid #3B82F6' : '1px solid #3D3D3D',
+                        borderRadius: '0.5rem',
+                        color: newMemberRole === role ? '#FFFFFF' : '#A1A1AA',
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #2D2D2D', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button
+                onClick={() => {
+                  setShowAddMemberModal(false);
+                  setSelectedUserId(null);
+                  setNewMemberRole('Member');
+                  setUserSearchQuery('');
+                }}
+                style={{
+                  padding: '0.625rem 1.25rem',
+                  background: 'transparent',
+                  border: '1px solid #3D3D3D',
+                  borderRadius: '0.5rem',
+                  color: '#A1A1AA',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#71717A'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#A1A1AA'; }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addMember}
+                disabled={!selectedUserId}
+                style={{
+                  padding: '0.625rem 1.5rem',
+                  background: selectedUserId ? '#10B981' : '#2D2D2D',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  color: selectedUserId ? '#FFFFFF' : '#52525B',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: selectedUserId ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => { if (selectedUserId) e.currentTarget.style.background = '#059669'; }}
+                onMouseLeave={(e) => { if (selectedUserId) e.currentTarget.style.background = '#10B981'; }}
+              >
+                Add Member
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Task Modal */}
+      {showCreateTask && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }}>
+          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '40rem', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D' }}>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Create New Task</h2>
+              <button
+                onClick={() => setShowCreateTask(false)}
+                style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', fontSize: '1.5rem', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+              </button>
+              </div>
+              
+            <form onSubmit={handleCreateTask} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Task Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newTask.name}
+                    onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', transition: 'border 0.2s' }}
+                    placeholder="Enter task name..."
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                  />
+                  </div>
+            
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Description</label>
+                  <textarea
+                    value={newTask.description}
+                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', resize: 'none', transition: 'border 0.2s' }}
+                    rows={3}
+                    placeholder="Describe the task..."
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                  />
+                                      </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Tags (comma separated)</label>
+                  <input
+                    type="text"
+                    value={newTask.tags}
+                    onChange={(e) => setNewTask({ ...newTask, tags: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', transition: 'border 0.2s' }}
+                    placeholder="Design, Frontend, API..."
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                  />
+                                      </div>
+                
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Priority</label>
+                  <select
+                    value={newTask.priority}
+                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer', transition: 'border 0.2s' }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Start Date</label>
+                    <input
+                      type="date"
+                      value={newTask.start_date}
+                      onChange={(e) => setNewTask({ ...newTask, start_date: e.target.value })}
+                      onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                      style={{ 
+                        width: '100%', 
+                        padding: '0.75rem 1rem', 
+                        background: '#0D0D0D', 
+                        border: '1px solid #2D2D2D', 
+                        borderRadius: '0.5rem', 
+                        color: '#FFFFFF', 
+                        fontSize: '0.875rem', 
+                        outline: 'none', 
+                        cursor: 'pointer', 
+                        transition: 'border 0.2s',
+                        colorScheme: 'dark'
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                    />
+                </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Due Date</label>
+                    <input
+                      type="date"
+                      value={newTask.due_date}
+                      onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                      onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                      style={{ 
+                        width: '100%', 
+                        padding: '0.75rem 1rem', 
+                        background: '#0D0D0D', 
+                        border: '1px solid #2D2D2D', 
+                        borderRadius: '0.5rem', 
+                        color: '#FFFFFF', 
+                        fontSize: '0.875rem', 
+                        outline: 'none', 
+                        cursor: 'pointer', 
+                        transition: 'border 0.2s',
+                        colorScheme: 'dark'
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                    />
+                          </div>
+                                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.75rem' }}>Assign To</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', padding: '0.5rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
+                    {project.members?.map((member, i) => {
+                      const isSelected = newTask.assignee_ids.includes(member.id);
+                    return (
+                        <label
+                          key={member.id}
+                          style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                            gap: '0.75rem',
+                            padding: '0.75rem',
+                            background: isSelected ? '#1A1A1A' : 'transparent',
+                            border: '1px solid',
+                            borderColor: isSelected ? '#3D3D3D' : '#2D2D2D',
+                            borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#1A1A1A'; }}
+                          onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNewTask({ ...newTask, assignee_ids: [...newTask.assignee_ids, member.id] });
+                              } else {
+                                setNewTask({ ...newTask, assignee_ids: newTask.assignee_ids.filter(id => id !== member.id) });
+                              }
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#10B981' }}
+                          />
+                          <UserAvatar user={member} size="md" />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {member.name}
+                              </div>
+                            <div style={{ fontSize: '0.75rem', color: '#71717A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {member.email}
+                                </div>
+                            </div>
+                        </label>
+                      );
+                    })}
+                    {(!project.members || project.members.length === 0) && (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#71717A', fontSize: '0.875rem' }}>
+                        No team members available
+                      </div>
+                        )}
+                  </div>
+            </div>
+            
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.75rem' }}>
+                    Report To
+                    <span style={{ fontSize: '0.75rem', color: '#71717A', fontWeight: 400, marginLeft: '0.5rem' }}>
+                      (These users will receive notifications)
+                    </span>
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', padding: '0.5rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem' }}>
+                    {project.members?.map((member, i) => {
+                      const isSelected = newTask.report_to_ids.includes(member.id);
+                      return (
+                        <label
+                          key={member.id}
+                          style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                            padding: '0.75rem',
+                            background: isSelected ? '#1A1A1A' : 'transparent',
+                            border: '1px solid',
+                            borderColor: isSelected ? '#3B82F6' : '#2D2D2D',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                                position: 'relative'
+                              }}
+                          onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#1A1A1A'; }}
+                          onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNewTask({ ...newTask, report_to_ids: [...newTask.report_to_ids, member.id] });
+                              } else {
+                                setNewTask({ ...newTask, report_to_ids: newTask.report_to_ids.filter(id => id !== member.id) });
+                              }
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#3B82F6' }}
+                          />
+                          <UserAvatar user={member} size="md" />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {member.name}
+                  </div>
+                            <div style={{ fontSize: '0.75rem', color: '#71717A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {member.email}
+                  </div>
+                  </div>
+                          {isSelected && (
+                            <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', width: '6px', height: '6px', background: '#3B82F6', borderRadius: '50%', boxShadow: '0 0 8px rgba(59, 130, 246, 0.5)' }} />
+                          )}
+                        </label>
+                      );
+                    })}
+                    {(!project.members || project.members.length === 0) && (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#71717A', fontSize: '0.875rem' }}>
+                        No team members available
+                  </div>
+                    )}
+                </div>
+                  {newTask.report_to_ids.length > 0 && (
+                    <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '0.5rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#71717A', marginBottom: '0.5rem' }}>
+                        {newTask.report_to_ids.length} {newTask.report_to_ids.length === 1 ? 'user' : 'users'} will be notified
+              </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
+                        {newTask.report_to_ids.map(id => {
+                          const member = project.members?.find(m => m.id === id);
+                          return member ? (
+                            <span key={id} style={{ fontSize: '0.75rem', color: '#3B82F6', fontWeight: 500 }}>
+                              {member.name}
+                            </span>
+                          ) : null;
+                        }).reduce((prev: any, curr: any, i: number) => {
+                          if (i === 0) return [curr];
+                          return [...prev, <span key={`sep-${i}`} style={{ color: '#71717A' }}>,</span>, curr];
+                        }, [])}
+            </div>
+          </div>
+        )}
+              </div>
+              
+                {/* Subtasks Section */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Subtasks</label>
+                  {newTaskSubtasks.length > 0 && (
+                    <div style={{ marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {newTaskSubtasks.map((subtask, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.625rem 0.875rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
+                          <span style={{ width: '16px', height: '16px', border: '2px solid #52525B', borderRadius: '0.25rem', flexShrink: 0 }} />
+                          <span style={{ flex: 1, color: '#FFFFFF', fontSize: '0.875rem' }}>{subtask}</span>
+                <button
+                            type="button"
+                            onClick={() => removeTempSubtask(index)}
+                            style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: 0 }}
+                          >
+                            <XMarkIcon style={{ width: '16px', height: '16px' }} />
+                </button>
+                </div>
+                      ))}
+                  </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      value={tempSubtask}
+                      onChange={(e) => setTempSubtask(e.target.value)}
+                      onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTempSubtask(); } }}
+                      placeholder="Add a subtask..."
+                      style={{ flex: 1, padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', transition: 'border 0.2s' }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = '#10B981'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+                    />
+                <button
+                      type="button"
+                      onClick={addTempSubtask}
+                      style={{ padding: '0.75rem 1.25rem', background: '#2D2D2D', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', transition: 'background 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#3D3D3D'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
+                    >
+                      Add
+                </button>
+              </div>
+            </div>
+                  </div>
+              
+              <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #2D2D2D', display: 'flex', gap: '0.75rem' }}>
                 <button
                   type="button"
                   onClick={() => setShowCreateTask(false)}
-                        className="btn-secondary"
+                  style={{ flex: 1, padding: '0.75rem', background: '#2D2D2D', color: '#A1A1AA', border: 'none', borderRadius: '0.5rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem', transition: 'all 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#3D3D3D'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                        className="btn-primary"
+                  style={{ flex: 1, padding: '0.75rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem', transition: 'background 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
                 >
                   Create Task
                 </button>
-              </div>
+                </div>
             </form>
+              </div>
+            </div>
+        )}
+
+      {/* Task Detail Modal - Dark Theme */}
+      {selectedTask && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(4px)', padding: '1rem' }}
+          onClick={() => setSelectedTask(null)}
+        >
+          <div 
+            style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '75rem', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.7)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+                {isEditingTask ? 'Edit Task' : 'Task Detail'}
+              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {!isEditingTask ? (
+                <button
+                    onClick={startEditingTask}
+                    style={{ padding: '0.5rem 1rem', background: '#3B82F6', border: 'none', color: '#FFFFFF', cursor: 'pointer', borderRadius: '0.5rem', fontSize: '0.8125rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.375rem', transition: 'all 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#2563EB'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#3B82F6'}
+                  >
+                    <PencilIcon style={{ width: '14px', height: '14px' }} />
+                    Edit
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setIsEditingTask(false)}
+                      style={{ padding: '0.5rem 1rem', background: 'transparent', border: '1px solid #2D2D2D', color: '#A1A1AA', cursor: 'pointer', borderRadius: '0.5rem', fontSize: '0.8125rem', fontWeight: 500, transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#71717A'; e.currentTarget.style.color = '#FFFFFF'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={saveTaskEdit}
+                      style={{ padding: '0.5rem 1rem', background: '#10B981', border: 'none', color: '#FFFFFF', cursor: 'pointer', borderRadius: '0.5rem', fontSize: '0.8125rem', fontWeight: 500, transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#10B981'}
+                    >
+                      Save Changes
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => { setSelectedTask(null); setIsEditingTask(false); }}
+                style={{ padding: '0.5rem', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', borderRadius: '0.375rem', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#2D2D2D'; e.currentTarget.style.color = '#FFFFFF'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#71717A'; }}
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+              {/* Left Panel - Task Details */}
+              <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', borderRight: '1px solid #2D2D2D' }}>
+                {isEditingTask ? (
+                  <>
+                    <input
+                      type="text"
+                      value={editTaskForm.name}
+                      onChange={(e) => setEditTaskForm({ ...editTaskForm, name: e.target.value })}
+                      placeholder="Task name"
+                      style={{ width: '100%', fontSize: '1.5rem', fontWeight: 700, color: '#FFFFFF', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', padding: '0.75rem 1rem', marginBottom: '1rem', outline: 'none' }}
+                    />
+                    <textarea
+                      value={editTaskForm.description}
+                      onChange={(e) => setEditTaskForm({ ...editTaskForm, description: e.target.value })}
+                      placeholder="Task description"
+                      rows={3}
+                      style={{ width: '100%', color: '#A1A1AA', fontSize: '0.9375rem', lineHeight: 1.6, background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', padding: '0.75rem 1rem', marginBottom: '1.5rem', outline: 'none', resize: 'vertical' }}
+                    />
+                  </>
+                ) : (
+                  <>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '1rem' }}>{selectedTask.name}</h1>
+                <p style={{ color: '#A1A1AA', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+                  {selectedTask.description || 'No description provided'}
+                </p>
+                  </>
+                )}
+
+                {/* Task Properties Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Status</label>
+                    {isEditingTask ? (
+                      <select
+                        value={editTaskForm.status}
+                        onChange={(e) => setEditTaskForm({ ...editTaskForm, status: e.target.value })}
+                        style={{ width: '100%', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer' }}
+                      >
+                        {TASK_STATUSES.map(s => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
+                      </select>
+                    ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: TASK_STATUSES.find(s => s.value === selectedTask.status)?.color }} />
+                      <span style={{ fontSize: '0.875rem', color: '#FFFFFF', fontWeight: 500 }}>
+                        {TASK_STATUSES.find(s => s.value === selectedTask.status)?.label}
+                                     </span>
+                               </div>
+                    )}
+                               </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Assigned to</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {(selectedTask.assignees || []).map((assignee) => (
+                        <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
+                          <UserAvatar user={assignee} size="xs" />
+                          <span style={{ fontSize: '0.8125rem', color: '#FFFFFF', fontWeight: 500 }}>{assignee.name}</span>
+                </div>
+                      ))}
+                      {(!selectedTask.assignees || selectedTask.assignees.length === 0) && (
+                        <span style={{ fontSize: '0.875rem', color: '#52525B' }}>No assignees</span>
+                              )}
+                            </div>
+                               </div>
+
+                  {selectedTask.start_date && (
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Start date</label>
+                      <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
+                        <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>
+                          {new Date(selectedTask.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                 </span>
+                               </div>
+                          </div>
+                  )}
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Due date</label>
+                    {isEditingTask ? (
+                      <input
+                        type="date"
+                        value={editTaskForm.due_date}
+                        onChange={(e) => setEditTaskForm({ ...editTaskForm, due_date: e.target.value })}
+                        style={{ width: '100%', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none' }}
+                      />
+                    ) : selectedTask.due_date ? (
+                      <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
+                        <span style={{ fontSize: '0.875rem', color: '#FFFFFF' }}>
+                          {new Date(selectedTask.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                 </span>
+              </div>
+                    ) : (
+                      <div style={{ padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
+                        <span style={{ fontSize: '0.875rem', color: '#52525B' }}>No due date</span>
+              </div>
+            )}
+                  </div>
+
+              <div>
+                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Priority</label>
+                    {isEditingTask ? (
+                      <select
+                        value={editTaskForm.priority}
+                        onChange={(e) => setEditTaskForm({ ...editTaskForm, priority: e.target.value })}
+                        style={{ width: '100%', padding: '0.5rem 0.75rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer' }}
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    ) : (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.75rem', background: selectedTask.priority === 'high' ? 'rgba(239, 68, 68, 0.2)' : selectedTask.priority === 'medium' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)', borderRadius: '9999px', border: '1px solid #2D2D2D' }}>
+                        <span style={{ fontSize: '0.875rem', color: selectedTask.priority === 'high' ? '#EF4444' : selectedTask.priority === 'medium' ? '#F59E0B' : '#10B981', fontWeight: 500, textTransform: 'capitalize' }}>
+                          {selectedTask.priority || 'Low'}
+                      </span>
+                </div>
+                    )}
+              </div>
+              </div>
+
+                {/* Tabs and Content Section */}
+                <div style={{ marginTop: '2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+                      {activeTab === 'subtask' && `Subtask (${subtasks.filter(s => s.is_completed).length}/${subtasks.length})`}
+                      {activeTab === 'attachment' && `Attachments (${attachments.length})`}
+                      {activeTab === 'comments' && `Comments (${comments.length})`}
+                    </h3>
+                  </div>
+
+                  {/* Tabs */}
+                  <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid #2D2D2D', marginBottom: '1rem' }}>
+                    {[
+                      { id: 'subtask', label: 'Subtask', count: subtasks.length },
+                      { id: 'attachment', label: 'Attachment', count: attachments.length },
+                      { id: 'comments', label: 'Comments', count: comments.length }
+                    ].map((tab) => (
+                    <button 
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as any)}
+                      style={{
+                          padding: '0.75rem 0',
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          color: activeTab === tab.id ? '#10B981' : '#71717A',
+                          borderBottom: activeTab === tab.id ? '2px solid #10B981' : 'none',
+                          background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                          transition: 'color 0.2s'
+                        }}
+                      >
+                        {tab.label}
+                    </button>
+                    ))}
+                  </div>
+
+                  {/* Tab Content */}
+                  <div>
+                    {/* Subtasks Tab */}
+                    {activeTab === 'subtask' && (
+                      <div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                          {subtasks.map((subtask) => (
+                            <div key={subtask.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: '#0D0D0D', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
+                              <input 
+                                type="checkbox"
+                                checked={subtask.is_completed}
+                                onChange={() => toggleSubtask(subtask.id, subtask.is_completed)}
+                                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#10B981' }}
+                              />
+                              <span style={{ flex: 1, color: subtask.is_completed ? '#52525B' : '#FFFFFF', fontSize: '0.9375rem', textDecoration: subtask.is_completed ? 'line-through' : 'none' }}>
+                                {subtask.title}
+                    </span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input
+                            type="text"
+                            value={newSubtask}
+                            onChange={(e) => setNewSubtask(e.target.value)}
+                            onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSubtask(); } }}
+                            placeholder="+ Add subtask"
+                            style={{ flex: 1, padding: '0.625rem 0.875rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem', fontSize: '0.875rem', color: '#FFFFFF', outline: 'none' }}
+                          />
+                    <button 
+                            onClick={addSubtask}
+                            type="button"
+                            style={{ padding: '0.625rem 1rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}
+                          >
+                            Add
+                    </button>
+                  </div>
+                </div>
+                    )}
+
+                    {/* Attachments Tab */}
+                    {activeTab === 'attachment' && (
+                      <div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                          {attachments.map((attachment) => (
+                            <div key={attachment.id} style={{ padding: '0.75rem', background: '#0D0D0D', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                                <PaperClipIcon style={{ width: '16px', height: '16px', color: '#10B981' }} />
+                                <a 
+                                  href={attachment.attachment_url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  style={{ flex: 1, color: '#10B981', fontSize: '0.9375rem', fontWeight: 500, textDecoration: 'none' }}
+                                >
+                                  {attachment.attachment_name}
+                                </a>
+                            </div>
+                              <div style={{ fontSize: '0.75rem', color: '#71717A', marginLeft: '1.75rem' }}>
+                                Added by {attachment.user_name} • {new Date(attachment.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                    ))}
+                  </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <input
+                            type="text"
+                            value={newAttachmentName}
+                            onChange={(e) => setNewAttachmentName(e.target.value)}
+                            placeholder="Attachment name (e.g., Design mockup)"
+                            style={{ padding: '0.625rem 0.875rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem', fontSize: '0.875rem', color: '#FFFFFF', outline: 'none' }}
+                          />
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <input
+                              type="url"
+                              value={newAttachmentUrl}
+                              onChange={(e) => setNewAttachmentUrl(e.target.value)}
+                              onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); addAttachmentLink(); } }}
+                              placeholder="Paste link URL (https://...)"
+                              style={{ flex: 1, padding: '0.625rem 0.875rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem', fontSize: '0.875rem', color: '#FFFFFF', outline: 'none' }}
+                            />
+                            <button
+                              onClick={addAttachmentLink}
+                              type="button"
+                              style={{ padding: '0.625rem 1rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}
+                            >
+                              Add Link
+                            </button>
+                          </div>
+                        </div>
+                                      </div>
+                                    )}
+                                    
+                    {/* Comments Tab */}
+                    {activeTab === 'comments' && (
+                      <div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
+                          {comments.map((comment) => (
+                            <div key={comment.id} style={{ padding: '1rem', background: '#0D0D0D', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
+                              <div style={{ display: 'flex', alignItems: 'start', gap: '0.75rem' }}>
+                                <UserAvatar user={{ id: comment.user_id, name: comment.user_name || 'User', avatar_url: comment.user_avatar_url }} size="md" />
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ marginBottom: '0.5rem' }}>
+                                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>{comment.user_name || 'User'}</span>
+                                    <span style={{ fontSize: '0.75rem', color: '#71717A', marginLeft: '0.5rem' }}>
+                                      {new Date(comment.created_at).toLocaleDateString()} at {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                  <p style={{ color: '#A1A1AA', fontSize: '0.9375rem', lineHeight: 1.5, margin: 0 }}>
+                                    {comment.comment_text}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                  </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <textarea
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            onKeyPress={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addComment(); } }}
+                            placeholder="Write a comment..."
+                            style={{ flex: 1, padding: '0.625rem 0.875rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem', fontSize: '0.875rem', color: '#FFFFFF', outline: 'none', resize: 'none', minHeight: '80px' }}
+                          />
+                          <button
+                            onClick={addComment}
+                            type="button"
+                            style={{ padding: '0.625rem 1rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.375rem', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', alignSelf: 'flex-end' }}
+                          >
+                            Send
+                          </button>
+                </div>
+                      </div>
+                    )}
+              </div>
+            </div>
+
+                {/* Created by */}
+                <div style={{ marginTop: '2rem', padding: '1rem', background: '#0D0D0D', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
+                  <div style={{ fontSize: '0.8125rem', color: '#71717A', marginBottom: '0.5rem' }}>Created by</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <UserAvatar user={selectedTask.created_by || { name: 'Unknown' }} size="sm" />
+                    <span style={{ fontSize: '0.875rem', color: '#FFFFFF', fontWeight: 500 }}>
+                      {selectedTask.created_by?.name || 'Unknown'}
+                    </span>
+                  </div>
+                  </div>
+                  </div>
+              
+              {/* Right Panel - Project Status & Activities */}
+              <div style={{ width: '380px', background: '#0D0D0D', padding: '1.5rem', overflowY: 'auto', borderLeft: '1px solid #2D2D2D' }}>
+                {/* Project Status */}
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#71717A', marginBottom: '1rem' }}>Project Status</h3>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', padding: '0.75rem', background: '#1A1A1A', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '0.375rem', background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <ClockIcon style={{ width: '16px', height: '16px', color: '#FFFFFF' }} />
+                </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>Time Remaining</div>
+                      <div style={{ fontSize: '0.75rem', color: '#71717A' }}>
+                        {selectedTask.due_date ? Math.max(0, Math.ceil((new Date(selectedTask.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) + 'd' : 'No due date'}
+              </div>
+                  </div>
+                  </div>
+
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
+                      <span style={{ fontSize: '0.8125rem', color: '#71717A' }}>Progress</span>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#10B981' }}>
+                        {subtasks.length > 0 ? Math.round((subtasks.filter(s => s.is_completed).length / subtasks.length) * 100) : 0}%
+                      </span>
+                  </div>
+                    <div style={{ height: '8px', background: '#2D2D2D', borderRadius: '9999px', overflow: 'hidden' }}>
+                      <div style={{ width: `${subtasks.length > 0 ? (subtasks.filter(s => s.is_completed).length / subtasks.length) * 100 : 0}%`, height: '100%', background: '#10B981', borderRadius: '9999px', transition: 'width 0.3s' }} />
+                  </div>
+                </div>
+              </div>
+              
+                {/* Activities */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#71717A', margin: 0 }}>Activities</h3>
+                    </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {activityLog.map((activity) => (
+                      <div key={activity.id} style={{ display: 'flex', gap: '0.75rem' }}>
+                        <UserAvatar user={{ name: activity.user_name }} size="md" />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ marginBottom: '0.25rem' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>{activity.user_name} </span>
+                            <span style={{ fontSize: '0.875rem', color: '#A1A1AA' }}>{activity.description}</span>
+                  </div>
+                          <div style={{ fontSize: '0.75rem', color: '#71717A' }}>
+                            {new Date(activity.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(activity.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+                          {activity.activity_type === 'status_changed' && (
+                            <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(239, 68, 68, 0.2)', color: '#EF4444', fontSize: '0.75rem', borderRadius: '0.25rem', fontWeight: 500 }}>To Do</span>
+                              <span style={{ fontSize: '0.75rem', color: '#71717A' }}>→</span>
+                              <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(245, 158, 11, 0.2)', color: '#F59E0B', fontSize: '0.75rem', borderRadius: '0.25rem', fontWeight: 500 }}>In Progress</span>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+            </div>
+                    ))}
 
-      {showTaskDetail && selectedTask && (
-        <TaskDetailModal
-          task={selectedTask}
-          users={project.members}
-          onClose={handleCloseTaskDetail}
-          onSave={handleUpdateTask}
-          onStatusChange={handleTaskStatusChange}
-          onDelete={handleDeleteTask}
-        />
-      )}
+                    {/* Default activity - task created */}
+                    {activityLog.length === 0 && (
+                      <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <UserAvatar user={selectedTask.created_by || { name: 'User' }} size="md" />
+                        <div>
+                          <div style={{ marginBottom: '0.25rem' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#FFFFFF' }}>{selectedTask.created_by?.name || 'User'} </span>
+                            <span style={{ fontSize: '0.875rem', color: '#A1A1AA' }}>created task</span>
+          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#71717A' }}>
+                            {new Date(selectedTask.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(selectedTask.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+              </div>
+                    </div>
+                    )}
+                          </div>
+                              </div>
+                      </div>
+                          </div>
+                          </div>
+                        </div>
+                      )}
 
-      {showMembersModal && project && (
-        <ProjectMembersModal
-          projectId={project.id}
-          currentMembers={project.members}
-          onClose={() => setShowMembersModal(false)}
-          onMembersUpdate={handleMembersUpdate}
-        />
-      )}
-
-      {showDeleteConfirm && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '400px' }}>
-            <h2 className="modal-title" style={{ color: '#ef4444' }}>Delete Project</h2>
-            <p style={{ textAlign: 'center', marginBottom: '2rem', color: '#6b7280' }}>
-              Are you sure you want to delete "{project.name}"? This action cannot be undone.
-              All tasks and project data will be permanently deleted.
-            </p>
-            <div className="button-group">
+      {/* Add Column Modal */}
+      {showAddColumnModal && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(4px)', padding: '1rem' }}
+          onClick={() => setShowAddColumnModal(false)}
+        >
+          <div 
+            style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', width: '100%', maxWidth: '32rem', boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>Add Custom Column</h3>
               <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="btn-secondary"
+                onClick={() => setShowAddColumnModal(false)}
+                style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                <XMarkIcon style={{ width: '20px', height: '20px' }} />
+              </button>
+                </div>
+
+            <div style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Column Name</label>
+                      <input
+                    type="text"
+                    value={newColumn.name}
+                    onChange={(e) => setNewColumn({ ...newColumn, name: e.target.value })}
+                    placeholder="e.g., Budget, Phase, Designer"
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none' }}
+                      />
+                    </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Column Type</label>
+                  <select
+                    value={newColumn.type}
+                    onChange={(e) => setNewColumn({ ...newColumn, type: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none', cursor: 'pointer' }}
+                  >
+                    <option value="text">Text</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="status">Status</option>
+                    <option value="person">Person</option>
+                    <option value="dropdown">Dropdown</option>
+                    <option value="checkbox">Checkbox</option>
+                    <option value="url">URL</option>
+                  </select>
+              </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#A1A1AA', marginBottom: '0.5rem' }}>Column Width (px)</label>
+                <input
+                    type="number"
+                    value={newColumn.width}
+                    onChange={(e) => setNewColumn({ ...newColumn, width: parseInt(e.target.value) || 150 })}
+                    min="100"
+                    max="400"
+                    style={{ width: '100%', padding: '0.75rem 1rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', outline: 'none' }}
+                />
+              </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+              <button
+                  onClick={() => setShowAddColumnModal(false)}
+                  style={{ flex: 1, padding: '0.75rem', background: '#2D2D2D', color: '#A1A1AA', border: 'none', borderRadius: '0.5rem', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem' }}
               >
                 Cancel
               </button>
               <button
-                onClick={handleDeleteProject}
+                  onClick={async () => {
+                    if (!newColumn.name.trim()) return;
+                    try {
+                      const { supabase } = await import('@/lib/supabase');
+                      await supabase.rpc('add_project_custom_column', {
+                        p_project_id: project.id,
+                        p_column_name: newColumn.name.trim(),
+                        p_column_type: newColumn.type,
+                        p_column_width: newColumn.width
+                      });
+                      setNewColumn({ name: '', type: 'text', width: 150 });
+                      setShowAddColumnModal(false);
+                      fetchProject();
+                    } catch (error) {
+                      // Error adding column
+                    }
+                  }}
+                  style={{ flex: 1, padding: '0.75rem', background: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}
+                >
+                  Add Column
+              </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Project Confirmation Modal */}
+      {showDeleteProject && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+          }}
+          onClick={() => setShowDeleteProject(false)}
+        >
+          <div
+            style={{
+              background: '#1A1A1A',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '400px',
+              maxWidth: '90vw',
+              border: '1px solid #2D2D2D',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ 
+                width: '48px', 
+                height: '48px', 
+                borderRadius: '50%', 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <TrashIcon style={{ width: '24px', height: '24px', color: '#EF4444' }} />
+              </div>
+              <div>
+                <h3 style={{ color: '#FFFFFF', fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>
+                  Delete Project
+                </h3>
+                <p style={{ color: '#71717A', fontSize: '0.875rem', margin: '4px 0 0' }}>
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+            
+            <p style={{ color: '#A1A1AA', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: '20px' }}>
+              Are you sure you want to delete <strong style={{ color: '#FFFFFF' }}>{project?.name}</strong>? 
+              All tasks, comments, and data associated with this project will be permanently deleted.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setShowDeleteProject(false)}
                 style={{
                   flex: 1,
-                  background: '#ef4444',
-                  color: '#ffffff',
+                  padding: '12px 20px',
+                  background: '#2D2D2D',
                   border: 'none',
-                  padding: '1rem',
                   borderRadius: '8px',
-                  fontWeight: '600',
+                  color: '#FFFFFF',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease'
+                  transition: 'background 0.2s',
                 }}
-                onMouseOver={(e) => e.currentTarget.style.background = '#dc2626'}
-                onMouseOut={(e) => e.currentTarget.style.background = '#ef4444'}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#3D3D3D'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#2D2D2D'}
               >
-                Delete Project
+                Cancel
+              </button>
+              <button
+                onClick={deleteProject}
+                disabled={deletingProject}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#EF4444',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#FFFFFF',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: deletingProject ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.2s',
+                  opacity: deletingProject ? 0.7 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!deletingProject) e.currentTarget.style.background = '#DC2626';
+                }}
+                onMouseLeave={(e) => {
+                  if (!deletingProject) e.currentTarget.style.background = '#EF4444';
+                }}
+              >
+                {deletingProject ? 'Deleting...' : 'Delete Project'}
               </button>
             </div>
           </div>
         </div>
       )}
-        </div>
-      </div>
     </div>
   );
 } 

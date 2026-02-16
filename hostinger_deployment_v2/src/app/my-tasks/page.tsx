@@ -24,7 +24,10 @@ import {
   ListBulletIcon,
   Squares2X2Icon
 } from '@heroicons/react/24/outline';
+import Sidebar from '@/components/Sidebar';
 import TaskDetailModal from '@/components/TaskDetailModal';
+import MobileHeader from '@/components/MobileHeader';
+import { showNotification, notificationScheduler } from '@/lib/electron-notifications';
 
 interface User {
   id: number;
@@ -128,8 +131,9 @@ export default function MyTasksPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
   const [isMobile, setIsMobile] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Mobile detection
+  // Mobile detection and sidebar state
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -137,7 +141,23 @@ export default function MyTasksPage() {
     
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    
+    // Listen for sidebar collapse changes
+    const handleSidebarChange = (e: CustomEvent) => {
+      setSidebarCollapsed(e.detail.isCollapsed);
+    };
+    window.addEventListener('sidebarCollapsedChange', handleSidebarChange as EventListener);
+    
+    // Check localStorage for initial state
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState === 'true') {
+      setSidebarCollapsed(true);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('sidebarCollapsedChange', handleSidebarChange as EventListener);
+    };
   }, []);
   
   // Calendar view state
@@ -444,15 +464,32 @@ export default function MyTasksPage() {
   const handleTaskStatusChange = async (taskId: number, newStatus: string) => {
     try {
       await taskService.updateTaskStatus(taskId, newStatus);
-      setTasks(tasks.map(task => 
-        task.id === taskId 
-          ? { ...task, status: newStatus }
-          : task
+      
+      // Find the task to get its name for notification
+      const task = tasks.find(t => t.id === taskId);
+      
+      setTasks(tasks.map(t => 
+        t.id === taskId 
+          ? { ...t, status: newStatus }
+          : t
       ));
       
       // Update selected task if it's the same one
       if (selectedTask && selectedTask.id === taskId) {
         setSelectedTask({ ...selectedTask, status: newStatus });
+      }
+      
+      // Show desktop notification for task status change
+      if (task) {
+        if (newStatus === 'done') {
+          showNotification('🎉 Task Completed!', `"${task.name}" has been marked as done`, {
+            urgency: 'normal'
+          });
+          // Cancel any scheduled reminder
+          notificationScheduler.cancelReminder(String(taskId));
+        } else if (newStatus === 'in_progress') {
+          showNotification('📝 Task Started', `"${task.name}" is now in progress`);
+        }
       }
     } catch (err) {
       setError('Failed to update task status');
@@ -648,6 +685,7 @@ export default function MyTasksPage() {
 
   return (
     <div>
+      
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes spin {
@@ -677,10 +715,12 @@ export default function MyTasksPage() {
           }
           .main-content {
             flex: 1;
+            margin-left: ${isMobile ? '0' : (sidebarCollapsed ? '72px' : '256px')};
             background: transparent;
             padding-top: ${isMobile ? '70px' : '0'};
             padding-left: ${isMobile ? '12px' : '0'};
             padding-right: ${isMobile ? '12px' : '0'};
+            transition: margin-left 0.3s ease;
           }
           .header {
             background: transparent;
@@ -1599,7 +1639,14 @@ export default function MyTasksPage() {
         `
       }} />
       
-      <div className="main-content">
+      <div className="my-tasks-container">
+        <Sidebar 
+          projects={allProjects} 
+          onCreateProject={() => {}} 
+          onCollapsedChange={setSidebarCollapsed}
+        />
+        
+        <div className="main-content">
           <header className="header">
             <div className="header-content">
               <div>
@@ -2108,6 +2155,7 @@ export default function MyTasksPage() {
               onDelete={handleDeleteTask}
             />
           )}
+        </div>
       </div>
     </div>
   );

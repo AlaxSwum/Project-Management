@@ -13,7 +13,10 @@ import {
   TrashIcon,
   XMarkIcon,
   CheckIcon,
+  ArrowPathIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline';
+import Sidebar from '@/components/Sidebar';
 import DatePicker from '@/components/DatePicker';
 import MeetingDetailModal from '@/components/MeetingDetailModal';
 
@@ -44,8 +47,11 @@ interface Meeting {
   updated_at: string;
   attendees?: string;
   attendees_list?: string[];
-  attendee_ids?: number[]; // Add this field for proper attendee assignment
-  event_type?: string; // Add this field to distinguish personal vs project events
+  attendee_ids?: number[];
+  event_type?: string;
+  agenda_items?: string[];
+  meeting_link?: string;
+  reminder_time?: number; // in minutes before meeting
 }
 
 export default function TimetablePage() {
@@ -91,7 +97,37 @@ export default function TimetablePage() {
     project_id: 0,
     attendees: '',
     attendee_ids: [] as number[],
+    agenda_items: [] as string[],
+    meeting_link: '',
+    reminder_time: 15, // default 15 minutes before
+    // Recurring meeting options
+    isRecurring: false,
+    endDate: '',
+    repeatDays: [] as number[], // 0=Sun, 1=Mon, 2=Tue, etc.
+    // Timezone selection
+    timezone: 'UK' as 'UK' | 'MM',
   });
+  const [newAgendaItem, setNewAgendaItem] = useState('');
+  
+  // Follow-up meeting modal state
+  const [showFollowUpModal, setShowFollowUpModal] = useState(false);
+  const [followUpMeeting, setFollowUpMeeting] = useState<Meeting | null>(null);
+  const [followUpForm, setFollowUpForm] = useState({
+    date: '',
+    time: '',
+    duration: 60,
+    attendee_ids: [] as number[],
+    agenda_items: [] as string[],
+    meeting_link: '',
+    reminder_time: 15,
+    notes: '',
+  });
+  const [followUpAgendaItem, setFollowUpAgendaItem] = useState('');
+  const [isCreatingFollowUp, setIsCreatingFollowUp] = useState(false);
+  
+  // Cache for meetings data
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const CACHE_DURATION = 30000; // 30 seconds cache
 
   useEffect(() => {
     // Don't redirect if auth is still loading
@@ -115,95 +151,69 @@ export default function TimetablePage() {
     }
   }, [newMeeting.project_id]);
 
-  const fetchData = async () => {
+  const fetchData = async (forceRefresh = false) => {
+    // Use cache if available and not forcing refresh
+    const now = Date.now();
+    if (!forceRefresh && lastFetchTime > 0 && (now - lastFetchTime) < CACHE_DURATION && meetings.length > 0) {
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       setError('');
-      console.log('Timetable: Fetching data for user:', user?.id);
       
-      const [projectsData, meetingsData, usersData, userTasks] = await Promise.all([
-        projectService.getProjects(),
-        meetingService.getMeetings(),
-        projectService.getUsers(),
-        taskService.getUserTasks()
-      ]);
+      // Fetch projects first (usually smaller dataset)
+      const projectsData = await projectService.getProjects();
+      setProjects(projectsData || []);
       
-      console.log('Timetable: Fetched projects:', projectsData?.length || 0);
-      console.log('Timetable: Fetched meetings:', meetingsData?.length || 0);
-      console.log('Timetable: Fetched users:', usersData?.length || 0);
-      
-      // Use all projects the user has access to (same as dashboard)
-      // The projectService.getProjects() already filters based on user access
+      // Build accessible projects set
       const accessibleProjects = new Set<number>();
       projectsData.forEach((project: any) => {
         accessibleProjects.add(project.id);
       });
+      setAccessibleProjectIds(accessibleProjects);
       
-      // Also track projects where user has task involvement for meeting access control
-      userTasks.forEach((task: any) => {
-        if (task.assignee?.id === user?.id || task.created_by?.id === user?.id) {
-          accessibleProjects.add(task.project_id);
-        }
-      });
+      // Fetch meetings (this is usually the large dataset)
+      const meetingsData = await meetingService.getMeetings();
       
-      // Filter meetings for visibility - show meetings where user is:
-      // 1. The creator of the meeting, OR 
-      // 2. Listed as an attendee by ID (attendee_ids), OR
-      // 3. Listed as an attendee by name/email (attendees), OR  
-      // 4. Has access to the project AND is specifically assigned
+      // Filter meetings efficiently
       const filteredMeetings = meetingsData.filter((meeting: Meeting) => {
         const projectId = meeting.project_id || meeting.project;
         
-        // PERSONAL EVENTS (event_type === 'personal'): Only show to creator
-        if (meeting.event_type === 'personal') {
+        // Personal events: only show to creator
+        if (meeting.event_type === 'personal' || !projectId) {
           return meeting.created_by?.id === user?.id;
         }
         
-        // PERSONAL EVENTS (no project_id): Only show to creator (legacy support)
-        if (!projectId) {
-          return meeting.created_by?.id === user?.id;
-        }
-        
-        // PROJECT MEETINGS: Must have project access first
+        // Project meetings: must have project access
         if (!accessibleProjects.has(projectId)) {
           return false;
         }
         
-        // Show if user created the meeting
-        if (meeting.created_by?.id === user?.id) {
-          return true;
-        }
+        // Show if user created it
+        if (meeting.created_by?.id === user?.id) return true;
         
-        // IMPORTANT: Check if user is assigned via attendee_ids (primary method)
-        if (meeting.attendee_ids && Array.isArray(meeting.attendee_ids) && user?.id && meeting.attendee_ids.includes(user.id)) {
-          return true;
-        }
+        // Check attendee_ids
+        if (meeting.attendee_ids && user?.id && meeting.attendee_ids.includes(user.id)) return true;
         
-        // Fallback: Check if user is in attendees string/list (legacy method)
+        // Check attendees string
         const attendeesList = meeting.attendees_list || 
-          (meeting.attendees ? meeting.attendees.split(',').map(a => a.trim()) : []);
+          (meeting.attendees ? meeting.attendees.split(',').map((a: string) => a.trim().toLowerCase()) : []);
+        const userName = (user?.name || '').toLowerCase();
+        const userEmail = (user?.email || '').toLowerCase();
         
-        const userInAttendees = attendeesList.some(attendee => 
-          attendee.toLowerCase().includes(user?.name?.toLowerCase() || '') ||
-          attendee.toLowerCase().includes(user?.email?.toLowerCase() || '')
-        );
-        
-        if (userInAttendees) {
-          return true;
-        }
-        
-        // Don't show meetings where user is not explicitly involved
-        return false;
+        return attendeesList.some((a: string) => a.includes(userName) || a.includes(userEmail));
       });
       
-      setAccessibleProjectIds(accessibleProjects);
-      setProjects(projectsData || []);
       setMeetings(filteredMeetings || []);
-      setUsers(usersData || []);
-      console.log('Timetable: Data loaded successfully');
+      setLastFetchTime(now);
+      
+      // Fetch users in background (not blocking)
+      projectService.getUsers().then(usersData => setUsers(usersData || []));
+      
     } catch (err: any) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load timetable data';
-      setError(errorMessage);
-      console.error('Timetable: Fetch error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+      console.error('Fetch error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -232,6 +242,22 @@ export default function TimetablePage() {
       return;
     }
 
+    // Validate recurring meeting settings
+    if (newMeeting.isRecurring) {
+      if (!newMeeting.endDate) {
+        setError('Please select an end date for recurring meetings');
+        return;
+      }
+      if (newMeeting.repeatDays.length === 0) {
+        setError('Please select at least one day for recurring meetings');
+        return;
+      }
+      if (new Date(newMeeting.endDate) <= new Date(newMeeting.date)) {
+        setError('End date must be after start date');
+        return;
+      }
+    }
+
     // Check if user has access to the selected project
     if (!accessibleProjectIds.has(newMeeting.project_id)) {
       setError('You do not have access to create meetings for this project');
@@ -239,19 +265,65 @@ export default function TimetablePage() {
     }
 
     try {
+      const createdMeetings: Meeting[] = [];
+      
+      // Convert to UK time if entered in Myanmar timezone (always store as UK time)
+      const ukTime = newMeeting.timezone === 'MM' ? convertMyanmarToUK(newMeeting.time) : newMeeting.time;
+      
+      if (newMeeting.isRecurring && newMeeting.endDate && newMeeting.repeatDays.length > 0) {
+        // Create multiple meetings for recurring schedule
+        const startDate = new Date(newMeeting.date);
+        const endDate = new Date(newMeeting.endDate);
+        const currentDate = new Date(startDate);
+        
+        while (currentDate <= endDate) {
+          const dayOfWeek = currentDate.getDay();
+          
+          if (newMeeting.repeatDays.includes(dayOfWeek)) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            
+            const meetingData = {
+              title: newMeeting.title.trim(),
+              description: newMeeting.description.trim(),
+              project: newMeeting.project_id,
+              date: dateStr,
+              time: ukTime,
+              duration: newMeeting.duration,
+              attendees: newMeeting.attendees,
+              attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
+              agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
+              meeting_link: newMeeting.meeting_link.trim() || undefined,
+              reminder_time: newMeeting.reminder_time || undefined,
+            };
+
+            const createdMeeting = await meetingService.createMeeting(meetingData);
+            createdMeetings.push(createdMeeting);
+          }
+          
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        setMeetings([...createdMeetings, ...meetings]);
+        alert(`Created ${createdMeetings.length} recurring meetings!`);
+      } else {
+        // Single meeting creation
       const meetingData = {
         title: newMeeting.title.trim(),
         description: newMeeting.description.trim(),
         project: newMeeting.project_id,
         date: newMeeting.date,
-        time: newMeeting.time,
+          time: ukTime,
         duration: newMeeting.duration,
         attendees: newMeeting.attendees,
         attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
+        agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
+        meeting_link: newMeeting.meeting_link.trim() || undefined,
+        reminder_time: newMeeting.reminder_time || undefined,
       };
 
       const createdMeeting = await meetingService.createMeeting(meetingData);
       setMeetings([createdMeeting, ...meetings]);
+      }
       
       setNewMeeting({
         title: '',
@@ -262,6 +334,13 @@ export default function TimetablePage() {
         project_id: 0,
         attendees: '',
         attendee_ids: [],
+        agenda_items: [],
+        meeting_link: '',
+        reminder_time: 15,
+        isRecurring: false,
+        endDate: '',
+        repeatDays: [],
+        timezone: 'UK',
       });
       setShowCreateForm(false);
       setError('');
@@ -273,13 +352,18 @@ export default function TimetablePage() {
   const handleMeetingClick = (meeting: Meeting) => {
     setSelectedMeeting(meeting);
     setShowMeetingDetail(true);
+    // Fetch project members for the meeting's project
+    const projectId = meeting.project_id || meeting.project;
+    if (projectId) {
+      fetchProjectMembers(projectId);
+    }
   };
 
   const handleUpdateMeetingFromDetail = async (meetingData: any) => {
     if (!selectedMeeting) return;
 
     // Check if user has access to update this meeting
-    const projectId = selectedMeeting.project_id || selectedMeeting.project;
+    const projectId = meetingData.project || selectedMeeting.project_id || selectedMeeting.project;
     if (!projectId || !accessibleProjectIds.has(projectId)) {
       setError('You do not have access to update this meeting');
       return;
@@ -288,11 +372,13 @@ export default function TimetablePage() {
     try {
       const updatedMeeting = await meetingService.updateMeeting(selectedMeeting.id, {
         title: meetingData.title.trim(),
-        description: meetingData.description.trim(),
+        description: meetingData.description?.trim() || '',
         date: meetingData.date,
         time: meetingData.time,
         duration: meetingData.duration,
+        project: meetingData.project || projectId,
         attendees: meetingData.attendees,
+        attendee_ids: meetingData.attendee_ids,
       });
       
       setMeetings(meetings.map(m => m.id === selectedMeeting.id ? updatedMeeting : m));
@@ -300,6 +386,7 @@ export default function TimetablePage() {
       setError('');
     } catch (err: any) {
       setError('Failed to update meeting');
+      console.error('Update meeting error:', err);
     }
   };
 
@@ -323,16 +410,33 @@ export default function TimetablePage() {
     }
 
     setEditingMeeting(meeting);
+    
+    // Parse agenda_items - handle different formats
+    let agendaItems: string[] = [];
+    if (Array.isArray(meeting.agenda_items) && meeting.agenda_items.length > 0) {
+      agendaItems = meeting.agenda_items;
+    } else if (typeof (meeting as any).agenda === 'string' && (meeting as any).agenda.trim()) {
+      agendaItems = (meeting as any).agenda.split('\n').filter((a: string) => a.trim());
+    }
+    
     setNewMeeting({
       title: meeting.title,
-      description: meeting.description,
+      description: meeting.description || '',
       date: meeting.date,
       time: meeting.time,
       duration: meeting.duration,
       project_id: meeting.project_id || meeting.project || 0,
       attendees: meeting.attendees_list ? meeting.attendees_list.join(', ') : meeting.attendees || '',
-      attendee_ids: [],
+      attendee_ids: meeting.attendee_ids || [],
+      agenda_items: agendaItems,
+      meeting_link: meeting.meeting_link || '',
+      reminder_time: meeting.reminder_time || 15,
+      isRecurring: false,
+      endDate: '',
+      repeatDays: [],
+      timezone: 'UK',
     });
+    setNewAgendaItem('');
     setShowCreateForm(true);
   };
 
@@ -357,6 +461,9 @@ export default function TimetablePage() {
         duration: newMeeting.duration,
         attendees: newMeeting.attendees,
         attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : undefined,
+        agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
+        meeting_link: newMeeting.meeting_link.trim() || undefined,
+        reminder_time: newMeeting.reminder_time || undefined,
       };
 
       const updatedMeeting = await meetingService.updateMeeting(editingMeeting.id, meetingData);
@@ -372,6 +479,13 @@ export default function TimetablePage() {
         project_id: 0,
         attendees: '',
         attendee_ids: [],
+        agenda_items: [],
+        meeting_link: '',
+        reminder_time: 15,
+        isRecurring: false,
+        endDate: '',
+        repeatDays: [],
+        timezone: 'UK',
       });
       setShowCreateForm(false);
       setError('');
@@ -402,6 +516,173 @@ export default function TimetablePage() {
     }
   };
 
+  // Open follow-up meeting modal
+  const handleOpenFollowUp = (meeting: Meeting) => {
+    // Set the next day as default date for follow-up
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 7); // Default to 1 week later
+    const dateStr = tomorrow.toISOString().split('T')[0];
+    
+    // Pre-fill with original meeting data and pre-select original attendees
+    setFollowUpMeeting(meeting);
+    setFollowUpForm({
+      date: dateStr,
+      time: meeting.time || '10:00',
+      duration: meeting.duration || 60,
+      attendee_ids: meeting.attendee_ids || [], // Pre-select original attendees
+      agenda_items: [`Follow-up from: ${meeting.title}`],
+      meeting_link: meeting.meeting_link || '',
+      reminder_time: meeting.reminder_time || 15,
+      notes: '',
+    });
+    setFollowUpAgendaItem('');
+    
+    // Fetch project members for attendee selection
+    const projectId = meeting.project_id || meeting.project;
+    if (projectId) {
+      fetchProjectMembers(projectId);
+    }
+    
+    setShowFollowUpModal(true);
+  };
+
+  // Create follow-up meeting
+  const handleCreateFollowUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!followUpMeeting || !followUpForm.date || !followUpForm.time) {
+      setError('Please fill in date and time for the follow-up meeting');
+      return;
+    }
+
+    setIsCreatingFollowUp(true);
+    
+    try {
+      const projectId = followUpMeeting.project_id || followUpMeeting.project;
+      
+      // Strip any existing "Follow-up: " prefix to avoid "Follow-up: Follow-up: ..."
+      const baseTitle = followUpMeeting.title.replace(/^(Follow-up:\s*)+/i, '');
+      
+      const meetingData = {
+        title: `Follow-up: ${baseTitle}`,
+        description: followUpForm.notes || `Follow-up meeting for: ${baseTitle}\n\nOriginal meeting date: ${followUpMeeting.date}`,
+        project: projectId,
+        date: followUpForm.date,
+        time: followUpForm.time,
+        duration: followUpForm.duration,
+        attendees: projectMembers
+          .filter(m => followUpForm.attendee_ids.includes(m.user_id))
+          .map(m => m.name || m.email)
+          .join(', '),
+        attendee_ids: followUpForm.attendee_ids.length > 0 ? followUpForm.attendee_ids : undefined,
+        agenda_items: followUpForm.agenda_items.length > 0 ? followUpForm.agenda_items : undefined,
+        meeting_link: followUpForm.meeting_link.trim() || undefined,
+        reminder_time: followUpForm.reminder_time || undefined,
+      };
+
+      const createdMeeting = await meetingService.createMeeting(meetingData);
+      setMeetings([createdMeeting, ...meetings]);
+      
+      // Send email notifications to attendees
+      await sendFollowUpNotifications(createdMeeting, followUpForm.attendee_ids);
+      
+      // Reset and close
+      setShowFollowUpModal(false);
+      setFollowUpMeeting(null);
+      setFollowUpForm({
+        date: '',
+        time: '',
+        duration: 60,
+        attendee_ids: [],
+        agenda_items: [],
+        meeting_link: '',
+        reminder_time: 15,
+        notes: '',
+      });
+      
+      alert('✅ Follow-up meeting created and notifications sent to all attendees!');
+      
+    } catch (err: any) {
+      console.error('Error creating follow-up meeting:', err);
+      setError('Failed to create follow-up meeting');
+    } finally {
+      setIsCreatingFollowUp(false);
+    }
+  };
+
+  // Send email notifications for follow-up meeting
+  const sendFollowUpNotifications = async (meeting: any, attendeeIds: number[]) => {
+    try {
+      // Get attendee emails
+      const attendeeEmails: string[] = [];
+      for (const id of attendeeIds) {
+        const member = projectMembers.find(m => m.user_id === id);
+        if (member?.email) {
+          attendeeEmails.push(member.email);
+        }
+      }
+      
+      // Also add the creator's email
+      if (user?.email) {
+        attendeeEmails.push(user.email);
+      }
+      
+      if (attendeeEmails.length === 0) return;
+
+      // Call the meeting reminders API to send notifications
+      const response = await fetch('/api/meeting-reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          meeting: {
+            ...meeting,
+            project_name: followUpMeeting?.project_name || 'Unknown Project',
+            attendees_list: projectMembers
+              .filter(m => attendeeIds.includes(m.user_id))
+              .map(m => m.name || m.email),
+          },
+          attendeeEmails,
+          isFollowUp: true,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to send follow-up notifications');
+      }
+    } catch (err) {
+      console.error('Error sending follow-up notifications:', err);
+    }
+  };
+
+  // Add agenda item to follow-up
+  const addFollowUpAgendaItem = () => {
+    if (followUpAgendaItem.trim()) {
+      setFollowUpForm(prev => ({
+        ...prev,
+        agenda_items: [...prev.agenda_items, followUpAgendaItem.trim()],
+      }));
+      setFollowUpAgendaItem('');
+    }
+  };
+
+  // Remove agenda item from follow-up
+  const removeFollowUpAgendaItem = (index: number) => {
+    setFollowUpForm(prev => ({
+      ...prev,
+      agenda_items: prev.agenda_items.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Toggle attendee in follow-up
+  const toggleFollowUpAttendee = (userId: number) => {
+    setFollowUpForm(prev => ({
+      ...prev,
+      attendee_ids: prev.attendee_ids.includes(userId)
+        ? prev.attendee_ids.filter(id => id !== userId)
+        : [...prev.attendee_ids, userId],
+    }));
+  };
+
   const formatDate = (dateString: string) => {
     // Parse date string manually to avoid timezone issues
     const [year, month, day] = dateString.split('-').map(Number);
@@ -423,6 +704,57 @@ export default function TimetablePage() {
       minute: '2-digit',
       hour12: true,
     });
+  };
+
+  // Convert UK time to Myanmar time (Myanmar is UTC+6:30, UK is UTC+0/+1)
+  const convertUKToMyanmar = (ukTime: string): string => {
+    if (!ukTime) return '';
+    const [hours, minutes] = ukTime.split(':').map(Number);
+    
+    // Myanmar is 5:30 hours ahead of UK (GMT) or 4:30 ahead during BST
+    // Using 5:30 as a general offset (UK winter time)
+    let myanmarHours = hours + 5;
+    let myanmarMinutes = minutes + 30;
+    
+    if (myanmarMinutes >= 60) {
+      myanmarMinutes -= 60;
+      myanmarHours += 1;
+    }
+    
+    if (myanmarHours >= 24) {
+      myanmarHours -= 24;
+    }
+    
+    return `${String(myanmarHours).padStart(2, '0')}:${String(myanmarMinutes).padStart(2, '0')}`;
+  };
+
+  // Convert Myanmar time to UK time (reverse: Myanmar - 5:30 = UK)
+  const convertMyanmarToUK = (mmTime: string): string => {
+    if (!mmTime) return '';
+    const [hours, minutes] = mmTime.split(':').map(Number);
+    
+    // UK is 5:30 hours behind Myanmar
+    let ukHours = hours - 5;
+    let ukMinutes = minutes - 30;
+    
+    if (ukMinutes < 0) {
+      ukMinutes += 60;
+      ukHours -= 1;
+    }
+    
+    if (ukHours < 0) {
+      ukHours += 24;
+    }
+    
+    return `${String(ukHours).padStart(2, '0')}:${String(ukMinutes).padStart(2, '0')}`;
+  };
+
+  // Format time with both UK and Myanmar
+  const formatTimeWithTimezones = (timeString: string) => {
+    const ukTime = formatTime(timeString);
+    const myanmarTimeStr = convertUKToMyanmar(timeString);
+    const myanmarTime = formatTime(myanmarTimeStr);
+    return { uk: ukTime, myanmar: myanmarTime };
   };
 
   const formatDuration = (minutes: number) => {
@@ -496,12 +828,30 @@ export default function TimetablePage() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
   };
 
+  // Memoized meetings grouped by date for faster lookups
+  const meetingsByDate = useMemo(() => {
+    const grouped: Record<string, Meeting[]> = {};
+    meetings.forEach(meeting => {
+      if (!grouped[meeting.date]) {
+        grouped[meeting.date] = [];
+      }
+      grouped[meeting.date].push(meeting);
+    });
+    return grouped;
+  }, [meetings]);
+
   const getMeetingsForDate = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
-    return meetings.filter(meeting => meeting.date === dateStr);
+    const dayMeetings = meetingsByDate[dateStr] || [];
+    // Sort by time (earliest first)
+    return dayMeetings.sort((a, b) => {
+      const [hoursA, minutesA] = a.time.split(':').map(Number);
+      const [hoursB, minutesB] = b.time.split(':').map(Number);
+      return (hoursA * 60 + minutesA) - (hoursB * 60 + minutesB);
+    });
   };
 
   // Helper functions for week and day views
@@ -597,8 +947,31 @@ export default function TimetablePage() {
 
   if (isLoading) {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5ED' }}>
-        <div style={{ width: '32px', height: '32px', border: '3px solid #C483D9', borderTop: '3px solid #5884FD', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <div style={{ minHeight: '100vh', background: '#F5F5ED' }}>
+        <div style={{ display: 'flex' }}>
+          <Sidebar projects={[]} onCreateProject={() => {}} />
+          <div className="page-main" style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', padding: '2rem' }}>
+            {/* Skeleton Header */}
+            <div style={{ marginBottom: '2rem' }}>
+              <div style={{ height: '32px', width: '250px', background: '#E5E7EB', borderRadius: '8px', marginBottom: '12px', animation: 'pulse 1.5s infinite' }}></div>
+              <div style={{ height: '20px', width: '350px', background: '#E5E7EB', borderRadius: '6px', animation: 'pulse 1.5s infinite' }}></div>
+            </div>
+            {/* Skeleton Calendar Grid */}
+            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', marginBottom: '16px' }}>
+                {[1,2,3,4,5,6,7].map(i => (
+                  <div key={i} style={{ height: '40px', background: '#F3F4F6', borderRadius: '8px', animation: 'pulse 1.5s infinite' }}></div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+                {Array.from({length: 35}, (_, i) => (
+                  <div key={i} style={{ height: '100px', background: '#F9FAFB', borderRadius: '8px', animation: 'pulse 1.5s infinite' }}></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
       </div>
     );
   }
@@ -625,6 +998,7 @@ export default function TimetablePage() {
           }
           .main-content {
             flex: 1;
+            margin-left: ${isMobile ? '0' : '280px'};
             background: transparent;
             max-width: ${isMobile ? '100vw' : 'calc(100vw - 280px)'};
             overflow-x: hidden;
@@ -2218,13 +2592,16 @@ export default function TimetablePage() {
         `
       }} />
 
-      <main className="main-content">
+      <div className="timetable-container">
+        <Sidebar projects={projects} onCreateProject={handleCreateProject} />
+
+        <main className="main-content">
           <header className="header">
             <div className="header-content">
               <div>
                 <h1 className="header-title">
                   <ClockIcon style={{ width: '32px', height: '32px' }} />
-                  Timetable & Meetings
+                  Meeting Schedule
                 </h1>
                 <p style={{ color: '#666666', fontSize: '1.1rem', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                   Schedule and manage team meetings across all projects
@@ -2528,6 +2905,17 @@ export default function TimetablePage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              handleOpenFollowUp(meeting);
+                            }}
+                            className="action-btn"
+                            title="Schedule follow-up"
+                            style={{ background: '#dbeafe', color: '#2563eb' }}
+                          >
+                            <ArrowPathIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleEditMeeting(meeting);
                             }}
                             className="action-btn"
@@ -2553,9 +2941,17 @@ export default function TimetablePage() {
                           <CalendarDaysIcon style={{ width: '16px', height: '16px' }} />
                           <span>{formatDate(meeting.date)}</span>
                         </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                         <div className="detail-item">
                           <ClockIcon style={{ width: '16px', height: '16px' }} />
-                          <span>{formatTime(meeting.time)} ({formatDuration(meeting.duration)})</span>
+                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#6B7280', minWidth: '24px' }}>UK</span>
+                            <span>{formatTime(meeting.time)}</span>
+                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>({formatDuration(meeting.duration)})</span>
+                          </div>
+                          <div className="detail-item" style={{ paddingLeft: '22px' }}>
+                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#D97706', minWidth: '24px' }}>MM</span>
+                            <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
+                          </div>
                         </div>
                         <div className="detail-item">
                           <UserGroupIcon style={{ width: '16px', height: '16px' }} />
@@ -2579,6 +2975,34 @@ export default function TimetablePage() {
                           </div>
                         </div>
                       )}
+
+                      {/* Follow-up button for quick access */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenFollowUp(meeting);
+                        }}
+                        style={{
+                          marginTop: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          width: '100%',
+                          padding: '8px 12px',
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <ArrowPathIcon style={{ width: '14px', height: '14px' }} />
+                        Schedule Follow-up Meeting
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -2610,6 +3034,17 @@ export default function TimetablePage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              handleOpenFollowUp(meeting);
+                            }}
+                            className="action-btn"
+                            title="Schedule follow-up"
+                            style={{ background: '#dbeafe', color: '#2563eb' }}
+                          >
+                            <ArrowPathIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleDeleteMeeting(meeting.id);
                             }}
                             className="action-btn delete"
@@ -2625,9 +3060,17 @@ export default function TimetablePage() {
                           <CalendarDaysIcon style={{ width: '16px', height: '16px' }} />
                           <span>{formatDate(meeting.date)}</span>
                         </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                         <div className="detail-item">
                           <ClockIcon style={{ width: '16px', height: '16px' }} />
-                          <span>{formatTime(meeting.time)} ({formatDuration(meeting.duration)})</span>
+                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#6B7280', minWidth: '24px' }}>UK</span>
+                            <span>{formatTime(meeting.time)}</span>
+                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>({formatDuration(meeting.duration)})</span>
+                          </div>
+                          <div className="detail-item" style={{ paddingLeft: '22px' }}>
+                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#D97706', minWidth: '24px' }}>MM</span>
+                            <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
+                          </div>
                         </div>
                         <div className="detail-item">
                           <UserGroupIcon style={{ width: '16px', height: '16px' }} />
@@ -2651,6 +3094,34 @@ export default function TimetablePage() {
                           </div>
                         </div>
                       )}
+
+                      {/* Follow-up button for past meetings */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenFollowUp(meeting);
+                        }}
+                        style={{
+                          marginTop: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          width: '100%',
+                          padding: '8px 12px',
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <ArrowPathIcon style={{ width: '14px', height: '14px' }} />
+                        Schedule Follow-up Meeting
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -2869,28 +3340,32 @@ export default function TimetablePage() {
                                 </div>
                                 <div style={{ 
                                   display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '2px',
+                                  fontSize: '0.625rem'
+                                }}>
+                                <div style={{ 
+                                  display: 'flex',
                                   justifyContent: 'space-between',
                                   alignItems: 'center',
-                                  fontSize: '0.65rem'
                                 }}>
-                                  <div style={{
-                                    fontWeight: '500',
-                                    maxWidth: '60%',
-                                  overflow: 'hidden', 
-                                  textOverflow: 'ellipsis', 
-                                  whiteSpace: 'nowrap',
-                                    color: '#6B7280'
-                                }}>
-                                    {formatTime(meeting.time)}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                      <span style={{ fontWeight: '600', color: '#1E3A5F', fontSize: '9px' }}>UK</span>
+                                      <span style={{ color: '#0369A1', fontWeight: '500' }}>{formatTime(meeting.time)}</span>
                                 </div>
                                   <div style={{ 
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '0.125rem',
+                                      gap: '2px',
                                     color: '#6B7280'
                                   }}>
-                                    <UserGroupIcon style={{ width: '10px', height: '10px' }} />
-                                    {meeting.created_by.name.split(' ')[0]}
+                                      <UserGroupIcon style={{ width: '9px', height: '9px' }} />
+                                      <span style={{ fontSize: '9px' }}>{meeting.created_by.name.split(' ')[0]}</span>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <span style={{ fontWeight: '600', color: '#92400E', fontSize: '9px' }}>MM</span>
+                                    <span style={{ color: '#B45309', fontWeight: '500' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
                                   </div>
                                 </div>
                               </div>
@@ -3062,10 +3537,19 @@ export default function TimetablePage() {
                                         {meeting.title}
                                       </div>
                                       <div style={{
-                                        fontSize: '0.75rem',
-                                        color: '#6B7280'
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '2px',
+                                        fontSize: '0.7rem',
                                       }}>
-                                        {formatTime(meeting.time)}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                          <span style={{ fontWeight: '600', color: '#1E3A5F', fontSize: '10px' }}>UK</span>
+                                          <span style={{ color: '#0369A1' }}>{formatTime(meeting.time)}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                          <span style={{ fontWeight: '600', color: '#92400E', fontSize: '10px' }}>MM</span>
+                                          <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
+                                        </div>
                                       </div>
                                     </div>
                                   ))}
@@ -3184,10 +3668,22 @@ export default function TimetablePage() {
                                       </div>
                                       <div style={{
                                         fontSize: '0.875rem',
-                                        color: '#6B7280',
-                                        marginBottom: '0.25rem'
+                                        marginBottom: '0.25rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
                                       }}>
-                                        {formatTime(meeting.time)} • {meeting.project_name}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                          <span style={{ fontWeight: '600', color: '#1E3A5F', fontSize: '11px' }}>UK</span>
+                                          <span style={{ color: '#0369A1' }}>{formatTime(meeting.time)}</span>
+                                        </div>
+                                        <span style={{ color: '#D1D5DB' }}>|</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                          <span style={{ fontWeight: '600', color: '#92400E', fontSize: '11px' }}>MM</span>
+                                          <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
+                                        </div>
+                                        <span style={{ color: '#D1D5DB' }}>•</span>
+                                        <span style={{ color: '#6B7280' }}>{meeting.project_name}</span>
                                       </div>
                                       {meeting.description && (
                                         <div style={{
@@ -3211,6 +3707,7 @@ export default function TimetablePage() {
               )}
           </div>
         </main>
+      </div>
 
       {/* Meeting Detail Modal */}
       {showMeetingDetail && selectedMeeting && (
@@ -3222,6 +3719,11 @@ export default function TimetablePage() {
           }}
           onUpdate={handleUpdateMeetingFromDetail}
           onDelete={handleDeleteMeetingFromDetail}
+          onFollowUp={(meeting) => {
+            setShowMeetingDetail(false);
+            setSelectedMeeting(null);
+            handleOpenFollowUp(meeting as any);
+          }}
           projectMembers={projectMembers}
           projects={projects}
           onProjectChange={(projectId: number) => {
@@ -3395,6 +3897,13 @@ export default function TimetablePage() {
             project_id: 0,
             attendees: '',
             attendee_ids: [],
+            agenda_items: [],
+            meeting_link: '',
+            reminder_time: 15,
+            isRecurring: false,
+            endDate: '',
+            repeatDays: [],
+            timezone: 'UK',
           });
         }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -3416,6 +3925,13 @@ export default function TimetablePage() {
                     project_id: 0,
                     attendees: '',
                     attendee_ids: [],
+                    agenda_items: [],
+                    meeting_link: '',
+                    reminder_time: 15,
+                    isRecurring: false,
+                    endDate: '',
+                    repeatDays: [],
+                    timezone: 'UK',
                   });
                 }}
                 className="modal-close-btn"
@@ -3474,6 +3990,16 @@ export default function TimetablePage() {
                   />
                 </div>
                 <div className="form-group">
+                  <label className="form-label">Timezone</label>
+                  <select
+                    className="form-select"
+                    value={newMeeting.timezone}
+                    onChange={(e) => setNewMeeting({ ...newMeeting, timezone: e.target.value as 'UK' | 'MM' })}
+                    style={{ marginBottom: '8px' }}
+                  >
+                    <option value="UK">UK (GMT/BST)</option>
+                    <option value="MM">Myanmar (MMT)</option>
+                  </select>
                   <label className="form-label">Time *</label>
                   <input
                     type="time"
@@ -3482,6 +4008,33 @@ export default function TimetablePage() {
                     value={newMeeting.time}
                     onChange={(e) => setNewMeeting({ ...newMeeting, time: e.target.value })}
                   />
+                  {newMeeting.time && (
+                    <div style={{ 
+                      marginTop: '8px', 
+                      padding: '10px 12px', 
+                      background: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)', 
+                      borderRadius: '8px',
+                      border: '1px solid #BAE6FD',
+                      fontSize: '12px',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: '700', color: '#1E3A5F', fontSize: '11px' }}>UK</span>
+                          <span style={{ color: '#0369A1', fontWeight: '500' }}>
+                            {formatTime(newMeeting.timezone === 'UK' ? newMeeting.time : convertMyanmarToUK(newMeeting.time))}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: '700', color: '#92400E', fontSize: '11px' }}>MM</span>
+                          <span style={{ color: '#B45309', fontWeight: '500' }}>
+                            {formatTime(newMeeting.timezone === 'MM' ? newMeeting.time : convertUKToMyanmar(newMeeting.time))}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="form-group">
                   <label className="form-label">Duration</label>
@@ -3497,6 +4050,102 @@ export default function TimetablePage() {
                   />
                 </div>
               </div>
+
+              {/* Recurring Meeting Options */}
+              {!editingMeeting && (
+                <div style={{
+                  padding: '16px',
+                  background: newMeeting.isRecurring ? '#EFF6FF' : '#F9FAFB',
+                  borderRadius: '12px',
+                  border: newMeeting.isRecurring ? '2px solid #3B82F6' : '1px solid #E5E7EB',
+                  marginBottom: '16px'
+                }}>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    color: '#374151'
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={newMeeting.isRecurring}
+                      onChange={(e) => setNewMeeting({ ...newMeeting, isRecurring: e.target.checked })}
+                      style={{ width: '18px', height: '18px', accentColor: '#3B82F6' }}
+                    />
+                    <span>Recurring Meeting</span>
+                  </label>
+                  
+                  {newMeeting.isRecurring && (
+                    <div style={{ marginTop: '16px' }}>
+                      {/* End Date */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#374151', fontSize: '14px' }}>
+                          End Date *
+                        </label>
+                        <input
+                          type="date"
+                          className="form-input"
+                          value={newMeeting.endDate}
+                          min={newMeeting.date}
+                          onChange={(e) => setNewMeeting({ ...newMeeting, endDate: e.target.value })}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                      
+                      {/* Day Selection */}
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151', fontSize: '14px' }}>
+                          Repeat on Days *
+                        </label>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {[
+                            { day: 0, label: 'Sun' },
+                            { day: 1, label: 'Mon' },
+                            { day: 2, label: 'Tue' },
+                            { day: 3, label: 'Wed' },
+                            { day: 4, label: 'Thu' },
+                            { day: 5, label: 'Fri' },
+                            { day: 6, label: 'Sat' },
+                          ].map(({ day, label }) => (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => {
+                                const newDays = newMeeting.repeatDays.includes(day)
+                                  ? newMeeting.repeatDays.filter(d => d !== day)
+                                  : [...newMeeting.repeatDays, day];
+                                setNewMeeting({ ...newMeeting, repeatDays: newDays });
+                              }}
+                              style={{
+                                padding: '8px 14px',
+                                borderRadius: '8px',
+                                border: newMeeting.repeatDays.includes(day) ? '2px solid #3B82F6' : '1px solid #D1D5DB',
+                                background: newMeeting.repeatDays.includes(day) ? '#3B82F6' : 'white',
+                                color: newMeeting.repeatDays.includes(day) ? 'white' : '#374151',
+                                fontWeight: '600',
+                                fontSize: '13px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        {newMeeting.repeatDays.length > 0 && (
+                          <p style={{ marginTop: '8px', fontSize: '13px', color: '#6B7280' }}>
+                            Meeting will repeat every {newMeeting.repeatDays.sort((a, b) => a - b).map(d => 
+                              ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]
+                            ).join(', ')} from {newMeeting.date || 'start date'} to {newMeeting.endDate || 'end date'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="form-group">
                 <label className="form-label">Invite Attendees (Optional)</label>
@@ -3613,6 +4262,188 @@ export default function TimetablePage() {
                 )}
               </div>
 
+              {/* Meeting Agenda */}
+              <div className="form-group">
+                <label className="form-label">Meeting Agenda</label>
+                
+                {/* Add new agenda item */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Add agenda item..."
+                    value={newAgendaItem}
+                    onChange={(e) => setNewAgendaItem(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && newAgendaItem.trim()) {
+                        e.preventDefault();
+                        setNewMeeting({
+                          ...newMeeting,
+                          agenda_items: [...newMeeting.agenda_items, newAgendaItem.trim()]
+                        });
+                        setNewAgendaItem('');
+                      }
+                    }}
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newAgendaItem.trim()) {
+                        setNewMeeting({
+                          ...newMeeting,
+                          agenda_items: [...newMeeting.agenda_items, newAgendaItem.trim()]
+                        });
+                        setNewAgendaItem('');
+                      }
+                    }}
+                    style={{
+                      padding: '10px 16px',
+                      background: '#10B981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    <PlusIcon style={{ width: '16px', height: '16px' }} />
+                    Add
+                  </button>
+                </div>
+
+                {/* Agenda items list */}
+                {newMeeting.agenda_items.length > 0 ? (
+                  <div style={{ 
+                    border: '1px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    overflow: 'hidden',
+                    background: '#F9FAFB'
+                  }}>
+                    {newMeeting.agenda_items.map((item, index) => (
+                      <div 
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px 16px',
+                          borderBottom: index < newMeeting.agenda_items.length - 1 ? '1px solid #E5E7EB' : 'none',
+                          background: 'white'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <span style={{
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            background: '#5884FD',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {index + 1}
+                          </span>
+                          <span style={{ fontSize: '14px', color: '#374151' }}>{item}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewMeeting({
+                              ...newMeeting,
+                              agenda_items: newMeeting.agenda_items.filter((_, i) => i !== index)
+                            });
+                          }}
+                          style={{
+                            padding: '4px 8px',
+                            background: '#FEE2E2',
+                            color: '#DC2626',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{
+                    padding: '24px',
+                    textAlign: 'center',
+                    color: '#9CA3AF',
+                    border: '2px dashed #E5E7EB',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}>
+                    No agenda items yet. Add items to keep your meeting focused.
+                  </div>
+                )}
+              </div>
+
+              {/* Meeting Link */}
+              <div className="form-group">
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '18px', height: '18px', color: '#3b82f6' }}>
+                    <path strokeLinecap="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                  Meeting Link (Zoom/Google Meet/Teams)
+                </label>
+                <input
+                  type="url"
+                  className="form-input"
+                  placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+                  value={newMeeting.meeting_link}
+                  onChange={(e) => setNewMeeting({ ...newMeeting, meeting_link: e.target.value })}
+                  style={{ 
+                    borderColor: newMeeting.meeting_link ? '#3b82f6' : undefined,
+                    background: newMeeting.meeting_link ? '#eff6ff' : undefined
+                  }}
+                />
+                <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
+                  Add a video call link for remote attendees
+                </p>
+              </div>
+
+              {/* Email Reminder */}
+              <div className="form-group">
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '18px', height: '18px', color: '#f59e0b' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                  </svg>
+                  Email Reminder
+                </label>
+                <select
+                  className="form-select"
+                  value={newMeeting.reminder_time}
+                  onChange={(e) => setNewMeeting({ ...newMeeting, reminder_time: Number(e.target.value) })}
+                  style={{ 
+                    borderColor: '#f59e0b',
+                    background: '#fffbeb'
+                  }}
+                >
+                  <option value={0}>No reminder</option>
+                  <option value={5}>5 minutes before</option>
+                  <option value={10}>10 minutes before</option>
+                  <option value={15}>15 minutes before</option>
+                  <option value={30}>30 minutes before</option>
+                  <option value={60}>1 hour before</option>
+                  <option value={120}>2 hours before</option>
+                  <option value={1440}>1 day before</option>
+                </select>
+                <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
+                  Send an email notification to all attendees before the meeting starts
+                </p>
+              </div>
+
               <div className="form-actions">
                 <button type="submit" className="btn-primary">
                   {editingMeeting ? 'Update Meeting' : 'Schedule Meeting'}
@@ -3629,9 +4460,528 @@ export default function TimetablePage() {
                     project_id: 0,
                     attendees: '',
                     attendee_ids: [],
+                    agenda_items: [],
+                    meeting_link: '',
+                    reminder_time: 15,
+                    isRecurring: false,
+                    endDate: '',
+                    repeatDays: [],
+                    timezone: 'UK',
                   });
                 }} className="btn-secondary">
                   Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Follow-Up Meeting Modal */}
+      {showFollowUpModal && followUpMeeting && (
+        <div 
+          className="modal-overlay"
+          onClick={() => setShowFollowUpModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fff',
+              borderRadius: '20px',
+              maxWidth: '560px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'hidden',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              background: '#1F2937',
+              padding: '24px',
+              color: '#fff',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Schedule Follow-up
+                  </p>
+                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#fff' }}>
+                    {followUpMeeting.title.replace(/^(Follow-up:\s*)+/i, '')}
+                  </h2>
+                  <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#9CA3AF' }}>
+                      <CalendarDaysIcon style={{ width: '14px', height: '14px' }} />
+                      {formatDate(followUpMeeting.date)}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#9CA3AF' }}>
+                      <ClockIcon style={{ width: '14px', height: '14px' }} />
+                      {formatTime(followUpMeeting.time)}
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowFollowUpModal(false)}
+                  style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '10px',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                >
+                  <XMarkIcon style={{ width: '20px', height: '20px', color: '#fff' }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleCreateFollowUp} style={{ padding: '24px', overflowY: 'auto', maxHeight: 'calc(90vh - 140px)' }}>
+              {/* Date and Time Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={followUpForm.date}
+                    onChange={(e) => setFollowUpForm(prev => ({ ...prev, date: e.target.value }))}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      background: '#F9FAFB',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Time (UK)
+                  </label>
+                  <input
+                    type="time"
+                    value={followUpForm.time}
+                    onChange={(e) => setFollowUpForm(prev => ({ ...prev, time: e.target.value }))}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      background: '#F9FAFB',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
+                  />
+                  {followUpForm.time && (
+                    <div style={{ marginTop: '4px', fontSize: '11px', color: '#D97706', fontWeight: '500' }}>
+                      MM: {formatTime(convertUKToMyanmar(followUpForm.time))}
+                </div>
+                  )}
+              </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Duration
+                  </label>
+                  <select
+                    value={followUpForm.duration}
+                    onChange={(e) => setFollowUpForm(prev => ({ ...prev, duration: Number(e.target.value) }))}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      background: '#F9FAFB',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value={15}>15 min</option>
+                    <option value={30}>30 min</option>
+                    <option value={45}>45 min</option>
+                    <option value={60}>1 hour</option>
+                    <option value={90}>1.5 hours</option>
+                    <option value={120}>2 hours</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Meeting Link and Reminder Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Meeting Link
+                  </label>
+                  <input
+                    type="url"
+                    value={followUpForm.meeting_link}
+                    onChange={(e) => setFollowUpForm(prev => ({ ...prev, meeting_link: e.target.value }))}
+                    placeholder="https://zoom.us/j/..."
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      background: '#F9FAFB',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Reminder
+                  </label>
+                  <select
+                    value={followUpForm.reminder_time}
+                    onChange={(e) => setFollowUpForm(prev => ({ ...prev, reminder_time: Number(e.target.value) }))}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      background: '#F9FAFB',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value={0}>None</option>
+                    <option value={5}>5 min</option>
+                    <option value={15}>15 min</option>
+                    <option value={30}>30 min</option>
+                    <option value={60}>1 hour</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Attendees - Show original meeting attendees */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Attendees
+                </label>
+                {(() => {
+                  // Get original meeting attendees - from attendee_ids or attendees_list
+                  const originalAttendeeIds = followUpMeeting?.attendee_ids || [];
+                  const originalAttendeeNames = followUpMeeting?.attendees_list || 
+                    (followUpMeeting?.attendees ? followUpMeeting.attendees.split(',').map((a: string) => a.trim()).filter((a: string) => a) : []);
+                  
+                  // Get user objects for original attendees
+                  const originalAttendees = originalAttendeeIds.length > 0
+                    ? users.filter(u => originalAttendeeIds.includes(u.id))
+                    : originalAttendeeNames.map((name: string, idx: number) => ({ id: idx, name, email: '' }));
+                  
+                  if (originalAttendees.length === 0 && originalAttendeeNames.length > 0) {
+                    // Fallback: show names as tags if we can't match to user objects
+                    return (
+                      <div style={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: '8px', 
+                        padding: '12px', 
+                        background: '#f9fafb', 
+                        borderRadius: '8px'
+                      }}>
+                        {originalAttendeeNames.map((name: string, idx: number) => (
+                          <div
+                            key={idx}
+                  style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '6px 10px',
+                              background: '#dbeafe',
+                              border: '2px solid #3b82f6',
+                              borderRadius: '20px',
+                              fontSize: '13px',
+                            }}
+                          >
+                            <span style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              background: '#3b82f6',
+                              color: '#fff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                            }}>
+                              {name.charAt(0).toUpperCase()}
+                            </span>
+                            {name}
+                            <CheckIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
+              </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  
+                  if (originalAttendees.length > 0) {
+                    return (
+                      <div style={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: '8px', 
+                        padding: '12px', 
+                        background: '#f9fafb', 
+                        borderRadius: '8px',
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                      }}>
+                        {originalAttendees.map((member: any) => {
+                          const userId = member.id || member.user_id;
+                          const isSelected = followUpForm.attendee_ids.includes(userId);
+                        return (
+                          <div
+                              key={userId}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                                toggleFollowUpAttendee(userId);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '6px 10px',
+                              background: isSelected ? '#dbeafe' : '#fff',
+                              border: `2px solid ${isSelected ? '#3b82f6' : '#e5e7eb'}`,
+                              borderRadius: '20px',
+                              cursor: 'pointer',
+                              fontSize: '13px',
+                              transition: 'all 0.2s ease',
+                              userSelect: 'none',
+                            }}
+                          >
+                            <span style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              background: isSelected ? '#3b82f6' : '#e5e7eb',
+                              color: '#fff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                            }}>
+                              {(member.name || member.email || '?').charAt(0).toUpperCase()}
+                            </span>
+                            {member.name || member.email}
+                            {isSelected && (
+                              <CheckIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
+                            )}
+                          </div>
+                        );
+                      })}
+                  </div>
+                    );
+                  }
+                  
+                  return (
+                  <p style={{ fontSize: '13px', color: '#6b7280', fontStyle: 'italic' }}>
+                      No attendees in original meeting
+                  </p>
+                  );
+                })()}
+              </div>
+
+              {/* Agenda Items */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Agenda
+                </label>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                  <input
+                    type="text"
+                    value={followUpAgendaItem}
+                    onChange={(e) => setFollowUpAgendaItem(e.target.value)}
+                    placeholder="Add agenda item..."
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFollowUpAgendaItem())}
+                    style={{
+                      flex: 1,
+                      padding: '12px 14px',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '10px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      background: '#F9FAFB',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
+                  />
+                  <button
+                    type="button"
+                    onClick={addFollowUpAgendaItem}
+                    style={{
+                      padding: '12px 20px',
+                      background: '#1F2937',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#374151'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#1F2937'}
+                  >
+                    Add
+                  </button>
+                </div>
+                {followUpForm.agenda_items.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {followUpForm.agenda_items.map((item, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 12px',
+                          background: '#f3f4f6',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                        }}
+                      >
+                        <span>{index + 1}. {item}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeFollowUpAgendaItem(index)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#ef4444',
+                            cursor: 'pointer',
+                            padding: '4px',
+                          }}
+                        >
+                          <XMarkIcon style={{ width: '16px', height: '16px' }} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#6B7280', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Notes
+                </label>
+                <textarea
+                  value={followUpForm.notes}
+                  onChange={(e) => setFollowUpForm(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Additional context for this follow-up..."
+                  rows={2}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    resize: 'none',
+                    background: '#F9FAFB',
+                    transition: 'border-color 0.2s, box-shadow 0.2s',
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
+                />
+              </div>
+
+              {/* Actions */}
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                paddingTop: '16px',
+                borderTop: '1px solid #E5E7EB'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setShowFollowUpModal(false)}
+                  style={{
+                    padding: '14px 24px',
+                    background: '#F3F4F6',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#E5E7EB'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#F3F4F6'}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingFollowUp}
+                  style={{
+                    flex: 1,
+                    padding: '14px 24px',
+                    background: isCreatingFollowUp ? '#9CA3AF' : '#1F2937',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: isCreatingFollowUp ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={(e) => !isCreatingFollowUp && (e.currentTarget.style.background = '#374151')}
+                  onMouseLeave={(e) => !isCreatingFollowUp && (e.currentTarget.style.background = '#1F2937')}
+                >
+                  {isCreatingFollowUp ? (
+                    <>
+                      <svg className="animate-spin" style={{ width: '16px', height: '16px' }} fill="none" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.25 }} />
+                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style={{ opacity: 0.75 }} />
+                      </svg>
+                      Creating...
+                    </>
+                  ) : (
+                    'Schedule Follow-up'
+                  )}
                 </button>
               </div>
             </form>

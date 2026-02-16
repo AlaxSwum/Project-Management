@@ -20,6 +20,8 @@ import {
   UserIcon,
   GlobeAltIcon
 } from '@heroicons/react/24/outline';
+import Sidebar from '@/components/Sidebar';
+
 interface PasswordEntry {
   id: number;
   account_name: string;
@@ -184,6 +186,8 @@ export default function PasswordVaultPage() {
   const fetchFolders = async () => {
     const { supabaseDb, supabase } = await import('@/lib/supabase');
     
+    if (!user?.id) return;
+    
     // Use the new service function
     const { data, error } = await supabaseDb.getPasswordFolders();
     
@@ -192,14 +196,20 @@ export default function PasswordVaultPage() {
     // Count passwords per folder and try to get access data separately
     const foldersWithCounts = await Promise.all(
       (data || []).map(async (folder: any) => {
-        const { count } = await supabase
+        // Count passwords user has access to in this folder
+        const { data: folderPasswords } = await supabase
           .from('password_vault')
-          .select('*', { count: 'exact' })
+          .select('id')
           .eq('folder_id', folder.id)
-          .eq('is_active', true);
+          .eq('is_active', true)
+          .or(`created_by_id.eq.${user.id}`);
+        
+        const accessiblePasswordCount = folderPasswords?.length || 0;
         
         // Try to get access data, but don't fail if table doesn't exist
         let members: FolderMember[] = [];
+        let hasAccess = false;
+        
         try {
           const { data: accessData } = await supabase
             .from('password_vault_folder_access')
@@ -216,20 +226,37 @@ export default function PasswordVaultPage() {
             .eq('folder_id', folder.id);
           
           members = accessData || [];
+          
+          // Check if current user has access to this folder
+          hasAccess = members.some(m => Number(m.user_id) === Number(user.id) && m.can_view);
         } catch (accessError) {
           console.warn('password_vault_folder_access table not found, using empty members array');
           members = [];
         }
         
+        // User has access if:
+        // 1. They created the folder, OR
+        // 2. They have folder-level access, OR
+        // 3. They have at least one accessible password in the folder
+        const userHasAccess = 
+          folder.created_by_id === user.id || 
+          hasAccess || 
+          accessiblePasswordCount > 0;
+        
         return {
           ...folder,
-          password_count: count || 0,
-          members: members
+          password_count: accessiblePasswordCount,
+          members: members,
+          userHasAccess: userHasAccess
         };
       })
     );
     
-    setFolders(foldersWithCounts);
+    // Filter to only show folders user has access to
+    const accessibleFolders = foldersWithCounts.filter(folder => folder.userHasAccess);
+    
+    console.log(`Password Vault: Showing ${accessibleFolders.length} of ${foldersWithCounts.length} folders`);
+    setFolders(accessibleFolders);
   };
 
   const createFolder = async () => {
@@ -574,22 +601,26 @@ export default function PasswordVaultPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div style={{ 
-        padding: '2rem', 
-        background: '#F5F5ED', 
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ 
-          width: '32px', 
-          height: '32px', 
-          border: '3px solid #C483D9', 
-          borderTop: '3px solid #5884FD', 
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#0D0D0D' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+        <div className="page-main" style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#0D0D0D', 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{ 
+            width: '32px', 
+            height: '32px', 
+            border: '3px solid #C483D9', 
+            borderTop: '3px solid #5884FD', 
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
       </div>
     );
   }
@@ -603,6 +634,25 @@ export default function PasswordVaultPage() {
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+          }
+          
+          input::placeholder,
+          textarea::placeholder {
+            color: #71717A;
+            opacity: 1;
+          }
+          
+          input:-webkit-autofill,
+          input:-webkit-autofill:hover,
+          input:-webkit-autofill:focus,
+          input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #141414 inset !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+          }
+          
+          select option {
+            background: #141414;
+            color: #FFFFFF;
           }
           
           .modal-overlay {
@@ -619,13 +669,13 @@ export default function PasswordVaultPage() {
           }
           
           .modal-content {
-            background: #ffffff;
+            background: #1A1A1A;
             border-radius: 16px;
             width: 90%;
             max-width: 600px;
             max-height: 90vh;
             overflow: auto;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
           }
           
           .password-item {
@@ -633,9 +683,9 @@ export default function PasswordVaultPage() {
           }
           
           .password-item:hover {
-            background: #f8fafc !important;
+            background: #2D2D2D !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
           }
           
           .folder-item {
@@ -644,7 +694,7 @@ export default function PasswordVaultPage() {
           }
           
           .folder-item:hover {
-            background: #f8fafc !important;
+            background: #2D2D2D !important;
             transform: translateY(-1px);
           }
           
@@ -655,12 +705,16 @@ export default function PasswordVaultPage() {
         `
       }} />
       
-      <div style={{ 
-        padding: '2rem', 
-        background: '#F5F5ED', 
-        flex: 1,
-        minHeight: '100vh'
-      }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#0D0D0D' }}>
+        <Sidebar projects={[]} onCreateProject={() => {}} />
+
+        <div className="page-main" style={{ 
+          marginLeft: '256px',
+          padding: '2rem', 
+          background: '#0D0D0D', 
+          flex: 1,
+          minHeight: '100vh'
+        }}>
           {/* Header */}
           <div style={{ 
             display: 'flex', 
@@ -673,7 +727,7 @@ export default function PasswordVaultPage() {
                 fontSize: '2.5rem', 
                 fontWeight: '300', 
                 margin: '0', 
-                color: '#1a1a1a',
+                color: '#FFFFFF',
                 letterSpacing: '-0.02em',
                 display: 'flex',
                 alignItems: 'center',
@@ -682,7 +736,7 @@ export default function PasswordVaultPage() {
                 <KeyIcon style={{ width: '36px', height: '36px', color: '#5884FD' }} />
                 Password Vault
               </h1>
-              <p style={{ fontSize: '1.1rem', color: '#666666', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
+              <p style={{ fontSize: '1.1rem', color: '#A1A1AA', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
                 Secure password management with folder organization
               </p>
             </div>
@@ -736,7 +790,7 @@ export default function PasswordVaultPage() {
 
           {error && (
             <div style={{ 
-              background: '#ffffff', 
+              background: '#1A1A1A', 
               border: '1px solid #F87239', 
               borderRadius: '12px', 
               padding: '1rem', 
@@ -751,17 +805,18 @@ export default function PasswordVaultPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
             {/* Sidebar with folders */}
             <div style={{
-              background: '#ffffff',
+              background: '#1A1A1A',
               borderRadius: '16px',
               padding: '1.5rem',
-              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)',
-              height: 'fit-content'
+              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.3)',
+              height: 'fit-content',
+              border: '1px solid #2D2D2D'
             }}>
               <h3 style={{ 
                 fontSize: '1.1rem', 
                 fontWeight: '600', 
                 margin: '0 0 1rem 0',
-                color: '#1a1a1a'
+                color: '#FFFFFF'
               }}>
                 Folders
               </h3>
@@ -774,12 +829,13 @@ export default function PasswordVaultPage() {
                   padding: '0.75rem',
                   borderRadius: '8px',
                   marginBottom: '0.5rem',
-                  background: selectedFolder === null ? 'linear-gradient(135deg, #5884FD, #6c91ff)' : '#f8fafc',
-                  color: selectedFolder === null ? '#ffffff' : '#1a1a1a',
+                  background: selectedFolder === null ? 'linear-gradient(135deg, #5884FD, #6c91ff)' : '#141414',
+                  color: selectedFolder === null ? '#ffffff' : '#E4E4E7',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.75rem',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  border: selectedFolder === null ? 'none' : '1px solid #2D2D2D'
                 }}
               >
                 <KeyIcon style={{ width: '16px', height: '16px' }} />
@@ -787,9 +843,10 @@ export default function PasswordVaultPage() {
                 <span style={{ 
                   fontSize: '0.8rem', 
                   opacity: 0.8,
-                  background: selectedFolder === null ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+                  background: selectedFolder === null ? 'rgba(255,255,255,0.2)' : '#2D2D2D',
                   padding: '2px 6px',
-                  borderRadius: '4px'
+                  borderRadius: '4px',
+                  color: selectedFolder === null ? '#ffffff' : '#A1A1AA'
                 }}>
                   {passwords.length}
                 </span>
@@ -804,12 +861,13 @@ export default function PasswordVaultPage() {
                     padding: '0.75rem',
                     borderRadius: '8px',
                     marginBottom: '0.5rem',
-                    background: selectedFolder === folder.id ? 'linear-gradient(135deg, #5884FD, #6c91ff)' : '#f8fafc',
-                    color: selectedFolder === folder.id ? '#ffffff' : '#1a1a1a',
+                    background: selectedFolder === folder.id ? 'linear-gradient(135deg, #5884FD, #6c91ff)' : '#141414',
+                    color: selectedFolder === folder.id ? '#ffffff' : '#E4E4E7',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    border: selectedFolder === folder.id ? 'none' : '1px solid #2D2D2D'
                   }}
                 >
                   <FolderIcon style={{ width: '16px', height: '16px', color: folder.color }} />
@@ -828,7 +886,7 @@ export default function PasswordVaultPage() {
                       border: 'none',
                       padding: '2px',
                       cursor: 'pointer',
-                      color: selectedFolder === folder.id ? 'rgba(255,255,255,0.7)' : '#9ca3af',
+                      color: selectedFolder === folder.id ? 'rgba(255,255,255,0.7)' : '#71717A',
                       transition: 'color 0.2s ease'
                     }}
                     title="Manage members"
@@ -838,9 +896,10 @@ export default function PasswordVaultPage() {
                   <span style={{ 
                     fontSize: '0.8rem', 
                     opacity: 0.8,
-                    background: selectedFolder === folder.id ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+                    background: selectedFolder === folder.id ? 'rgba(255,255,255,0.2)' : '#2D2D2D',
                     padding: '2px 6px',
-                    borderRadius: '4px'
+                    borderRadius: '4px',
+                    color: selectedFolder === folder.id ? '#ffffff' : '#A1A1AA'
                   }}>
                     {folder.password_count}
                   </span>
@@ -850,10 +909,11 @@ export default function PasswordVaultPage() {
 
             {/* Main content */}
             <div style={{
-              background: '#ffffff',
+              background: '#1A1A1A',
               borderRadius: '16px',
               padding: '1.5rem',
-              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.04)'
+              boxShadow: '0 2px 16px rgba(0, 0, 0, 0.3)',
+              border: '1px solid #2D2D2D'
             }}>
               {/* Search bar */}
               <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
@@ -864,7 +924,7 @@ export default function PasswordVaultPage() {
                   transform: 'translateY(-50%)',
                   width: '20px', 
                   height: '20px', 
-                  color: '#9ca3af' 
+                  color: '#71717A' 
                 }} />
                 <input
                   type="text"
@@ -874,14 +934,17 @@ export default function PasswordVaultPage() {
                   style={{
                     width: '100%',
                     padding: '0.875rem 1rem 0.875rem 3rem',
-                    border: '2px solid rgba(0, 0, 0, 0.1)',
+                    border: '2px solid #3D3D3D',
                     borderRadius: '12px',
                     fontSize: '1rem',
-                    background: 'rgba(255, 255, 255, 0.9)',
+                    background: '#141414',
+                    color: '#FFFFFF',
                     transition: 'all 0.2s ease',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
+                  onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                  onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                 />
               </div>
 
@@ -892,15 +955,15 @@ export default function PasswordVaultPage() {
                     key={password.id}
                     className="password-item"
                     style={{
-                      background: '#ffffff',
-                      border: '1px solid #e2e8f0',
+                      background: '#141414',
+                      border: '1px solid #2D2D2D',
                       borderRadius: '8px',
                       padding: '1.5rem',
                       margin: '0.5rem',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '1.5rem',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
                     }}
                   >
                     <div style={{ flex: 1 }}>
@@ -909,26 +972,26 @@ export default function PasswordVaultPage() {
                           fontSize: '1.1rem', 
                           fontWeight: '600', 
                           margin: '0',
-                          color: '#1a1a1a'
+                          color: '#FFFFFF'
                         }}>
                           {password.account_name}
                         </h4>
                         {password.is_shared && (
                           <span style={{
                             fontSize: '0.75rem',
-                            background: '#f0f0f0',
+                            background: '#2D2D2D',
                             padding: '2px 6px',
                             borderRadius: '4px',
-                            color: '#666'
+                            color: '#A1A1AA'
                           }}>
                             Shared
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: '0.9rem', color: '#666666', marginBottom: '0.25rem' }}>
+                      <div style={{ fontSize: '0.9rem', color: '#A1A1AA', marginBottom: '0.25rem' }}>
                         {password.email || password.username}
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: '#999999', marginBottom: '0.5rem' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#71717A', marginBottom: '0.5rem' }}>
                         {password.folder_name}
                       </div>
                       
@@ -936,7 +999,7 @@ export default function PasswordVaultPage() {
                       {password.is_shared && (
                         <div style={{ 
                           fontSize: '0.75rem',
-                          color: '#666',
+                          color: '#71717A',
                           marginTop: '0.25rem'
                         }}>
                           Shared with {password.shared_with?.length || 0} team member{(password.shared_with?.length || 0) > 1 ? 's' : ''}
@@ -948,13 +1011,22 @@ export default function PasswordVaultPage() {
                       <button
                         onClick={() => openViewModal(password)}
                         style={{
-                          background: '#ffffff',
-                          border: '1px solid #d1d5db',
+                          background: '#141414',
+                          border: '1px solid #3D3D3D',
                           padding: '6px 12px',
                           borderRadius: '4px',
                           cursor: 'pointer',
-                          color: '#374151',
-                          fontSize: '0.875rem'
+                          color: '#E4E4E7',
+                          fontSize: '0.875rem',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#2D2D2D';
+                          e.currentTarget.style.borderColor = '#3D3D3D';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#141414';
+                          e.currentTarget.style.borderColor = '#3D3D3D';
                         }}
                         title="View password details"
                       >
@@ -964,13 +1036,22 @@ export default function PasswordVaultPage() {
                       <button
                         onClick={() => openEditModal(password)}
                         style={{
-                          background: '#ffffff',
-                          border: '1px solid #d1d5db',
+                          background: '#141414',
+                          border: '1px solid #3D3D3D',
                           padding: '6px 12px',
                           borderRadius: '4px',
                           cursor: 'pointer',
-                          color: '#374151',
-                          fontSize: '0.875rem'
+                          color: '#E4E4E7',
+                          fontSize: '0.875rem',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#2D2D2D';
+                          e.currentTarget.style.borderColor = '#3D3D3D';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#141414';
+                          e.currentTarget.style.borderColor = '#3D3D3D';
                         }}
                         title="Edit password"
                       >
@@ -980,13 +1061,22 @@ export default function PasswordVaultPage() {
                       <button
                         onClick={() => openShareModal(password)}
                         style={{
-                          background: '#ffffff',
-                          border: '1px solid #d1d5db',
+                          background: '#141414',
+                          border: '1px solid #3D3D3D',
                           padding: '6px 12px',
                           borderRadius: '4px',
                           cursor: 'pointer',
-                          color: '#374151',
-                          fontSize: '0.875rem'
+                          color: '#E4E4E7',
+                          fontSize: '0.875rem',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#2D2D2D';
+                          e.currentTarget.style.borderColor = '#3D3D3D';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#141414';
+                          e.currentTarget.style.borderColor = '#3D3D3D';
                         }}
                         title="Share with team"
                       >
@@ -996,13 +1086,20 @@ export default function PasswordVaultPage() {
                       <button
                         onClick={() => deletePassword(password.id)}
                         style={{
-                          background: '#ffffff',
+                          background: '#141414',
                           border: '1px solid #dc2626',
                           padding: '6px 12px',
                           borderRadius: '4px',
                           cursor: 'pointer',
                           color: '#dc2626',
-                          fontSize: '0.875rem'
+                          fontSize: '0.875rem',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#2D2D2D';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#141414';
                         }}
                         title="Delete password"
                       >
@@ -1016,10 +1113,10 @@ export default function PasswordVaultPage() {
                   <div style={{
                     textAlign: 'center',
                     padding: '3rem',
-                    color: '#666666'
+                    color: '#71717A'
                   }}>
-                    <KeyIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', opacity: 0.5 }} />
-                    <p style={{ fontSize: '1.1rem', margin: '0' }}>
+                    <KeyIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', opacity: 0.5, color: '#71717A' }} />
+                    <p style={{ fontSize: '1.1rem', margin: '0', color: '#A1A1AA' }}>
                       {searchTerm ? 'No passwords found matching your search' : 'No passwords in this folder'}
                     </p>
                   </div>
@@ -1028,6 +1125,7 @@ export default function PasswordVaultPage() {
             </div>
           </div>
         </div>
+      </div>
 
       {/* Password Modal */}
       {showPasswordModal && (
@@ -1035,17 +1133,17 @@ export default function PasswordVaultPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ 
               padding: '1.5rem 2rem', 
-              borderBottom: '1px solid #e5e7eb',
+              borderBottom: '1px solid #2D2D2D',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <h3 style={{ margin: '0', fontSize: '1.25rem', fontWeight: '600' }}>
+              <h3 style={{ margin: '0', fontSize: '1.25rem', fontWeight: '600', color: '#FFFFFF' }}>
                 {isEditing ? 'Edit Password' : 'New Password'}
               </h3>
               <button
                 onClick={() => setShowPasswordModal(false)}
-                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#E4E4E7' }}
               >
                 ×
               </button>
@@ -1054,7 +1152,7 @@ export default function PasswordVaultPage() {
             <div style={{ padding: '2rem' }}>
               <div style={{ display: 'grid', gap: '1.5rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                     Account Name *
                   </label>
                   <input
@@ -1064,18 +1162,22 @@ export default function PasswordVaultPage() {
                     style={{
                       width: '100%',
                       padding: '0.875rem',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '8px',
                       fontSize: '1rem',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      background: '#141414',
+                      color: '#FFFFFF'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                    onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                     placeholder="e.g., Gmail, GitHub, Bank Account"
                   />
                 </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>
+                    <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                       Email
                     </label>
                     <input
@@ -1085,17 +1187,21 @@ export default function PasswordVaultPage() {
                       style={{
                         width: '100%',
                         padding: '0.875rem',
-                        border: '1px solid #e2e8f0',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '8px',
                         fontSize: '1rem',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        background: '#141414',
+                        color: '#FFFFFF'
                       }}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                       placeholder="your@email.com"
                     />
                   </div>
                   
                   <div>
-                    <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>
+                    <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                       Username
                     </label>
                     <input
@@ -1105,18 +1211,22 @@ export default function PasswordVaultPage() {
                       style={{
                         width: '100%',
                         padding: '0.875rem',
-                        border: '1px solid #e2e8f0',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '8px',
                         fontSize: '1rem',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        background: '#141414',
+                        color: '#FFFFFF'
                       }}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                       placeholder="username"
                     />
                   </div>
                 </div>
                 
                 <div>
-                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                     Password {!isEditing && '*'}
                   </label>
                   <input
@@ -1126,18 +1236,22 @@ export default function PasswordVaultPage() {
                     style={{
                       width: '100%',
                       padding: '0.875rem',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '8px',
                       fontSize: '1rem',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      background: '#141414',
+                      color: '#FFFFFF'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                    onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                     placeholder={isEditing ? "Leave blank to keep current password" : "Enter password"}
                   />
                 </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>
+                    <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                       Website URL
                     </label>
                     <input
@@ -1147,17 +1261,21 @@ export default function PasswordVaultPage() {
                       style={{
                         width: '100%',
                         padding: '0.875rem',
-                        border: '1px solid #e2e8f0',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '8px',
                         fontSize: '1rem',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        background: '#141414',
+                        color: '#FFFFFF'
                       }}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                       placeholder="https://example.com"
                     />
                   </div>
                   
                   <div>
-                    <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>
+                    <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                       Folder
                     </label>
                     <select
@@ -1166,22 +1284,26 @@ export default function PasswordVaultPage() {
                       style={{
                         width: '100%',
                         padding: '0.875rem',
-                        border: '1px solid #e2e8f0',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '8px',
                         fontSize: '1rem',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        background: '#141414',
+                        color: '#FFFFFF'
                       }}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                     >
-                      <option value="">Select folder</option>
+                      <option value="" style={{ background: '#141414', color: '#FFFFFF' }}>Select folder</option>
                       {folders.map(folder => (
-                        <option key={folder.id} value={folder.id}>{folder.name}</option>
+                        <option key={folder.id} value={folder.id} style={{ background: '#141414', color: '#FFFFFF' }}>{folder.name}</option>
                       ))}
                     </select>
                   </div>
                 </div>
                 
                 <div>
-                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                     Notes
                   </label>
                   <textarea
@@ -1190,13 +1312,17 @@ export default function PasswordVaultPage() {
                     style={{
                       width: '100%',
                       padding: '0.875rem',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       minHeight: '100px',
                       resize: 'vertical',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      background: '#141414',
+                      color: '#FFFFFF'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                    onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                     placeholder="Additional notes..."
                   />
                 </div>
@@ -1209,12 +1335,21 @@ export default function PasswordVaultPage() {
                     flex: 1,
                     padding: '0.875rem',
                     background: 'transparent',
-                    color: '#666666',
-                    border: '1px solid #e2e8f0',
+                    color: '#A1A1AA',
+                    border: '1px solid #3D3D3D',
                     borderRadius: '8px',
                     fontSize: '1rem',
                     fontWeight: '500',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#2D2D2D';
+                    e.currentTarget.style.borderColor = '#3D3D3D';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = '#3D3D3D';
                   }}
                 >
                   Cancel
@@ -1230,8 +1365,11 @@ export default function PasswordVaultPage() {
                     borderRadius: '8px',
                     fontSize: '1rem',
                     fontWeight: '500',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#6c91ff'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#5884FD'}
                 >
                   {isEditing ? 'Update' : 'Create'}
                 </button>
@@ -1247,17 +1385,17 @@ export default function PasswordVaultPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ 
               padding: '1.5rem 2rem', 
-              borderBottom: '1px solid #e5e7eb',
+              borderBottom: '1px solid #2D2D2D',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <h3 style={{ margin: '0', fontSize: '1.25rem', fontWeight: '600' }}>
+              <h3 style={{ margin: '0', fontSize: '1.25rem', fontWeight: '600', color: '#FFFFFF' }}>
                 New Folder
               </h3>
               <button
                 onClick={() => setShowFolderModal(false)}
-                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#E4E4E7' }}
               >
                 ×
               </button>
@@ -1266,7 +1404,7 @@ export default function PasswordVaultPage() {
             <div style={{ padding: '2rem' }}>
               <div style={{ display: 'grid', gap: '1.5rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                     Folder Name *
                   </label>
                   <input
@@ -1276,17 +1414,21 @@ export default function PasswordVaultPage() {
                     style={{
                       width: '100%',
                       padding: '0.875rem',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '8px',
                       fontSize: '1rem',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      background: '#141414',
+                      color: '#FFFFFF'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                    onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                     placeholder="e.g., Work, Personal, Banking"
                   />
                 </div>
                 
                 <div>
-                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                     Description
                   </label>
                   <textarea
@@ -1295,19 +1437,23 @@ export default function PasswordVaultPage() {
                     style={{
                       width: '100%',
                       padding: '0.875rem',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '8px',
                       fontSize: '1rem',
                       minHeight: '80px',
                       resize: 'vertical',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      background: '#141414',
+                      color: '#FFFFFF'
                     }}
+                    onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                    onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                     placeholder="Optional description..."
                   />
                 </div>
                 
                 <div>
-                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                     Color
                   </label>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -1320,7 +1466,7 @@ export default function PasswordVaultPage() {
                           height: '40px',
                           borderRadius: '8px',
                           background: color,
-                          border: newFolder.color === color ? '3px solid #1a1a1a' : '1px solid #e2e8f0',
+                          border: newFolder.color === color ? '3px solid #FFFFFF' : '1px solid #3D3D3D',
                           cursor: 'pointer'
                         }}
                       />
@@ -1336,12 +1482,21 @@ export default function PasswordVaultPage() {
                     flex: 1,
                     padding: '0.875rem',
                     background: 'transparent',
-                    color: '#666666',
-                    border: '1px solid #e2e8f0',
+                    color: '#A1A1AA',
+                    border: '1px solid #3D3D3D',
                     borderRadius: '8px',
                     fontSize: '1rem',
                     fontWeight: '500',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#2D2D2D';
+                    e.currentTarget.style.borderColor = '#3D3D3D';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = '#3D3D3D';
                   }}
                 >
                   Cancel
@@ -1357,8 +1512,11 @@ export default function PasswordVaultPage() {
                     borderRadius: '8px',
                     fontSize: '1rem',
                     fontWeight: '500',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#6c91ff'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#5884FD'}
                 >
                   Create Folder
                 </button>
@@ -1374,17 +1532,17 @@ export default function PasswordVaultPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ 
               padding: '1.5rem 2rem', 
-              borderBottom: '1px solid #e5e7eb',
+              borderBottom: '1px solid #2D2D2D',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <h3 style={{ margin: '0', fontSize: '1.25rem', fontWeight: '600' }}>
+              <h3 style={{ margin: '0', fontSize: '1.25rem', fontWeight: '600', color: '#FFFFFF' }}>
                 Manage Folder Members
               </h3>
               <button
                 onClick={() => setShowMembersModal(false)}
-                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#E4E4E7' }}
               >
                 ×
               </button>
@@ -1392,17 +1550,17 @@ export default function PasswordVaultPage() {
             
             <div style={{ padding: '2rem' }}>
               <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: '600' }}>
+                <h4 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: '600', color: '#FFFFFF' }}>
                   {selectedFolderForMembers.name}
                 </h4>
-                <p style={{ margin: '0', fontSize: '0.9rem', color: '#666666' }}>
+                <p style={{ margin: '0', fontSize: '0.9rem', color: '#A1A1AA' }}>
                   Manage who can access this folder and their permissions
                 </p>
               </div>
 
               {/* Current Members */}
               <div style={{ marginBottom: '2rem' }}>
-                <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', fontWeight: '600', color: '#374151' }}>
+                <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', fontWeight: '600', color: '#E4E4E7' }}>
                   Current Members ({selectedFolderForMembers.members?.length || 0})
                 </h5>
                 
@@ -1414,9 +1572,9 @@ export default function PasswordVaultPage() {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '0.75rem',
-                        background: '#f8fafc',
+                        background: '#141414',
                         borderRadius: '8px',
-                        border: '1px solid #e2e8f0'
+                        border: '1px solid #2D2D2D'
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                           <div style={{
@@ -1434,10 +1592,10 @@ export default function PasswordVaultPage() {
                             {(member.user_name || member.user_email)?.charAt(0)?.toUpperCase() || 'U'}
                           </div>
                           <div>
-                            <div style={{ fontSize: '0.9rem', fontWeight: '500', color: '#1a1a1a' }}>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '500', color: '#FFFFFF' }}>
                               {member.user_name || member.user_email?.split('@')[0] || 'Unknown User'}
                             </div>
-                            <div style={{ fontSize: '0.8rem', color: '#666666' }}>
+                            <div style={{ fontSize: '0.8rem', color: '#A1A1AA' }}>
                               {member.user_email}
                             </div>
                           </div>
@@ -1449,16 +1607,17 @@ export default function PasswordVaultPage() {
                             onChange={(e) => updateMemberPermission(member.id, e.target.value as 'owner' | 'editor' | 'viewer')}
                             style={{
                               padding: '0.5rem',
-                              border: '1px solid #e2e8f0',
+                              border: '1px solid #3D3D3D',
                               borderRadius: '6px',
                               fontSize: '0.8rem',
-                              background: '#ffffff'
+                              background: '#141414',
+                              color: '#FFFFFF'
                             }}
                             disabled={member.permission_level === 'owner'}
                           >
-                            <option value="viewer">Viewer</option>
-                            <option value="editor">Editor</option>
-                            <option value="owner">Owner</option>
+                            <option value="viewer" style={{ background: '#141414', color: '#FFFFFF' }}>Viewer</option>
+                            <option value="editor" style={{ background: '#141414', color: '#FFFFFF' }}>Editor</option>
+                            <option value="owner" style={{ background: '#141414', color: '#FFFFFF' }}>Owner</option>
                           </select>
                           
                           {member.permission_level !== 'owner' && (
@@ -1485,13 +1644,13 @@ export default function PasswordVaultPage() {
                   <div style={{
                     textAlign: 'center',
                     padding: '2rem',
-                    color: '#666666',
-                    background: '#f8fafc',
+                    color: '#A1A1AA',
+                    background: '#141414',
                     borderRadius: '8px',
-                    border: '1px solid #e2e8f0'
+                    border: '1px solid #2D2D2D'
                   }}>
-                    <UserIcon style={{ width: '32px', height: '32px', margin: '0 auto 0.5rem', opacity: 0.5 }} />
-                    <p style={{ fontSize: '0.9rem', margin: '0' }}>
+                    <UserIcon style={{ width: '32px', height: '32px', margin: '0 auto 0.5rem', opacity: 0.5, color: '#71717A' }} />
+                    <p style={{ fontSize: '0.9rem', margin: '0', color: '#A1A1AA' }}>
                       No members added yet
                     </p>
                   </div>
@@ -1500,13 +1659,13 @@ export default function PasswordVaultPage() {
 
               {/* Add New Member */}
               <div>
-                <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', fontWeight: '600', color: '#374151' }}>
+                <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', fontWeight: '600', color: '#E4E4E7' }}>
                   Add New Member
                 </h5>
                 
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'end' }}>
                   <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                       Email Address
                     </label>
                     <input
@@ -1515,31 +1674,38 @@ export default function PasswordVaultPage() {
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: '1px solid #e2e8f0',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '8px',
                         fontSize: '0.9rem',
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        background: '#141414',
+                        color: '#FFFFFF'
                       }}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                     />
                   </div>
                   
                   <div style={{ minWidth: '120px' }}>
-                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                       Permission
                     </label>
                     <select
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: '1px solid #e2e8f0',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '8px',
                         fontSize: '0.9rem',
-                        background: '#ffffff',
+                        background: '#141414',
+                        color: '#FFFFFF',
                         boxSizing: 'border-box'
                       }}
+                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                      onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
                     >
-                      <option value="viewer">Viewer</option>
-                      <option value="editor">Editor</option>
+                      <option value="viewer" style={{ background: '#141414', color: '#FFFFFF' }}>Viewer</option>
+                      <option value="editor" style={{ background: '#141414', color: '#FFFFFF' }}>Editor</option>
                     </select>
                   </div>
                   
@@ -1553,22 +1719,25 @@ export default function PasswordVaultPage() {
                       fontSize: '0.9rem',
                       fontWeight: '500',
                       cursor: 'pointer',
-                      minWidth: '80px'
+                      minWidth: '80px',
+                      transition: 'all 0.2s ease'
                     }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#6c91ff'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#5884FD'}
                   >
                     Add
                   </button>
                 </div>
               </div>
               
-              <div style={{ marginTop: '2rem', padding: '1rem', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-                <h6 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', fontWeight: '600', color: '#1e40af' }}>
+              <div style={{ marginTop: '2rem', padding: '1rem', background: '#1A1A1A', borderRadius: '8px', border: '1px solid #2D2D2D' }}>
+                <h6 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', fontWeight: '600', color: '#3B82F6' }}>
                   Permission Levels:
                 </h6>
-                <ul style={{ margin: '0', paddingLeft: '1rem', fontSize: '0.8rem', color: '#374151' }}>
-                  <li><strong>Viewer:</strong> Can view passwords in this folder</li>
-                  <li><strong>Editor:</strong> Can view, create, and edit passwords</li>
-                  <li><strong>Owner:</strong> Full access including member management</li>
+                <ul style={{ margin: '0', paddingLeft: '1rem', fontSize: '0.8rem', color: '#A1A1AA' }}>
+                  <li><strong style={{ color: '#E4E4E7' }}>Viewer:</strong> Can view passwords in this folder</li>
+                  <li><strong style={{ color: '#E4E4E7' }}>Editor:</strong> Can view, create, and edit passwords</li>
+                  <li><strong style={{ color: '#E4E4E7' }}>Owner:</strong> Full access including member management</li>
                 </ul>
               </div>
             </div>
@@ -1585,37 +1754,39 @@ export default function PasswordVaultPage() {
             maxWidth: '500px',
             width: '90%'
           }}>
-            <h3 style={{ margin: '0 0 2rem 0', fontSize: '1.25rem', fontWeight: '600' }}>
+            <h3 style={{ margin: '0 0 2rem 0', fontSize: '1.25rem', fontWeight: '600', color: '#FFFFFF' }}>
               {passwordToView.account_name}
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', margin: '1rem 0' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                   Username/Email
                 </label>
                 <div style={{
                   padding: '0.75rem',
-                  background: '#f9f9f9',
-                  border: '1px solid #e2e8f0',
+                  background: '#141414',
+                  border: '1px solid #2D2D2D',
                   borderRadius: '4px',
-                  fontSize: '0.9rem'
+                  fontSize: '0.9rem',
+                  color: '#FFFFFF'
                 }}>
                   {passwordToView.email || passwordToView.username || 'Not provided'}
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                   Password
                 </label>
                 <div style={{
                   padding: '0.75rem',
-                  background: '#f9f9f9',
-                  border: '1px solid #e2e8f0',
+                  background: '#141414',
+                  border: '1px solid #2D2D2D',
                   borderRadius: '4px',
                   fontSize: '0.9rem',
-                  fontFamily: 'monospace'
+                  fontFamily: 'monospace',
+                  color: '#FFFFFF'
                 }}>
                   {decryptPassword(passwordToView.password_encrypted)}
                 </div>
@@ -1623,20 +1794,21 @@ export default function PasswordVaultPage() {
 
               {passwordToView.website_url && (
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                     Website
                   </label>
                   <div style={{
                     padding: '0.75rem',
-                    background: '#f9f9f9',
-                    border: '1px solid #e2e8f0',
+                    background: '#141414',
+                    border: '1px solid #2D2D2D',
                     borderRadius: '4px',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    color: '#FFFFFF'
                   }}>
                     <a href={passwordToView.website_url.startsWith('http') ? passwordToView.website_url : `https://${passwordToView.website_url}`} 
                        target="_blank" 
                        rel="noopener noreferrer"
-                       style={{ color: '#0066cc', textDecoration: 'underline' }}>
+                       style={{ color: '#3B82F6', textDecoration: 'underline' }}>
                       {passwordToView.website_url}
                     </a>
                   </div>
@@ -1645,15 +1817,16 @@ export default function PasswordVaultPage() {
 
               {passwordToView.notes && (
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                     Notes
                   </label>
                   <div style={{
                     padding: '0.75rem',
-                    background: '#f9f9f9',
-                    border: '1px solid #e2e8f0',
+                    background: '#141414',
+                    border: '1px solid #2D2D2D',
                     borderRadius: '4px',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    color: '#FFFFFF'
                   }}>
                     {passwordToView.notes}
                   </div>
@@ -1663,13 +1836,13 @@ export default function PasswordVaultPage() {
               {/* Shared with information */}
               {passwordToView.is_shared && passwordToView.shared_with && passwordToView.shared_with.length > 0 && (
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '0.5rem', color: '#E4E4E7' }}>
                     Shared with Team Members
                   </label>
                   <div style={{
                     padding: '0.75rem',
-                    background: '#f0f9ff',
-                    border: '1px solid #bfdbfe',
+                    background: '#141414',
+                    border: '1px solid #2D2D2D',
                     borderRadius: '4px'
                   }}>
                     {passwordToView.shared_with.map((share: any, index: number) => (
@@ -1678,10 +1851,10 @@ export default function PasswordVaultPage() {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         padding: '0.5rem 0',
-                        borderBottom: index < passwordToView.shared_with!.length - 1 ? '1px solid #e5e7eb' : 'none'
+                        borderBottom: index < passwordToView.shared_with!.length - 1 ? '1px solid #2D2D2D' : 'none'
                       }}>
-                        <span style={{ fontWeight: '500' }}>{share.user_email}</span>
-                        <div style={{ fontSize: '0.8rem', color: '#666' }}>
+                        <span style={{ fontWeight: '500', color: '#FFFFFF' }}>{share.user_email}</span>
+                        <div style={{ fontSize: '0.8rem', color: '#A1A1AA' }}>
                           {share.can_edit && 'Edit '}
                           {share.can_delete && 'Delete '}
                           {share.can_share && 'Share'}
@@ -1698,12 +1871,21 @@ export default function PasswordVaultPage() {
                 onClick={() => setShowViewModal(false)}
                 style={{
                   padding: '0.75rem 1.5rem',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid #3D3D3D',
                   borderRadius: '4px',
-                  background: '#ffffff',
-                  color: '#374151',
+                  background: '#141414',
+                  color: '#E4E4E7',
                   cursor: 'pointer',
-                  fontSize: '0.9rem'
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#2D2D2D';
+                  e.currentTarget.style.borderColor = '#3D3D3D';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#141414';
+                  e.currentTarget.style.borderColor = '#3D3D3D';
                 }}
               >
                 Close
@@ -1722,20 +1904,20 @@ export default function PasswordVaultPage() {
             maxWidth: '600px',
             width: '90%'
           }}>
-            <h3 style={{ margin: '0 0 2rem 0', fontSize: '1.25rem', fontWeight: '600' }}>
+            <h3 style={{ margin: '0 0 2rem 0', fontSize: '1.25rem', fontWeight: '600', color: '#FFFFFF' }}>
               Share Password: {passwordToShare.account_name}
             </h3>
 
             {/* Show current shared members */}
             {passwordToShare.is_shared && passwordToShare.shared_with && passwordToShare.shared_with.length > 0 && (
               <div style={{ marginBottom: '2rem' }}>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '1rem', color: '#E4E4E7' }}>
                   Currently Shared With:
                 </label>
                 <div style={{
                   padding: '1rem',
-                  background: '#f8f9fa',
-                  border: '1px solid #e9ecef',
+                  background: '#141414',
+                  border: '1px solid #2D2D2D',
                   borderRadius: '4px'
                 }}>
                   {passwordToShare.shared_with.map((share: any, index: number) => (
@@ -1744,16 +1926,16 @@ export default function PasswordVaultPage() {
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       padding: '0.5rem 0',
-                      borderBottom: index < passwordToShare.shared_with!.length - 1 ? '1px solid #e5e7eb' : 'none'
+                      borderBottom: index < passwordToShare.shared_with!.length - 1 ? '1px solid #2D2D2D' : 'none'
                     }}>
-                      <span style={{ fontWeight: '500', fontSize: '0.9rem' }}>{share.user_email}</span>
+                      <span style={{ fontWeight: '500', fontSize: '0.9rem', color: '#FFFFFF' }}>{share.user_email}</span>
                       <span style={{ 
                         fontSize: '0.8rem',
-                        color: '#6c757d',
-                        background: '#ffffff',
+                        color: '#A1A1AA',
+                        background: '#1A1A1A',
                         padding: '4px 8px',
                         borderRadius: '3px',
-                        border: '1px solid #dee2e6'
+                        border: '1px solid #2D2D2D'
                       }}>
                         {share.can_edit ? 'Can Edit' : 
                          share.can_delete ? 'Can Delete' : 
@@ -1766,7 +1948,7 @@ export default function PasswordVaultPage() {
             )}
 
             <div style={{ marginBottom: '2rem', position: 'relative' }}>
-              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '1rem', color: '#E4E4E7' }}>
                 Add New Team Member:
               </label>
               <input
@@ -1777,11 +1959,15 @@ export default function PasswordVaultPage() {
                 style={{
                   width: '100%',
                   padding: '0.75rem',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid #3D3D3D',
                   borderRadius: '4px',
                   fontSize: '0.9rem',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  background: '#141414',
+                  color: '#FFFFFF'
                 }}
+                onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                onBlur={(e) => e.target.style.borderColor = '#3D3D3D'}
               />
               
               {/* Email suggestions dropdown */}
@@ -1791,8 +1977,8 @@ export default function PasswordVaultPage() {
                   top: '100%',
                   left: '0',
                   right: '0',
-                  background: '#ffffff',
-                  border: '1px solid #d1d5db',
+                  background: '#1A1A1A',
+                  border: '1px solid #3D3D3D',
                   borderTop: 'none',
                   borderRadius: '0 0 4px 4px',
                   maxHeight: '150px',
@@ -1811,11 +1997,12 @@ export default function PasswordVaultPage() {
                         style={{
                           padding: '0.75rem',
                           cursor: 'pointer',
-                          borderBottom: '1px solid #f3f4f6',
-                          fontSize: '0.9rem'
+                          borderBottom: '1px solid #2D2D2D',
+                          fontSize: '0.9rem',
+                          color: '#FFFFFF'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#2D2D2D'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#1A1A1A'}
                       >
                         {email}
                       </div>
@@ -1825,7 +2012,7 @@ export default function PasswordVaultPage() {
             </div>
 
             <div style={{ marginBottom: '2rem' }}>
-              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '1rem', color: '#E4E4E7' }}>
                 Set Permissions:
               </label>
               
@@ -1834,8 +2021,8 @@ export default function PasswordVaultPage() {
                 flexDirection: 'column', 
                 gap: '1rem',
                 padding: '1rem',
-                background: '#f8f9fa',
-                border: '1px solid #e9ecef',
+                background: '#141414',
+                border: '1px solid #2D2D2D',
                 borderRadius: '4px'
               }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -1845,7 +2032,7 @@ export default function PasswordVaultPage() {
                     onChange={(e) => setSharePermissions(prev => ({ ...prev, can_view: e.target.checked }))}
                     style={{ cursor: 'pointer' }}
                   />
-                  <span style={{ fontSize: '0.9rem' }}>Can View - User can see this password</span>
+                  <span style={{ fontSize: '0.9rem', color: '#E4E4E7' }}>Can View - User can see this password</span>
                 </label>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -1855,7 +2042,7 @@ export default function PasswordVaultPage() {
                     onChange={(e) => setSharePermissions(prev => ({ ...prev, can_edit: e.target.checked }))}
                     style={{ cursor: 'pointer' }}
                   />
-                  <span style={{ fontSize: '0.9rem' }}>Can Edit - User can modify this password</span>
+                  <span style={{ fontSize: '0.9rem', color: '#E4E4E7' }}>Can Edit - User can modify this password</span>
                 </label>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -1865,7 +2052,7 @@ export default function PasswordVaultPage() {
                     onChange={(e) => setSharePermissions(prev => ({ ...prev, can_delete: e.target.checked }))}
                     style={{ cursor: 'pointer' }}
                   />
-                  <span style={{ fontSize: '0.9rem' }}>Can Delete - User can delete this password</span>
+                  <span style={{ fontSize: '0.9rem', color: '#E4E4E7' }}>Can Delete - User can delete this password</span>
                 </label>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -1875,7 +2062,7 @@ export default function PasswordVaultPage() {
                     onChange={(e) => setSharePermissions(prev => ({ ...prev, can_share: e.target.checked }))}
                     style={{ cursor: 'pointer' }}
                   />
-                  <span style={{ fontSize: '0.9rem' }}>Can Share - User can share this password with others</span>
+                  <span style={{ fontSize: '0.9rem', color: '#E4E4E7' }}>Can Share - User can share this password with others</span>
                 </label>
               </div>
             </div>
@@ -1885,12 +2072,21 @@ export default function PasswordVaultPage() {
                 onClick={() => setShowShareModal(false)}
                 style={{
                   padding: '0.75rem 1.5rem',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid #3D3D3D',
                   borderRadius: '4px',
-                  background: '#ffffff',
-                  color: '#374151',
+                  background: '#141414',
+                  color: '#E4E4E7',
                   cursor: 'pointer',
-                  fontSize: '0.9rem'
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#2D2D2D';
+                  e.currentTarget.style.borderColor = '#3D3D3D';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#141414';
+                  e.currentTarget.style.borderColor = '#3D3D3D';
                 }}
               >
                 Cancel
@@ -1899,12 +2095,21 @@ export default function PasswordVaultPage() {
                 onClick={sharePassword}
                 style={{
                   padding: '0.75rem 1.5rem',
-                  border: '1px solid #374151',
+                  border: '1px solid #3D3D3D',
                   borderRadius: '4px',
-                  background: '#374151',
-                  color: '#ffffff',
+                  background: '#1A1A1A',
+                  color: '#FFFFFF',
                   cursor: 'pointer',
-                  fontSize: '0.9rem'
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#2D2D2D';
+                  e.currentTarget.style.borderColor = '#3D3D3D';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#1A1A1A';
+                  e.currentTarget.style.borderColor = '#3D3D3D';
                 }}
               >
                 Share Password

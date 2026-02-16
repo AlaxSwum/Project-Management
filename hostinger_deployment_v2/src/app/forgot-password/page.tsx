@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
               margin: '0 0 1.5rem 0',
               cursor: 'pointer'
             }}>
-              ProjectFlow
+              Focus Project
             </h1>
           </Link>
           {!isSubmitted ? (
