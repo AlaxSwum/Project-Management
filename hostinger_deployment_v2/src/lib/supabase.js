@@ -423,29 +423,42 @@ export const supabaseDb = {
 
     const { data, error } = await query
     
-    // If successful, enrich with user data separately
+    // Enrich with user data - ONE query for all users (not per-task!)
     if (data && !error) {
-      const enrichedData = await Promise.all(
-        data.map(async (task) => {
-          const assigneesPromise = task.assignee_ids && task.assignee_ids.length > 0
-            ? supabase.from('auth_user').select('id, name, email, role, avatar_url').in('id', task.assignee_ids)
-            : Promise.resolve({ data: [] });
-          
-          const createdByPromise = task.created_by_id
-            ? supabase.from('auth_user').select('id, name, email, avatar_url').eq('id', task.created_by_id).single()
-            : Promise.resolve({ data: null });
-
-          const [assigneesResult, createdByResult] = await Promise.all([assigneesPromise, createdByPromise]);
-
-          return {
-            ...task,
-            assignees: assigneesResult.data || [],
-            assignee: (assigneesResult.data && assigneesResult.data.length > 0) ? assigneesResult.data[0] : null, // Backwards compatibility
-            created_by: createdByResult.data,
-            project: task.projects_project
-          };
-        })
-      );
+      // Collect all unique user IDs across all tasks
+      const allUserIds = new Set();
+      data.forEach(task => {
+        if (task.assignee_ids) task.assignee_ids.forEach(id => allUserIds.add(id));
+        if (task.created_by_id) allUserIds.add(task.created_by_id);
+      });
+      
+      // Single query to get all users
+      let usersMap = {};
+      if (allUserIds.size > 0) {
+        const { data: users } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role, avatar_url')
+          .in('id', [...allUserIds]);
+        if (users) {
+          usersMap = Object.fromEntries(users.map(u => [u.id, u]));
+        }
+      }
+      
+      // Map users to tasks (no extra queries)
+      const enrichedData = data.map(task => {
+        const assignees = (task.assignee_ids || [])
+          .map(id => usersMap[id])
+          .filter(Boolean);
+        const createdBy = task.created_by_id ? usersMap[task.created_by_id] || null : null;
+        
+        return {
+          ...task,
+          assignees,
+          assignee: assignees.length > 0 ? assignees[0] : null,
+          created_by: createdBy,
+          project: task.projects_project
+        };
+      });
       return { data: enrichedData, error: null };
     }
     

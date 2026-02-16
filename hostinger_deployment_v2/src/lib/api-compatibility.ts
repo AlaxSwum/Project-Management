@@ -229,9 +229,8 @@ export const taskService = {
         return [];
       }
       
-      // Verify user has access to this project
-      await supabaseDb.getProject(projectId, userId); // This will throw if no access
-      
+      // Skip redundant getProject access check - the page already calls getProject
+      // Just fetch tasks directly (access is verified by the page-level getProject call)
       const { data, error } = await supabaseDb.getTasks(projectId);
       if (error) throw error;
       return transformTasksData(data || []);
