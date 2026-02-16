@@ -14,5 +14,17 @@
   "../../node_modules/@supabase/storage-js/dist/module/lib/helpers.js -> @supabase/node-fetch": {
     "id": "../../node_modules/@supabase/storage-js/dist/module/lib/helpers.js -> @supabase/node-fetch",
     "files": []
+  },
+  "../app/projects/[id]/page.tsx -> @/lib/supabase": {
+    "id": "../app/projects/[id]/page.tsx -> @/lib/supabase",
+    "files": []
+  },
+  "../components/MeetingDetailModal.tsx -> ../lib/api-compatibility": {
+    "id": "../components/MeetingDetailModal.tsx -> ../lib/api-compatibility",
+    "files": []
+  },
+  "../lib/meetingNotesService.ts -> @/lib/supabase": {
+    "id": "../lib/meetingNotesService.ts -> @/lib/supabase",
+    "files": []
   }
 }
