@@ -2506,12 +2506,12 @@ export default function PersonalPage() {
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <SparklesIcon style={{ width: '14px', height: '14px', color: '#3b82f6' }} />
-                          <span style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>
+                          <span style={{ fontSize: '13px', fontWeight: '600', color: '#FFFFFF' }}>
                             New Block
                           </span>
                 </div>
                         {dragStart && dragEnd && (
-                          <div style={{ fontSize: '11px', color: '#86868b', marginTop: '4px' }}>
+                          <div style={{ fontSize: '11px', color: '#A1A1AA', marginTop: '4px' }}>
                             {formatTime(formatTimeFromParts(
                               Math.min(dragStart.hour, dragEnd.hour),
                               Math.min(dragStart.hour, dragEnd.hour) === dragStart.hour ? dragStart.minute : dragEnd.minute
@@ -2699,7 +2699,7 @@ export default function PersonalPage() {
                                   marginBottom: '4px',
                                 }}
                               >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#86868b' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#A1A1AA' }}>
                                   <ListBulletIcon style={{ width: '12px', height: '12px' }} />
                                   {block.checklist.filter(i => i.completed).length}/{block.checklist.length}
                     </div>
@@ -4123,7 +4123,7 @@ export default function PersonalPage() {
                         borderRadius: '8px',
                     background: 'rgba(0, 0, 0, 0.04)',
                     cursor: 'pointer',
-                    color: '#86868b',
+                    color: '#A1A1AA',
                   }}
                 >
                   <XMarkIcon style={{ width: '18px', height: '18px' }} />
@@ -4138,7 +4138,7 @@ export default function PersonalPage() {
                 display: 'block', 
                       fontSize: '13px',
                       fontWeight: '500',
-                      color: '#86868b',
+                      color: '#A1A1AA',
                       marginBottom: '8px',
                     }}
                   >
@@ -4153,7 +4153,7 @@ export default function PersonalPage() {
                         width: '100%',
                       padding: '12px 16px',
                   fontSize: '15px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #2D2D2D',
                       borderRadius: '10px',
                       outline: 'none',
                         transition: 'border-color 0.2s ease',
@@ -4168,7 +4168,7 @@ export default function PersonalPage() {
                 display: 'block', 
                       fontSize: '13px',
                       fontWeight: '500',
-                      color: '#86868b',
+                      color: '#A1A1AA',
                       marginBottom: '8px',
                     }}
                   >
@@ -4231,7 +4231,7 @@ export default function PersonalPage() {
                   display: 'block', 
                       fontSize: '13px',
                       fontWeight: '500',
-                      color: '#86868b',
+                      color: '#A1A1AA',
                       marginBottom: '8px',
                     }}
                   >
@@ -4312,7 +4312,7 @@ export default function PersonalPage() {
                           borderRadius: '20px',
                           background: '#1A1A1A',
                             cursor: 'pointer',
-                          color: '#86868b',
+                          color: '#A1A1AA',
                           fontSize: '12px',
                           fontWeight: '500',
                         }}
@@ -4331,7 +4331,7 @@ export default function PersonalPage() {
                           padding: '6px 10px',
                           background: 'rgba(0, 0, 0, 0.02)',
                           borderRadius: '20px',
-                          border: '1px solid rgba(0, 0, 0, 0.1)',
+                          border: '1px solid #2D2D2D',
                         }}
                       >
                         <div style={{ display: 'flex', gap: '4px' }}>
@@ -4361,7 +4361,7 @@ export default function PersonalPage() {
                             width: '80px',
                             padding: '4px 8px',
                             fontSize: '12px',
-                            border: '1px solid rgba(0, 0, 0, 0.1)',
+                            border: '1px solid #2D2D2D',
                             borderRadius: '8px',
                             outline: 'none',
                           }}
@@ -4391,7 +4391,7 @@ export default function PersonalPage() {
                             background: 'transparent',
                             border: 'none',
                             cursor: 'pointer',
-                            color: '#86868b',
+                            color: '#A1A1AA',
                           }}
                         >
                           <XMarkIcon style={{ width: '14px', height: '14px' }} />
@@ -4409,7 +4409,7 @@ export default function PersonalPage() {
                   display: 'block', 
                         fontSize: '13px',
                         fontWeight: '500',
-                        color: '#86868b',
+                        color: '#A1A1AA',
                         marginBottom: '8px',
                       }}
                     >
@@ -4423,9 +4423,12 @@ export default function PersonalPage() {
                         width: '100%',
                         padding: '12px 16px',
                     fontSize: '15px',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #2D2D2D',
                         borderRadius: '10px',
                         outline: 'none',
+                        background: '#141414',
+                        color: '#FFFFFF',
+                        colorScheme: 'dark',
                       }}
                     />
                   </div>
@@ -4435,7 +4438,7 @@ export default function PersonalPage() {
                   display: 'block', 
                         fontSize: '13px',
                         fontWeight: '500',
-                        color: '#86868b',
+                        color: '#A1A1AA',
                         marginBottom: '8px',
                       }}
                     >
@@ -4449,9 +4452,12 @@ export default function PersonalPage() {
                         width: '100%',
                         padding: '12px 16px',
                     fontSize: '15px',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #2D2D2D',
                         borderRadius: '10px',
                         outline: 'none',
+                        background: '#141414',
+                        color: '#FFFFFF',
+                        colorScheme: 'dark',
                       }}
                     />
                     </div>
@@ -4464,7 +4470,7 @@ export default function PersonalPage() {
                   display: 'block', 
                       fontSize: '13px',
                       fontWeight: '500',
-                      color: '#86868b',
+                      color: '#A1A1AA',
                       marginBottom: '8px',
                     }}
                   >
@@ -4479,7 +4485,7 @@ export default function PersonalPage() {
                     width: '100%',
                       padding: '12px 16px',
                     fontSize: '15px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #2D2D2D',
                       borderRadius: '10px',
                       outline: 'none',
                       resize: 'none',
@@ -4495,7 +4501,7 @@ export default function PersonalPage() {
                   display: 'block', 
                         fontSize: '13px',
                         fontWeight: '500',
-                        color: '#86868b',
+                        color: '#A1A1AA',
                         marginBottom: '8px',
                       }}
                     >
@@ -4510,7 +4516,7 @@ export default function PersonalPage() {
                           transform: 'translateY(-50%)',
                           width: '18px',
                           height: '18px',
-                          color: '#86868b',
+                          color: '#A1A1AA',
                         }}
                       />
                     <input
@@ -4522,7 +4528,7 @@ export default function PersonalPage() {
                         width: '100%',
                           padding: '12px 16px 12px 42px',
                     fontSize: '15px',
-                          border: '1px solid rgba(0, 0, 0, 0.1)',
+                          border: '1px solid #2D2D2D',
                           borderRadius: '10px',
                           outline: 'none',
                   }}
@@ -4538,7 +4544,7 @@ export default function PersonalPage() {
                       display: 'block',
                       fontSize: '13px',
                       fontWeight: '500',
-                      color: '#86868b',
+                      color: '#A1A1AA',
                       marginBottom: '8px',
                     }}
                   >
@@ -4551,7 +4557,7 @@ export default function PersonalPage() {
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '15px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #2D2D2D',
                       borderRadius: '10px',
                       outline: 'none',
                       background: '#1A1A1A',
@@ -4603,8 +4609,8 @@ export default function PersonalPage() {
                       />
                     </motion.button>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <ArrowPathIcon style={{ width: '16px', height: '16px', color: '#86868b' }} />
-                      <span style={{ fontSize: '14px', color: '#1d1d1f' }}>Repeat on specific days</span>
+                      <ArrowPathIcon style={{ width: '16px', height: '16px', color: '#A1A1AA' }} />
+                      <span style={{ fontSize: '14px', color: '#FFFFFF' }}>Repeat on specific days</span>
                     </div>
                   </div>
                   
@@ -4618,7 +4624,7 @@ export default function PersonalPage() {
                       >
                         {/* Days of week selection */}
                         <div style={{ paddingTop: '12px' }}>
-                          <label style={{ fontSize: '12px', fontWeight: '500', color: '#86868b', marginBottom: '8px', display: 'block' }}>
+                          <label style={{ fontSize: '12px', fontWeight: '500', color: '#A1A1AA', marginBottom: '8px', display: 'block' }}>
                             Repeat on
                           </label>
                           <div style={{ display: 'flex', gap: '6px' }}>
@@ -4662,7 +4668,7 @@ export default function PersonalPage() {
                         {/* Date range selection */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', paddingTop: '16px' }}>
                           <div>
-                            <label style={{ fontSize: '12px', fontWeight: '500', color: '#86868b', marginBottom: '6px', display: 'block' }}>
+                            <label style={{ fontSize: '12px', fontWeight: '500', color: '#A1A1AA', marginBottom: '6px', display: 'block' }}>
                               Start Date
                     </label>
                     <input
@@ -4673,14 +4679,14 @@ export default function PersonalPage() {
                         width: '100%',
                                 padding: '10px 12px',
                                 fontSize: '14px',
-                                border: '1px solid rgba(0, 0, 0, 0.1)',
+                                border: '1px solid #2D2D2D',
                                 borderRadius: '10px',
                                 outline: 'none',
                               }}
                             />
                           </div>
                           <div>
-                            <label style={{ fontSize: '12px', fontWeight: '500', color: '#86868b', marginBottom: '6px', display: 'block' }}>
+                            <label style={{ fontSize: '12px', fontWeight: '500', color: '#A1A1AA', marginBottom: '6px', display: 'block' }}>
                               End Date
                             </label>
                             <input
@@ -4692,7 +4698,7 @@ export default function PersonalPage() {
                                 width: '100%',
                                 padding: '10px 12px',
                                 fontSize: '14px',
-                                border: '1px solid rgba(0, 0, 0, 0.1)',
+                                border: '1px solid #2D2D2D',
                                 borderRadius: '10px',
                                 outline: 'none',
                               }}
@@ -4711,7 +4717,7 @@ export default function PersonalPage() {
                       display: 'block',
                       fontSize: '13px',
                     fontWeight: '500',
-                      color: '#86868b',
+                      color: '#A1A1AA',
                       marginBottom: '8px',
                     }}
                   >
@@ -4743,7 +4749,7 @@ export default function PersonalPage() {
                             flex: 1,
                         padding: '10px 14px',
                         fontSize: '14px',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #2D2D2D',
                         borderRadius: '10px',
                         outline: 'none',
                       }}
@@ -4890,7 +4896,7 @@ export default function PersonalPage() {
                     padding: '14px',
                     fontSize: '15px',
                             fontWeight: '500',
-                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    border: '1px solid #2D2D2D',
                   borderRadius: '12px',
                     background: '#1A1A1A',
                             cursor: 'pointer',
@@ -4938,7 +4944,7 @@ export default function PersonalPage() {
               background: '#1A1A1A',
               borderRadius: '12px',
               boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(0, 0, 0, 0.08)',
+              border: '1px solid #2D2D2D',
               padding: '6px',
               minWidth: '180px',
               zIndex: 9999,
@@ -5316,7 +5322,7 @@ export default function PersonalPage() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setShowPanel(false)}
-                      style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: '10px', background: 'rgba(0, 0, 0, 0.04)', cursor: 'pointer', color: '#86868b' }}
+                      style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: '10px', background: 'rgba(0, 0, 0, 0.04)', cursor: 'pointer', color: '#A1A1AA' }}
                     >
                       <XMarkIcon style={{ width: '15px', height: '15px' }} />
                     </motion.button>
@@ -5356,7 +5362,7 @@ export default function PersonalPage() {
                     }}>
                       {selectedBlock.title}
                     </h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '13px', color: '#86868b' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '13px', color: '#A1A1AA' }}>
                       <ClockIcon style={{ width: '13px', height: '13px' }} />
                       <span>{formatTime(selectedBlock.startTime)} - {formatTime(selectedBlock.endTime)}</span>
                       <span style={{ margin: '0 4px' }}>·</span>
@@ -5398,7 +5404,7 @@ export default function PersonalPage() {
                 {/* Notes - only show if has content */}
                 {selectedBlock.description && (
                   <div style={{ marginBottom: '16px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '600', color: '#86868b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Notes</div>
+                    <div style={{ fontSize: '12px', fontWeight: '600', color: '#A1A1AA', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Notes</div>
                     <div style={{ fontSize: '14px', lineHeight: 1.6, color: '#FFFFFF', whiteSpace: 'pre-wrap' }}>
                       {selectedBlock.description}
                     </div>
@@ -5408,7 +5414,7 @@ export default function PersonalPage() {
                 {/* Checklist Section - Always show */}
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: '600', color: '#86868b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: '#A1A1AA', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Checklist {selectedBlock.checklist.length > 0 && `(${selectedBlock.checklist.filter(i => i.completed).length}/${selectedBlock.checklist.length})`}
                     </span>
                     {selectedBlock.checklist.length > 0 && (
@@ -5468,7 +5474,7 @@ export default function PersonalPage() {
                         <motion.button
                           whileHover={{ opacity: 1 }}
                           onClick={(e) => { e.stopPropagation(); removeChecklistItem(item.id); }}
-                          style={{ opacity: 0.3, border: 'none', background: 'none', cursor: 'pointer', color: '#86868b', padding: '4px' }}
+                          style={{ opacity: 0.3, border: 'none', background: 'none', cursor: 'pointer', color: '#A1A1AA', padding: '4px' }}
                         >
                           <XMarkIcon style={{ width: '14px', height: '14px' }} />
                         </motion.button>
@@ -5484,7 +5490,7 @@ export default function PersonalPage() {
                         onChange={(e) => setNewChecklistItem(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter' && newChecklistItem.trim()) addChecklistItem(); }}
                         placeholder="Add item..."
-                        style={{ flex: 1, fontSize: '14px', border: 'none', outline: 'none', background: 'transparent', color: '#1d1d1f' }}
+                        style={{ flex: 1, fontSize: '14px', border: 'none', outline: 'none', background: 'transparent', color: '#FFFFFF' }}
                       />
                       {newChecklistItem && (
                         <motion.button
@@ -6557,7 +6563,7 @@ export default function PersonalPage() {
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '15px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #2D2D2D',
                       borderRadius: '10px',
                       outline: 'none',
                     }}
@@ -6578,7 +6584,7 @@ export default function PersonalPage() {
                         width: '100%',
                         padding: '12px 16px',
                         fontSize: '14px',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #2D2D2D',
                         borderRadius: '10px',
                         outline: 'none',
                       }}
@@ -6596,7 +6602,7 @@ export default function PersonalPage() {
                         width: '100%',
                         padding: '12px 16px',
                         fontSize: '14px',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #2D2D2D',
                         borderRadius: '10px',
                         outline: 'none',
                       }}
@@ -6619,7 +6625,7 @@ export default function PersonalPage() {
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '14px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #2D2D2D',
                       borderRadius: '10px',
                       outline: 'none',
                     }}
@@ -6674,7 +6680,7 @@ export default function PersonalPage() {
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '14px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #2D2D2D',
                       borderRadius: '10px',
                       outline: 'none',
                       resize: 'vertical',
