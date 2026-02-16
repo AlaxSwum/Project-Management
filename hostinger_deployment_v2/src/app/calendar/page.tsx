@@ -135,75 +135,79 @@ export default function CalendarPage() {
   const fetchData = async () => {
     try {
       setError(null);
-      console.log('Calendar: Fetching meetings for user:', user?.id);
       
-      // Fetch meetings where user is creator OR attendee, plus projects
-      const [meetingsData, projectsData] = await Promise.all([
-        supabase.from('projects_meeting').select('*').order('date', { ascending: true }),
-        projectService.getProjects()
+      // Fast parallel fetch: meetings + lightweight project list (no members needed)
+      const [meetingsResult, projectsResult] = await Promise.all([
+        supabase
+          .from('projects_meeting')
+          .select('id, title, description, date, time, duration, project_id, created_by_id, attendee_ids, meeting_link, location, notes, created_at, updated_at')
+          .order('date', { ascending: true }),
+        supabase
+          .from('projects_project')
+          .select('id, name, color')
       ]);
       
-      if (meetingsData.error) {
-        console.error('Error fetching meetings:', meetingsData.error);
+      if (meetingsResult.error) {
+        console.error('Error fetching meetings:', meetingsResult.error);
         setTasks([]);
-        setProjects(projectsData || []);
         setIsLoading(false);
         return;
       }
       
-      // Filter to only show meetings where current user is creator or attendee
-      const myMeetings = (meetingsData.data || []).filter((meeting: any) => {
-        if (meeting.created_by_id === user?.id) return true;
-        if (meeting.attendee_ids && Array.isArray(meeting.attendee_ids) && meeting.attendee_ids.includes(user?.id)) return true;
-        return false;
+      // Build project lookup map (O(1) lookups instead of O(n) find)
+      const projectMap = new Map<number, { name: string; color: string }>();
+      (projectsResult.data || []).forEach((p: any) => {
+        projectMap.set(p.id, { name: p.name, color: p.color });
       });
       
-      // Replace data with filtered results
-      meetingsData.data = myMeetings;
+      // Filter to user's meetings and transform in one pass
+      const uid = user?.id;
+      const transformedMeetings = (meetingsResult.data || [])
+        .filter((meeting: any) => {
+          if (meeting.created_by_id === uid) return true;
+          if (meeting.attendee_ids && Array.isArray(meeting.attendee_ids) && meeting.attendee_ids.includes(uid)) return true;
+          return false;
+        })
+        .map((meeting: any) => {
+          const startDateTime = meeting.date && meeting.time 
+            ? `${meeting.date}T${meeting.time}`
+            : meeting.date;
+          
+          let dueDateTime = startDateTime;
+          if (meeting.duration && startDateTime) {
+            const start = new Date(startDateTime);
+            start.setMinutes(start.getMinutes() + meeting.duration);
+            dueDateTime = start.toISOString();
+          }
+          
+          const project = projectMap.get(meeting.project_id);
+          
+          return {
+            id: meeting.id,
+            name: meeting.title,
+            description: meeting.description || '',
+            status: 'todo',
+            priority: 'medium',
+            due_date: dueDateTime,
+            start_date: startDateTime,
+            estimated_hours: meeting.duration ? meeting.duration / 60 : null,
+            actual_hours: null,
+            assignees: [],
+            assignee: null,
+            created_by: { id: meeting.created_by_id, name: '', email: '', role: '' },
+            tags_list: [],
+            created_at: meeting.created_at,
+            updated_at: meeting.updated_at,
+            project_id: meeting.project_id,
+            project_name: project?.name || 'Personal',
+            project_color: project?.color || '#3B82F6',
+            is_important: false,
+            _meetingData: meeting
+          };
+        });
       
-      // Transform meetings to task format for calendar display
-      const transformedMeetings = (meetingsData.data || []).map((meeting: any) => {
-        const startDateTime = meeting.date && meeting.time 
-          ? `${meeting.date}T${meeting.time}`
-          : meeting.date;
-        
-        let dueDateTime = startDateTime;
-        if (meeting.duration && startDateTime) {
-          const start = new Date(startDateTime);
-          start.setMinutes(start.getMinutes() + meeting.duration);
-          dueDateTime = start.toISOString();
-        }
-        
-        const project = projectsData?.find((p: any) => p.id === meeting.project_id);
-        
-        return {
-          id: meeting.id,
-          name: meeting.title,
-          description: meeting.description || '',
-          status: 'todo',
-          priority: 'medium',
-          due_date: dueDateTime,
-          start_date: startDateTime,
-          estimated_hours: meeting.duration ? meeting.duration / 60 : null,
-          actual_hours: null,
-          assignees: [],
-          assignee: null,
-          created_by: { id: meeting.created_by_id, name: '', email: '', role: '' },
-          tags_list: [],
-          created_at: meeting.created_at,
-          updated_at: meeting.updated_at,
-          project_id: meeting.project_id,
-          project_name: project?.name || 'Personal',
-          project_color: project?.color || '#3B82F6',
-          is_important: false,
-          // Keep original meeting data
-          _meetingData: meeting
-        };
-      });
-      
-      setProjects(projectsData || []);
-      setTasks(transformedMeetings || []);
-      console.log('Calendar: Meetings loaded successfully');
+      setProjects(projectsResult.data || []);
+      setTasks(transformedMeetings);
     } catch (err) {
       console.error('Calendar: Failed to fetch meetings:', err);
       setError(err instanceof Error ? err.message : 'Failed to load calendar data');
