@@ -21,15 +21,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/page.js"
     ],
-    "/my-personal/page": [
+    "/calendar/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/my-personal/page.js"
+      "static/chunks/app/calendar/page.js"
     ],
-    "/not-found": [
+    "/projects/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/not-found.js"
+      "static/chunks/app/projects/[id]/page.js"
     ]
   }
 }

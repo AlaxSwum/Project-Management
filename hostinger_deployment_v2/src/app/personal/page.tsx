@@ -2873,6 +2873,9 @@ export default function PersonalPage() {
                             background: isToday ? 'rgba(59, 130, 246, 0.03)' : 'transparent',
                           }}
                           onMouseDown={(e) => {
+                            // Don't start drag-to-create if clicking on a block or checkbox
+                            const target = e.target as HTMLElement;
+                            if (target.closest('[data-checkbox]') || target.closest('[data-block]')) return;
                             const rect = weekViewRefs.current[dayIndex]?.getBoundingClientRect();
                             if (!rect) return;
                             const relativeY = e.clientY - rect.top;
@@ -2961,6 +2964,7 @@ export default function PersonalPage() {
                               return (
                                 <motion.div
                                   key={block.id}
+                                  data-block="true"
                                   whileHover={{ scale: 1.02, zIndex: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -3613,7 +3617,7 @@ export default function PersonalPage() {
                         };
                         const statusColors: Record<string, { bg: string; text: string }> = {
                           idea: { bg: '#F3E8FF', text: '#9333EA' },
-                          draft: { bg: '#F3F4F6', text: '#6B7280' },
+                          draft: { bg: '#2D2D2D', text: '#A1A1AA' },
                           design: { bg: '#FEF3C7', text: '#D97706' },
                           review: { bg: '#DBEAFE', text: '#3B82F6' },
                           approved: { bg: '#D1FAE5', text: '#10B981' },
@@ -4139,9 +4143,9 @@ export default function PersonalPage() {
                             flexDirection: 'column',
                             alignItems: 'center',
                             gap: '6px',
-                            border: blockForm.type === type ? `2px solid ${colors.solid}` : '1px solid rgba(0, 0, 0, 0.1)',
+                            border: blockForm.type === type ? `2px solid ${colors.solid}` : '1px solid #2D2D2D',
                   borderRadius: '12px',
-                            background: blockForm.type === type ? colors.bg : '#fff',
+                            background: blockForm.type === type ? colors.bg : '#1F1F1F',
                             cursor: 'pointer',
                   transition: 'all 0.2s ease',
                           }}
@@ -4192,7 +4196,7 @@ export default function PersonalPage() {
                             gap: '6px',
                             border: blockForm.category === cat.id ? `2px solid ${cat.color}` : '1px solid rgba(0, 0, 0, 0.1)',
                             borderRadius: '20px',
-                            background: blockForm.category === cat.id ? `${cat.color}15` : '#fff',
+                            background: blockForm.category === cat.id ? `${cat.color}15` : '#1F1F1F',
                     cursor: 'pointer',
                             transition: 'all 0.2s ease',
                             position: 'relative',
@@ -4583,8 +4587,8 @@ export default function PersonalPage() {
                                     justifyContent: 'center',
                                     borderRadius: '20px',
                         border: 'none',
-                                    background: isSelected ? '#0071e3' : 'rgba(0, 0, 0, 0.05)',
-                                    color: isSelected ? '#fff' : '#86868b',
+                                    background: isSelected ? '#3B82F6' : '#2D2D2D',
+                                    color: isSelected ? '#fff' : '#71717A',
                                     fontSize: '12px',
                   fontWeight: '600',
                                     cursor: 'pointer',
@@ -5075,7 +5079,7 @@ export default function PersonalPage() {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    background: '#f3f4f6',
+                    background: '#1F1F1F',
                     border: 'none',
                     borderRadius: '10px',
                     fontSize: '14px',
@@ -5907,7 +5911,7 @@ export default function PersonalPage() {
                             alignItems: 'center',
                             gap: '8px',
                             padding: '8px 12px',
-                            background: '#f3f4f6',
+                            background: '#1F1F1F',
                             borderRadius: '20px',
                           }}
                         >
