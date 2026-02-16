@@ -1301,6 +1301,9 @@ select{
 .block{
   display: block;
 }
+.\!block{
+  display: block !important;
+}
 .inline-block{
   display: inline-block;
 }
@@ -2270,6 +2273,9 @@ select{
 }
 .uppercase{
   text-transform: uppercase;
+}
+.lowercase{
+  text-transform: lowercase;
 }
 .capitalize{
   text-transform: capitalize;
