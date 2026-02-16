@@ -351,6 +351,50 @@ export const taskService = {
     return [];
   },
 
+  async deleteTaskComment(commentId: number) {
+    try {
+      const { error } = await supabase
+        .from('task_comments')
+        .delete()
+        .eq('id', commentId);
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error in deleteTaskComment:', error);
+      throw error;
+    }
+  },
+
+  async updateTaskComment(commentId: number, commentText: string) {
+    try {
+      const { data, error } = await supabase
+        .from('task_comments')
+        .update({ comment: commentText, updated_at: new Date().toISOString() })
+        .eq('id', commentId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error in updateTaskComment:', error);
+      throw error;
+    }
+  },
+
+  async deleteTaskAttachment(attachmentId: number) {
+    try {
+      const { error } = await supabase
+        .from('task_attachment_links')
+        .delete()
+        .eq('id', attachmentId);
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error in deleteTaskAttachment:', error);
+      throw error;
+    }
+  },
+
   async uploadTaskAttachment(taskId: number, file: File) {
     try {
       // TODO: Add task-level access control - verify user can upload to this task

@@ -9,7 +9,11 @@ import {
   PaperClipIcon,
   FolderIcon,
   CloudArrowUpIcon,
-  DocumentIcon
+  DocumentIcon,
+  TrashIcon,
+  PencilIcon,
+  CheckIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import GoogleDriveExplorer from './GoogleDriveExplorer';
 
@@ -73,6 +77,8 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
   // File upload states
   const [showFileOptions, setShowFileOptions] = useState(false);
   const [showDriveExplorer, setShowDriveExplorer] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedDriveFiles, setSelectedDriveFiles] = useState<any[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -203,6 +209,41 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
 
   const removeSelectedDriveFile = (index: number) => {
     setSelectedDriveFiles(selectedDriveFiles.filter((_, i) => i !== index));
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    try {
+      await taskService.deleteTaskComment(commentId);
+      setComments(comments.filter(c => c.id !== commentId));
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
+    }
+  };
+
+  const handleEditComment = async (commentId: number) => {
+    if (!editingCommentText.trim()) return;
+    try {
+      await taskService.updateTaskComment(commentId, editingCommentText.trim());
+      setComments(comments.map(c => c.id === commentId ? { ...c, comment: editingCommentText.trim() } : c));
+      setEditingCommentId(null);
+      setEditingCommentText('');
+    } catch (error) {
+      console.error('Failed to edit comment:', error);
+    }
+  };
+
+  const handleDeleteAttachment = async (commentId: number, attachmentId: number) => {
+    try {
+      await taskService.deleteTaskAttachment(attachmentId);
+      setComments(comments.map(c => {
+        if (c.id === commentId && c.attachments) {
+          return { ...c, attachments: c.attachments.filter(a => a.id !== attachmentId) };
+        }
+        return c;
+      }));
+    } catch (error) {
+      console.error('Failed to delete attachment:', error);
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -722,8 +763,51 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
                         })}
                       </div>
                     </div>
+                    {/* Edit & Delete buttons for comment */}
+                    {comment.author_email === user?.email && (
+                      <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }}>
+                        <button
+                          onClick={() => { setEditingCommentId(comment.id); setEditingCommentText(comment.comment); }}
+                          style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer', color: '#71717A', borderRadius: '4px', minHeight: 'auto', minWidth: 'auto' }}
+                          title="Edit comment"
+                        >
+                          <PencilIcon style={{ width: '14px', height: '14px' }} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteComment(comment.id)}
+                          style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', borderRadius: '4px', minHeight: 'auto', minWidth: 'auto' }}
+                          title="Delete comment"
+                        >
+                          <TrashIcon style={{ width: '14px', height: '14px' }} />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div className="comment-content">{comment.comment}</div>
+                  {editingCommentId === comment.id ? (
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginTop: '8px' }}>
+                      <textarea
+                        value={editingCommentText}
+                        onChange={(e) => setEditingCommentText(e.target.value)}
+                        style={{ flex: 1, padding: '8px', background: '#141414', border: '1px solid #3D3D3D', borderRadius: '6px', color: '#FFFFFF', fontSize: '0.875rem', resize: 'vertical', minHeight: '60px', fontFamily: 'inherit' }}
+                      />
+                      <button
+                        onClick={() => handleEditComment(comment.id)}
+                        style={{ padding: '6px', background: '#10B981', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#FFFFFF', minHeight: 'auto', minWidth: 'auto' }}
+                        title="Save"
+                      >
+                        <CheckIcon style={{ width: '16px', height: '16px' }} />
+                      </button>
+                      <button
+                        onClick={() => { setEditingCommentId(null); setEditingCommentText(''); }}
+                        style={{ padding: '6px', background: '#2D2D2D', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#A1A1AA', minHeight: 'auto', minWidth: 'auto' }}
+                        title="Cancel"
+                      >
+                        <XMarkIcon style={{ width: '16px', height: '16px' }} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="comment-content">{comment.comment}</div>
+                  )}
                   
                                      {comment.attachments && comment.attachments.length > 0 && (
                      <div className="comment-attachments">
@@ -738,25 +822,49 @@ export default function TaskInteractionSection({ task }: TaskInteractionSectionP
                                {formatFileSize(attachment.size || attachment.file_size)} • {attachment.source === 'drive' ? 'Google Drive' : 'Uploaded'}
                              </div>
                            </div>
-                           {(attachment.url || attachment.file) && (
-                             <a
-                               href={attachment.url || attachment.file}
-                               target="_blank"
-                               rel="noopener noreferrer"
+                           <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
+                             {(attachment.url || attachment.file) && (
+                               <a
+                                 href={attachment.url || attachment.file}
+                                 target="_blank"
+                                 rel="noopener noreferrer"
+                                 style={{
+                                   padding: '0.25rem 0.5rem',
+                                   background: '#1F1F1F',
+                                   border: '1px solid #3D3D3D',
+                                   borderRadius: '4px',
+                                   color: '#A1A1AA',
+                                   textDecoration: 'none',
+                                   fontSize: '0.75rem',
+                                   fontWeight: '500'
+                                 }}
+                               >
+                                 View
+                               </a>
+                             )}
+                             <button
+                               onClick={() => handleDeleteAttachment(comment.id, attachment.id)}
                                style={{
                                  padding: '0.25rem 0.5rem',
-                                 background: '#1F1F1F',
+                                 background: 'none',
                                  border: '1px solid #3D3D3D',
                                  borderRadius: '4px',
-                                 color: '#A1A1AA',
-                                 textDecoration: 'none',
+                                 cursor: 'pointer',
+                                 color: '#EF4444',
                                  fontSize: '0.75rem',
-                                 fontWeight: '500'
+                                 fontWeight: '500',
+                                 display: 'flex',
+                                 alignItems: 'center',
+                                 gap: '2px',
+                                 minHeight: 'auto',
+                                 minWidth: 'auto'
                                }}
+                               title="Delete attachment"
                              >
-                               View
-                             </a>
-                           )}
+                               <TrashIcon style={{ width: '12px', height: '12px' }} />
+                               Delete
+                             </button>
+                           </div>
                          </div>
                        ))}
                      </div>
