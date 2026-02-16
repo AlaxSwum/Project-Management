@@ -11,6 +11,7 @@ import {
   ClockIcon
 } from '@heroicons/react/24/outline';
 import { projectService } from '@/lib/api-compatibility';
+import Sidebar from '@/components/Sidebar';
 
 interface ChecklistItem {
   id?: number;
@@ -452,51 +453,60 @@ export default function PersonalTaskManager() {
   const render15MinView = () => {
     const allDayEvents = events;
     
-    // Generate 15-minute time slots
+    // Generate 15-minute time slots starting from 1 AM to 11 PM
+    const startHour = 1;
+    const endHour = 23;
     const fifteenMinSlots: { hour: number; minute: number }[] = [];
-    for (let hour = 0; hour <= 23; hour++) {
+    for (let hour = startHour; hour <= endHour; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
         fifteenMinSlots.push({ hour, minute });
       }
     }
 
-    const slotHeight = 40;
-    const headerHeight = 100;
+    const slotHeight = isMobile ? 20 : 24;
+    const headerHeight = isMobile ? 48 : 56;
+
+    const formatHour = (hour: number) => {
+      if (hour === 0) return '12 AM';
+      if (hour < 12) return `${hour} AM`;
+      if (hour === 12) return '12 PM';
+      return `${hour - 12} PM`;
+    };
 
     return (
-      <div style={{ display: 'flex', gap: '1rem' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', flexDirection: isMobile ? 'column' : 'row' }}>
         {/* Unscheduled Tasks Sidebar */}
         <div style={{
-          width: isMobile ? '100%' : '300px',
-          background: '#ffffff',
-          border: '1px solid #E5E7EB',
-          borderRadius: '16px',
-          padding: '1rem',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-          maxHeight: '600px',
+          width: isMobile ? '100%' : '240px',
+          flexShrink: 0,
+          background: '#141414',
+          border: '1px solid #2D2D2D',
+          borderRadius: '12px',
+          padding: '0.75rem',
+          maxHeight: isMobile ? '200px' : 'calc(100vh - 220px)',
           overflowY: 'auto'
         }}>
           <h3 style={{ 
-            margin: '0 0 1rem 0', 
-            fontSize: '1.1rem', 
+            margin: '0 0 0.75rem 0', 
+            fontSize: '0.85rem', 
             fontWeight: '600',
-            color: '#1F2937'
+            color: '#FFFFFF'
           }}>
             Unscheduled Tasks
           </h3>
           
           {unscheduledTasks.length === 0 ? (
             <p style={{ 
-              color: '#6B7280', 
-              fontSize: '0.9rem',
+              color: '#71717A', 
+              fontSize: '0.8rem',
               fontStyle: 'italic',
               textAlign: 'center',
-              margin: '2rem 0'
+              margin: '1rem 0'
             }}>
               No unscheduled tasks
             </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '0.375rem', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
               {unscheduledTasks.map((task) => (
                 <div
                   key={task.id}
@@ -504,24 +514,25 @@ export default function PersonalTaskManager() {
                   onDragStart={() => handleTaskDragStart(task)}
                   onDragEnd={handleTaskDragEnd}
                   style={{
-                    padding: '0.75rem',
+                    padding: '0.5rem 0.625rem',
                     background: task.color || '#3B82F6',
                     color: '#ffffff',
-                    borderRadius: '8px',
+                    borderRadius: '6px',
                     cursor: 'grab',
-                    fontSize: '0.85rem',
+                    fontSize: '0.75rem',
                     fontWeight: '500',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                     transition: 'all 0.2s ease',
-                    userSelect: 'none'
+                    userSelect: 'none',
+                    minWidth: isMobile ? 'auto' : 'unset'
                   }}
                 >
-                  <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
+                  <div style={{ fontWeight: '600', fontSize: '0.75rem' }}>
                     {task.title}
                   </div>
-                  {task.priority && (
-                    <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '0.25rem' }}>
-                      Priority: {task.priority}
+                  {task.priority && !isMobile && (
+                    <div style={{ fontSize: '0.625rem', opacity: 0.8, marginTop: '0.125rem' }}>
+                      {task.priority}
                     </div>
                   )}
                 </div>
@@ -530,140 +541,147 @@ export default function PersonalTaskManager() {
           )}
         </div>
 
-        {/* Calendar Grid - Only show if not mobile or if mobile is in timeblocking mode */}
-        {(!isMobile || layoutType === '15min') && (
-          <div style={{
-            background: '#ffffff',
-            border: '1px solid #E5E7EB',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-            flex: 1,
-            maxHeight: '600px',
-            overflowY: 'auto'
-          }}>
-            <div style={{ display: 'flex' }}>
-              {/* Time column */}
-              <div style={{ width: '80px', borderRight: '1px solid #E5E7EB', background: '#F9FAFB' }}>
-                <div style={{ 
-                  height: `${headerHeight}px`, 
-                  borderBottom: '2px solid #D1D5DB', 
-                  display: 'flex', 
-                  alignItems: 'center', 
+        {/* Calendar Grid */}
+        <div style={{
+          background: '#141414',
+          border: '1px solid #2D2D2D',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          flex: 1,
+          maxHeight: isMobile ? 'calc(100vh - 380px)' : 'calc(100vh - 220px)',
+          overflowY: 'auto',
+          minWidth: 0
+        }}>
+          <div style={{ display: 'flex' }}>
+            {/* Time column */}
+            <div style={{ width: isMobile ? '50px' : '60px', borderRight: '1px solid #2D2D2D', background: '#0D0D0D', flexShrink: 0 }}>
+              <div style={{ 
+                height: `${headerHeight}px`, 
+                borderBottom: '2px solid #2D2D2D', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                background: '#0D0D0D',
+                position: 'sticky',
+                top: 0,
+                zIndex: 20
+              }}>
+                <span style={{ fontSize: '0.65rem', fontWeight: '600', color: '#71717A' }}>Time</span>
+              </div>
+              
+              {fifteenMinSlots.map((slot) => (
+                <div key={`${slot.hour}-${slot.minute}`} style={{
+                  height: `${slotHeight}px`,
+                  borderBottom: slot.minute === 0 ? '1px solid #2D2D2D' : '1px solid #1F1F1F',
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'center',
-                  background: '#F3F4F6'
+                  fontSize: slot.minute === 0 ? '0.65rem' : '0.55rem',
+                  color: slot.minute === 0 ? '#A1A1AA' : '#52525B',
+                  fontWeight: slot.minute === 0 ? '600' : '400',
+                  background: slot.minute === 0 ? 'rgba(16, 185, 129, 0.05)' : 'transparent'
                 }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#374151' }}>Time</span>
-                </div>
-                
-                {fifteenMinSlots.map((slot, index) => (
-                  <div key={`${slot.hour}-${slot.minute}`} style={{
-                    height: `${slotHeight}px`,
-                    borderBottom: slot.minute === 0 ? '2px solid #D1D5DB' : '1px solid #E5E7EB',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: slot.minute === 0 ? '0.8rem' : '0.7rem',
-                    color: slot.minute === 0 ? '#1F2937' : '#6B7280',
-                    fontWeight: slot.minute === 0 ? '700' : '600',
-                    background: slot.minute === 0 ? 'rgba(59, 130, 246, 0.05)' : 'transparent'
-                  }}>
-                    <div style={{ textAlign: 'center' }}>
-                      {slot.minute === 0 ? `${slot.hour}:00` : `:${slot.minute.toString().padStart(2, '0')}`}
-                    </div>
+                  <div style={{ textAlign: 'center' }}>
+                    {slot.minute === 0 ? formatHour(slot.hour) : `:${slot.minute.toString().padStart(2, '0')}`}
                   </div>
-                ))}
-              </div>
-
-              {/* Main calendar column */}
-              <div style={{ flex: 1, position: 'relative' }}>
-                <div style={{ 
-                  height: `${headerHeight}px`, 
-                  borderBottom: '2px solid #D1D5DB', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  background: '#F3F4F6'
-                }}>
-                  <span style={{ fontSize: '1rem', fontWeight: '600', color: '#374151' }}>
-                    {currentDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                  </span>
                 </div>
-                
-                {fifteenMinSlots.map((slot, index) => {
-                  const isWorkingHour = slot.hour >= 9 && slot.hour <= 17;
-                  
-                  return (
-                    <div 
-                      key={`main-${slot.hour}-${slot.minute}`} 
-                      onDragOver={(e) => handleSlotDragOver(e, currentDate, slot.hour, slot.minute)}
-                      onDrop={(e) => handleSlotDrop(e, currentDate, slot.hour, slot.minute)}
-                      style={{
-                        height: `${slotHeight}px`,
-                        borderBottom: slot.minute === 0 ? '2px solid #E5E7EB' : '1px solid #F3F4F6',
-                        borderRight: '1px solid #E5E7EB',
-                        position: 'relative',
-                        background: dragOverSlot && 
-                          dragOverSlot.date.toDateString() === currentDate.toDateString() &&
-                          dragOverSlot.hour === slot.hour && 
-                          dragOverSlot.minute === slot.minute 
-                          ? 'rgba(59, 130, 246, 0.2)' 
-                          : isWorkingHour ? 'rgba(16, 185, 129, 0.02)' : '#ffffff',
-                        transition: 'all 0.2s ease',
-                        userSelect: 'none',
-                        cursor: draggedTask ? 'copy' : 'default'
-                      }}
-                    />
-                  );
-                })}
+              ))}
+            </div>
 
-                {/* Events overlay */}
-                {allDayEvents.map((event) => {
-                  const eventStart = new Date(event.start_datetime);
-                  const eventEnd = new Date(event.end_datetime);
-                  
-                  if (eventStart.toDateString() !== currentDate.toDateString()) return null;
-                  
-                  const startMinutes = eventStart.getHours() * 60 + eventStart.getMinutes();
-                  const endMinutes = eventEnd.getHours() * 60 + eventEnd.getMinutes();
-                  const duration = endMinutes - startMinutes;
-                  
-                  const topPosition = headerHeight + (startMinutes / 15) * slotHeight;
-                  const height = (duration / 15) * slotHeight;
-                  
-                  return (
-                    <div
-                      key={event.id}
-                      style={{
-                        position: 'absolute',
-                        top: `${topPosition}px`,
-                        left: '4px',
-                        right: '4px',
-                        height: `${height}px`,
-                        background: event.color,
-                        color: '#ffffff',
-                        borderRadius: '4px',
-                        padding: '4px 8px',
-                        fontSize: '0.75rem',
-                        fontWeight: '500',
-                        overflow: 'hidden',
-                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
-                        zIndex: 10
-                      }}
-                    >
-                      <div style={{ fontWeight: '600' }}>{event.title}</div>
-                      {event.description && (
-                        <div style={{ fontSize: '0.7rem', opacity: 0.9, marginTop: '2px' }}>
-                          {event.description}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+            {/* Main calendar column */}
+            <div style={{ flex: 1, position: 'relative', minWidth: 0 }}>
+              <div style={{ 
+                height: `${headerHeight}px`, 
+                borderBottom: '2px solid #2D2D2D', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                background: '#0D0D0D',
+                position: 'sticky',
+                top: 0,
+                zIndex: 20,
+                padding: '0 0.5rem'
+              }}>
+                <span style={{ fontSize: isMobile ? '0.8rem' : '0.9rem', fontWeight: '600', color: '#FFFFFF', textAlign: 'center' }}>
+                  {currentDate.toLocaleDateString('en-US', { weekday: isMobile ? 'short' : 'long', month: 'short', day: 'numeric' })}
+                </span>
               </div>
+              
+              {fifteenMinSlots.map((slot) => {
+                const isWorkingHour = slot.hour >= 9 && slot.hour <= 17;
+                
+                return (
+                  <div 
+                    key={`main-${slot.hour}-${slot.minute}`} 
+                    onDragOver={(e) => handleSlotDragOver(e, currentDate, slot.hour, slot.minute)}
+                    onDrop={(e) => handleSlotDrop(e, currentDate, slot.hour, slot.minute)}
+                    style={{
+                      height: `${slotHeight}px`,
+                      borderBottom: slot.minute === 0 ? '1px solid #2D2D2D' : '1px solid #1A1A1A',
+                      position: 'relative',
+                      background: dragOverSlot && 
+                        dragOverSlot.date.toDateString() === currentDate.toDateString() &&
+                        dragOverSlot.hour === slot.hour && 
+                        dragOverSlot.minute === slot.minute 
+                        ? 'rgba(59, 130, 246, 0.25)' 
+                        : isWorkingHour ? 'rgba(16, 185, 129, 0.03)' : '#141414',
+                      transition: 'background 0.15s ease',
+                      userSelect: 'none',
+                      cursor: draggedTask ? 'copy' : 'default'
+                    }}
+                  />
+                );
+              })}
+
+              {/* Events overlay */}
+              {allDayEvents.map((event) => {
+                const eventStart = new Date(event.start_datetime);
+                const eventEnd = new Date(event.end_datetime);
+                
+                if (eventStart.toDateString() !== currentDate.toDateString()) return null;
+                
+                const startMinutes = eventStart.getHours() * 60 + eventStart.getMinutes();
+                const endMinutes = eventEnd.getHours() * 60 + eventEnd.getMinutes();
+                const duration = endMinutes - startMinutes;
+                
+                const offsetMinutes = startMinutes - (startHour * 60);
+                const topPosition = headerHeight + (offsetMinutes / 15) * slotHeight;
+                const height = Math.max((duration / 15) * slotHeight, slotHeight);
+                
+                return (
+                  <div
+                    key={event.id}
+                    style={{
+                      position: 'absolute',
+                      top: `${topPosition}px`,
+                      left: '2px',
+                      right: '2px',
+                      height: `${height}px`,
+                      background: event.color,
+                      color: '#ffffff',
+                      borderRadius: '4px',
+                      padding: '2px 6px',
+                      fontSize: '0.65rem',
+                      fontWeight: '500',
+                      overflow: 'hidden',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
+                      zIndex: 10,
+                      borderLeft: `3px solid ${event.color}`,
+                      opacity: 0.95
+                    }}
+                  >
+                    <div style={{ fontWeight: '600', fontSize: '0.65rem', lineHeight: 1.2 }}>{event.title}</div>
+                    {height > slotHeight * 2 && event.description && (
+                      <div style={{ fontSize: '0.6rem', opacity: 0.85, marginTop: '1px', lineHeight: 1.2 }}>
+                        {event.description}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
-        )}
+        </div>
       </div>
     );
   };
@@ -671,9 +689,7 @@ export default function PersonalTaskManager() {
   if (authLoading || isLoading) {
     return (
       <div style={{ 
-          padding: isMobile ? '1rem' : '2rem', 
-          background: '#F8FAFC', 
-          flex: 1,
+          background: '#0D0D0D', 
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -682,8 +698,8 @@ export default function PersonalTaskManager() {
           <div style={{ 
             width: '40px', 
             height: '40px', 
-            border: '4px solid #E5E7EB', 
-            borderTop: '4px solid #3B82F6', 
+            border: '4px solid rgba(16, 185, 129, 0.2)', 
+            borderTop: '4px solid #10B981', 
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
@@ -731,64 +747,67 @@ export default function PersonalTaskManager() {
         `
       }} />
       
-      <div style={{ 
-          padding: isMobile ? '1rem' : '2rem', 
-          background: '#F8FAFC', 
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#0D0D0D' }}>
+        <Sidebar projects={projects} onCreateProject={() => {}} />
+        <div className="page-main" style={{ 
+          padding: isMobile ? '1rem' : '1.5rem', 
+          background: '#0D0D0D', 
           flex: 1,
-          minHeight: '100vh'
+          minHeight: '100vh',
+          marginLeft: '280px',
+          maxWidth: 'calc(100vw - 280px)',
+          overflow: 'hidden'
         }}>
           {/* Header */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
-            marginBottom: '2rem',
+            marginBottom: '1.25rem',
             flexWrap: 'wrap',
-            gap: '1rem'
+            gap: '0.75rem'
           }}>
             <div>
               <h1 style={{ 
-                fontSize: isMobile ? '2rem' : '2.5rem', 
+                fontSize: isMobile ? '1.25rem' : '1.5rem', 
                 fontWeight: '700', 
                 margin: '0', 
-                color: '#1F2937',
+                color: '#FFFFFF',
                 letterSpacing: '-0.02em'
               }}>
-              Personal Task Management
+              Personal Tasks
             </h1>
-            <p style={{ fontSize: '1.1rem', color: '#6B7280', margin: '0.5rem 0 0 0', lineHeight: '1.5' }}>
-              Manage your personal tasks with 15-minute timeblocking - Build 2024
+            <p style={{ fontSize: '0.85rem', color: '#71717A', margin: '0.25rem 0 0 0' }}>
+              15-minute timeblocking
               </p>
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               {/* Layout Type Selector */}
-              <div style={{ display: 'flex', background: '#ffffff', borderRadius: '12px', padding: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+              <div style={{ display: 'flex', background: '#1F1F1F', borderRadius: '10px', padding: '3px' }}>
                 {[
-                  { type: 'list', icon: '', label: 'List' },
-                  { type: 'calendar', icon: '', label: 'Calendar' },
-                  { type: '15min', icon: '', label: '15 Min' }
-                ].map(({ type, icon, label }) => (
+                  { type: 'list', label: 'List' },
+                  { type: 'calendar', label: 'Cal' },
+                  { type: '15min', label: '15m' }
+                ].map(({ type, label }) => (
                   <button
                     key={type}
                     onClick={() => setLayoutType(type as any)}
                     style={{
-                      padding: '0.5rem 1rem',
-                      background: layoutType === type ? '#3B82F6' : 'transparent',
-                      color: layoutType === type ? '#ffffff' : '#6B7280',
+                      padding: '0.4rem 0.75rem',
+                      background: layoutType === type ? '#10B981' : 'transparent',
+                      color: layoutType === type ? '#ffffff' : '#71717A',
                       border: 'none',
                       borderRadius: '8px',
-                      fontSize: '0.875rem',
+                      fontSize: '0.8rem',
                       fontWeight: '500',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem'
+                      minHeight: 'auto',
+                      minWidth: 'auto'
                     }}
                   >
-                    <span>{icon}</span>
-                    {!isMobile && <span>{label}</span>}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -798,20 +817,21 @@ export default function PersonalTaskManager() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.75rem 1.5rem',
-                  background: '#3B82F6',
+                  gap: '0.375rem',
+                  padding: '0.5rem 1rem',
+                  background: '#10B981',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '0.9rem',
+                  borderRadius: '10px',
+                  fontSize: '0.8rem',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+                  minHeight: 'auto',
+                  minWidth: 'auto'
                 }}
               >
-                <PlusIcon style={{ width: '16px', height: '16px' }} />
+                <PlusIcon style={{ width: '14px', height: '14px' }} />
                 {!isMobile && 'New Task'}
               </button>
             </div>
@@ -862,23 +882,26 @@ export default function PersonalTaskManager() {
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
+              background: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(4px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              zIndex: 1000
+              zIndex: 1000,
+              padding: '1rem'
             }}>
               <div style={{
-                background: '#ffffff',
+                background: '#1A1A1A',
                 borderRadius: '16px',
-                padding: '2rem',
-                width: '90%',
+                padding: '1.5rem',
+                width: '100%',
                 maxWidth: '500px',
                 maxHeight: '90vh',
                 overflow: 'auto',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                border: '1px solid #2D2D2D',
+                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)'
               }}>
-                <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.5rem', fontWeight: '700', color: '#1F2937' }}>
+                <h2 style={{ margin: '0 0 1.25rem 0', fontSize: '1.25rem', fontWeight: '700', color: '#FFFFFF' }}>
                   Create New Task
                 </h2>
 
@@ -1193,6 +1216,7 @@ export default function PersonalTaskManager() {
               </div>
             </div>
           )}
+        </div>
       </div>
     </>
   );
