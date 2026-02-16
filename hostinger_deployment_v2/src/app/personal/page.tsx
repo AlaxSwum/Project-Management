@@ -152,6 +152,7 @@ interface TimeBlock {
   recurringEndDate?: string; // End date for recurring
   excludedDates?: string[]; // Dates to skip for this recurring block (YYYY-MM-DD format)
   completed?: boolean; // Main task completion status
+  completedDates?: string[]; // Dates where this recurring block is completed (YYYY-MM-DD format)
   created_at?: string;
   updated_at?: string;
 }
@@ -327,7 +328,11 @@ const getDailyProgress = (blocks: TimeBlock[], date: Date): { total: number; com
   dayBlocks.forEach(block => {
     // Count the main block as 1 task
     totalTasks += 1;
-    if (block.completed) {
+    // Per-date completion for recurring blocks
+    const isDayDone = block.isRecurring
+      ? (block.completedDates || []).includes(dateStr)
+      : !!block.completed;
+    if (isDayDone) {
       completedTasks += 1;
     }
     
@@ -386,6 +391,7 @@ const mapDbToBlock = (db: DbTimeBlock): TimeBlock => ({
   recurringEndDate: db.recurring_end_date,
   excludedDates: db.excluded_dates,
   completed: db.completed,
+  completedDates: db.completed_dates || [],
   created_at: db.created_at,
   updated_at: db.updated_at,
 });
@@ -410,6 +416,7 @@ const mapBlockToDb = (block: TimeBlock, userId?: string | number): DbTimeBlock =
   recurring_end_date: block.recurringEndDate,
   excluded_dates: block.excludedDates,
   completed: block.completed,
+  completed_dates: block.completedDates || [],
   created_at: block.created_at,
   updated_at: block.updated_at,
 });
@@ -2588,31 +2595,47 @@ export default function PersonalPage() {
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {/* Quick Complete Checkbox */}
+                            {/* Quick Complete Checkbox - per-date for recurring */}
+                            {(() => {
+                              const dayStr = formatDate(currentDate);
+                              const isDayComplete = block.isRecurring 
+                                ? (block.completedDates || []).includes(dayStr)
+                                : !!block.completed;
+                              return (
                             <motion.div
+                              data-checkbox="true"
                               whileHover={{ scale: 1.15 }}
                               whileTap={{ scale: 0.9 }}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const updatedBlock = { ...block, completed: !block.completed };
-                                saveBlock(updatedBlock);
+                                if (block.isRecurring) {
+                                  const dates = block.completedDates || [];
+                                  const newDates = dates.includes(dayStr)
+                                    ? dates.filter(d => d !== dayStr)
+                                    : [...dates, dayStr];
+                                  saveBlock({ ...block, completedDates: newDates });
+                                } else {
+                                  saveBlock({ ...block, completed: !block.completed });
+                                }
                               }}
                               style={{
                                 width: '20px',
                                 height: '20px',
                                 borderRadius: '6px',
-                                border: block.completed ? 'none' : '2.5px solid rgba(255,255,255,0.8)',
-                                background: block.completed ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.15)',
+                                border: isDayComplete ? 'none' : '2.5px solid rgba(255,255,255,0.8)',
+                                background: isDayComplete ? 'linear-gradient(135deg, #10B981, #059669)' : 'rgba(255,255,255,0.15)',
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
                                 cursor: 'pointer',
                                 flexShrink: 0,
-                                boxShadow: block.completed ? '0 2px 6px rgba(0,0,0,0.2)' : 'none',
+                                boxShadow: isDayComplete ? '0 2px 6px rgba(16,185,129,0.4)' : 'none',
                               }}
                             >
-                              {block.completed && <CheckIcon style={{ width: '13px', height: '13px', color: '#10B981', strokeWidth: 3 }} />}
+                              {isDayComplete && <CheckIcon style={{ width: '13px', height: '13px', color: '#FFFFFF', strokeWidth: 3 }} />}
                             </motion.div>
+                              );
+                            })()}
                             {block.type === 'focus' && <SparklesIcon style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.9)' }} />}
                             {block.type === 'meeting' && <VideoCameraIcon style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.9)' }} />}
                             {block.type === 'personal' && <UserIcon style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.9)' }} />}
@@ -2942,12 +2965,18 @@ export default function PersonalPage() {
                               { bg: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', border: '#3B82F6', text: '#FFFFFF' }, // Blue
                             ];
                             
+                            const dayDateStr = formatDate(day);
                             return dayBlocks.map((block, blockIdx) => {
                               const [startHour, startMin] = block.startTime.split(':').map(Number);
                               const [endHour, endMin] = block.endTime.split(':').map(Number);
                               const pxPerMinute = 80 / 60;
                               const top = ((startHour - 1) * 60 + startMin) * pxPerMinute;
                               const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) * pxPerMinute, 50);
+                              
+                              // Per-date completion for recurring blocks
+                              const isCompletedForDay = block.isRecurring 
+                                ? (block.completedDates || []).includes(dayDateStr)
+                                : !!block.completed;
                               
                               // Use colorful palette based on block type or index
                               const colorIndex = block.type ? 
@@ -3006,8 +3035,18 @@ export default function PersonalPage() {
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         e.preventDefault();
-                                        const updatedBlock = { ...block, completed: !block.completed };
-                                        saveBlock(updatedBlock);
+                                        if (block.isRecurring) {
+                                          // Per-date completion for recurring blocks
+                                          const dates = block.completedDates || [];
+                                          const newDates = dates.includes(dayDateStr)
+                                            ? dates.filter(d => d !== dayDateStr)
+                                            : [...dates, dayDateStr];
+                                          const updatedBlock = { ...block, completedDates: newDates };
+                                          saveBlock(updatedBlock);
+                                        } else {
+                                          const updatedBlock = { ...block, completed: !block.completed };
+                                          saveBlock(updatedBlock);
+                                        }
                                       }}
                                       whileHover={{ scale: 1.15 }}
                                       whileTap={{ scale: 0.85 }}
@@ -3015,25 +3054,25 @@ export default function PersonalPage() {
                                         width: '22px',
                                         height: '22px',
                                         borderRadius: '6px',
-                                        border: block.completed ? 'none' : `2.5px solid rgba(255,255,255,0.8)`,
-                                        background: block.completed ? `linear-gradient(135deg, #10B981, #059669)` : 'rgba(255,255,255,0.15)',
+                                        border: isCompletedForDay ? 'none' : `2.5px solid rgba(255,255,255,0.8)`,
+                                        background: isCompletedForDay ? `linear-gradient(135deg, #10B981, #059669)` : 'rgba(255,255,255,0.15)',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         cursor: 'pointer',
                                         flexShrink: 0,
-                                        boxShadow: block.completed ? '0 2px 8px rgba(16,185,129,0.4)' : 'none',
+                                        boxShadow: isCompletedForDay ? '0 2px 8px rgba(16,185,129,0.4)' : 'none',
                                         transition: 'all 0.2s ease',
                                         marginTop: '1px',
                                       }}
                                     >
-                                      {block.completed && <CheckIcon style={{ width: '13px', height: '13px', color: '#FFFFFF', strokeWidth: 3 }} />}
+                                      {isCompletedForDay && <CheckIcon style={{ width: '13px', height: '13px', color: '#FFFFFF', strokeWidth: 3 }} />}
                                     </motion.div>
                                     <span style={{ 
                                       fontSize: '13px', 
                                       fontWeight: 700, 
-                                      color: colors.text,
-                                      textDecoration: block.completed ? 'line-through' : 'none',
+                                      color: '#FFFFFF',
+                                      textDecoration: isCompletedForDay ? 'line-through' : 'none',
                                       lineHeight: 1.4,
                                       overflow: 'hidden',
                                       textOverflow: 'ellipsis',
@@ -3042,7 +3081,7 @@ export default function PersonalPage() {
                                       WebkitBoxOrient: 'vertical',
                                     }}>{block.title}</span>
                         </div>
-                                  <span style={{ fontSize: '11px', color: colors.text, opacity: 0.75, fontWeight: 600 }}>
+                                  <span style={{ fontSize: '11px', color: '#FFFFFF', opacity: 0.85, fontWeight: 600 }}>
                                     {(() => {
                                       const formatTime12 = (time: string) => {
                                         const [h, m] = time.split(':').map(Number);
@@ -3182,18 +3221,32 @@ export default function PersonalPage() {
                                   cursor: 'pointer',
                                 }}
                               >
+                                {(() => {
+                                  const monthDayStr = formatDate(day);
+                                  const isMonthDayComplete = block.isRecurring
+                                    ? (block.completedDates || []).includes(monthDayStr)
+                                    : !!block.completed;
+                                  return (
+                                    <>
                                 <div
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    const updatedBlock = { ...block, completed: !block.completed };
-                                    saveBlock(updatedBlock);
+                                    if (block.isRecurring) {
+                                      const dates = block.completedDates || [];
+                                      const newDates = dates.includes(monthDayStr)
+                                        ? dates.filter(d => d !== monthDayStr)
+                                        : [...dates, monthDayStr];
+                                      saveBlock({ ...block, completedDates: newDates });
+                                    } else {
+                                      saveBlock({ ...block, completed: !block.completed });
+                                    }
                                   }}
                                   style={{
                                     width: '12px',
                                     height: '12px',
                                     borderRadius: '3px',
-                                    border: block.completed ? 'none' : '2px solid rgba(255,255,255,0.8)',
-                                    background: block.completed ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.15)',
+                                    border: isMonthDayComplete ? 'none' : '2px solid rgba(255,255,255,0.8)',
+                                    background: isMonthDayComplete ? 'linear-gradient(135deg, #10B981, #059669)' : 'rgba(255,255,255,0.15)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -3201,9 +3254,12 @@ export default function PersonalPage() {
                                     flexShrink: 0,
                                   }}
                                 >
-                                  {block.completed && <CheckIcon style={{ width: '7px', height: '7px', color: '#10B981', strokeWidth: 3 }} />}
+                                  {isMonthDayComplete && <CheckIcon style={{ width: '7px', height: '7px', color: '#FFFFFF', strokeWidth: 3 }} />}
                       </div>
-                                <span style={{ textDecoration: block.completed ? 'line-through' : 'none', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{block.title}</span>
+                                <span style={{ textDecoration: isMonthDayComplete ? 'line-through' : 'none', color: '#FFFFFF', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{block.title}</span>
+                                    </>
+                                  );
+                                })()}
       </div>
     );
                           })}
