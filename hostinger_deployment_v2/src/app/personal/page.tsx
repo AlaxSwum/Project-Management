@@ -580,7 +580,7 @@ export default function PersonalPage() {
   // Convert Y position to time
   const getTimeFromY = (y: number, containerTop: number): { hour: number; minute: number } => {
     const relativeY = y - containerTop;
-    const hourHeight = 80; // 80px per hour for larger calendar boxes
+    const hourHeight = 52; // 52px per hour - compact for desktop
     const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
     const hour = Math.floor(totalMinutes / 60);
     const minute = Math.round((totalMinutes % 60) / 15) * 15; // Snap to 15-min intervals
@@ -626,7 +626,7 @@ export default function PersonalPage() {
         if (e.clientX >= rect.left && e.clientX <= rect.right && 
             e.clientY >= rect.top && e.clientY <= rect.bottom) {
           const relativeY = e.clientY - rect.top;
-          const hourHeight = 50; // 50px per hour in week view
+          const hourHeight = 52; // 52px per hour in week view
           const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
           const hour = Math.floor(totalMinutes / 60);
           const minute = Math.round((totalMinutes % 60) / 15) * 15;
@@ -1418,9 +1418,9 @@ export default function PersonalPage() {
       return;
     }
     
-    // Calculate time difference based on Y movement (60px = 1 hour)
+    // Calculate time difference based on Y movement (52px = 1 hour)
     const deltaY = moveCurrentY - moveStartY;
-    const deltaMinutes = Math.round((deltaY / 60) * 60 / 15) * 15; // Snap to 15-minute increments
+    const deltaMinutes = Math.round((deltaY / 52) * 60 / 15) * 15; // Snap to 15-minute increments
     
     // Calculate new start and end times
     const startMinutes = moveStartTime.hour * 60 + moveStartTime.minute + deltaMinutes;
@@ -2053,7 +2053,7 @@ export default function PersonalPage() {
     const duration = endMinutes - startMinutes;
     
     return {
-      top: (startMinutes / 60) * 80 + 40, // 80px per hour + header offset
+      top: (startMinutes / 60) * 52 + 40, // 52px per hour + header offset
       height: Math.max((duration / 60) * 80, 40), // minimum 40px
     };
   };
@@ -2450,7 +2450,7 @@ export default function PersonalPage() {
                         style={{
                           display: 'flex',
                           borderBottom: '1px solid #2D2D2D',
-                          minHeight: '80px',
+                          minHeight: '52px',
                         }}
                       >
                         <div
@@ -2795,7 +2795,7 @@ export default function PersonalPage() {
                           key={index}
                           whileHover={{ scale: 1.02 }}
                           style={{
-                            padding: '18px 10px 22px',
+                            padding: '10px 8px 12px',
                             textAlign: 'center',
                             borderLeft: '1px solid #2D2D2D',
                             background: isToday ? 'linear-gradient(180deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%)' : 'transparent',
@@ -2817,8 +2817,8 @@ export default function PersonalPage() {
                           </div>
                           <div
                             style={{
-                              fontSize: '36px',
-                              fontWeight: '800',
+                              fontSize: '24px',
+                              fontWeight: '700',
                               color: isToday ? '#3B82F6' : '#FFFFFF',
                               lineHeight: 1,
                               textShadow: isToday ? '0 2px 8px rgba(59, 130, 246, 0.3)' : 'none',
@@ -2836,18 +2836,18 @@ export default function PersonalPage() {
                     style={{ 
                       display: 'grid',
                       gridTemplateColumns: '80px repeat(7, 1fr)',
-                      minHeight: '1280px',
+                      minHeight: '1196px',
                     }}
                   >
                     {/* Time labels column */}
                     <div style={{ borderRight: '1px solid #1F1F1F' }}>
-                      {hours.filter(h => h >= 7 && h <= 22).map((hour) => (
+                      {hours.filter(h => h >= 1 && h <= 23).map((hour) => (
                         <div
                           key={hour}
                           style={{
-                            height: '80px',
-                            padding: '10px 14px',
-                            fontSize: '13px',
+                            height: '52px',
+                            padding: '6px 10px',
+                            fontSize: '11px',
                             fontWeight: 500,
                             color: '#71717A',
                             textAlign: 'right',
@@ -2876,9 +2876,9 @@ export default function PersonalPage() {
                             const rect = weekViewRefs.current[dayIndex]?.getBoundingClientRect();
                             if (!rect) return;
                             const relativeY = e.clientY - rect.top;
-                            const hourHeight = 80;
+                            const hourHeight = 52;
                             const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
-                            const hour = Math.floor(totalMinutes / 60) + 7;
+                            const hour = Math.floor(totalMinutes / 60) + 1;
                             const minute = Math.round((totalMinutes % 60) / 15) * 15;
                             const time = { hour: Math.min(23, hour), minute: minute >= 60 ? 0 : minute };
                             setIsDragging(true);
@@ -2889,11 +2889,11 @@ export default function PersonalPage() {
                           }}
                         >
                           {/* Hour grid lines */}
-                          {hours.filter(h => h >= 7 && h <= 22).map((hour) => (
+                          {hours.filter(h => h >= 1 && h <= 23).map((hour) => (
                             <div
                               key={hour}
                               style={{
-                                height: '80px',
+                                height: '52px',
                                 borderBottom: '1px solid #1F1F1F',
                               }}
                             />
@@ -2901,9 +2901,9 @@ export default function PersonalPage() {
                         
                           {/* Drag preview for this day */}
                           {isDragging && dragDate && formatDate(dragDate) === formatDate(day) && dragStart && dragEnd && (() => {
-                            const startMinutes = (dragStart.hour - 7) * 60 + dragStart.minute;
-                            const endMinutes = (dragEnd.hour - 7) * 60 + dragEnd.minute;
-                            const pxPerMinute = 80 / 60;
+                            const startMinutes = (dragStart.hour - 1) * 60 + dragStart.minute;
+                            const endMinutes = (dragEnd.hour - 1) * 60 + dragEnd.minute;
+                            const pxPerMinute = 52 / 60;
                             const top = Math.min(startMinutes, endMinutes) * pxPerMinute;
                             const height = Math.max(Math.abs(endMinutes - startMinutes) * pxPerMinute, 30);
                             return (
@@ -2942,9 +2942,9 @@ export default function PersonalPage() {
                             return dayBlocks.map((block, blockIdx) => {
                               const [startHour, startMin] = block.startTime.split(':').map(Number);
                               const [endHour, endMin] = block.endTime.split(':').map(Number);
-                              const pxPerMinute = 80 / 60;
-                              const top = ((startHour - 7) * 60 + startMin) * pxPerMinute;
-                              const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) * pxPerMinute, 50);
+                              const pxPerMinute = 52 / 60;
+                              const top = ((startHour - 1) * 60 + startMin) * pxPerMinute;
+                              const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) * pxPerMinute, 35);
                               
                               // Use colorful palette based on block type or index
                               const colorIndex = block.type ? 
@@ -3118,7 +3118,7 @@ export default function PersonalPage() {
                             setViewMode('day');
                           }}
                           style={{ 
-                            minHeight: '100px',
+                            minHeight: '80px',
                             padding: '8px',
                             borderRight: (index + 1) % 7 !== 0 ? '1px solid #2D2D2D' : 'none',
                             borderBottom: '1px solid #2D2D2D',
