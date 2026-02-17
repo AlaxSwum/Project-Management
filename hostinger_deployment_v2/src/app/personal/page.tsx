@@ -2066,24 +2066,22 @@ export default function PersonalPage() {
 
   return (
     <>
-      {/* Sidebar - only on desktop */}
-      {!isMobile && (
-        <Sidebar 
-          projects={[]} 
-          onCreateProject={() => {}} 
-          onCollapsedChange={setSidebarCollapsed}
-        />
-      )}
+      {/* Sidebar */}
+      <Sidebar 
+        projects={[]} 
+        onCreateProject={() => {}} 
+        onCollapsedChange={setSidebarCollapsed}
+      />
 
       {/* Main Content */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="main-content personal-main personal-page"
+        className="page-main main-content personal-main personal-page"
         style={{
           minHeight: '100vh',
-          marginLeft: '0',
+          marginLeft: '280px',
           marginRight: isMobile ? '0' : (showRightPanel ? '380px' : '0'),
           background: '#0D0D0D',
           transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
