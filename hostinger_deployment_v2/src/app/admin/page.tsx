@@ -3,13 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { createClient } from '@supabase/supabase-js';
 import Sidebar from '@/components/Sidebar';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from '@/lib/supabase';
 
 interface AdminProject {
   project_id: number;

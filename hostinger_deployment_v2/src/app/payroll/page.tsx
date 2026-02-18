@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import MobileHeader from '@/components/MobileHeader';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { generateUKPayrollPDF, generateMyanmarPayrollPDF, getPDFBase64 } from '@/lib/pdf-generator';
 import {
   DocumentTextIcon,
@@ -28,10 +28,6 @@ import {
   PlusIcon,
 } from '@heroicons/react/24/outline';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 // Reusable form styles to match theme (same pattern as company-outreach)
 const formStyles = {

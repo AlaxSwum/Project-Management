@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/Sidebar';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import {
   PlusIcon,
   ChartBarIcon,
@@ -22,10 +22,6 @@ import {
   LinkIcon
 } from '@heroicons/react/24/outline';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 // =============================================
 // INTERFACES

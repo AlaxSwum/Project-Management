@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectService, meetingService, userService, taskService } from '@/lib/api-compatibility';
@@ -19,6 +19,7 @@ import {
 import Sidebar from '@/components/Sidebar';
 import DatePicker from '@/components/DatePicker';
 import MeetingDetailModal from '@/components/MeetingDetailModal';
+import { TIMEZONES, TIMEZONE_KEYS, convertTime, convertToUK, adjustDate, getDisplayTimes, formatTime12h, type TimezoneKey } from '@/lib/timezone-utils';
 
 interface Project {
   id: number;
@@ -52,6 +53,8 @@ interface Meeting {
   agenda_items?: string[];
   meeting_link?: string;
   reminder_time?: number; // in minutes before meeting
+  input_timezone?: string;
+  display_timezones?: string[];
 }
 
 export default function TimetablePage() {
@@ -105,7 +108,8 @@ export default function TimetablePage() {
     endDate: '',
     repeatDays: [] as number[], // 0=Sun, 1=Mon, 2=Tue, etc.
     // Timezone selection
-    timezone: 'UK' as 'UK' | 'MM',
+    timezone: 'UK' as TimezoneKey,
+    display_timezones: ['UK', 'MM'] as TimezoneKey[],
   });
   const [newAgendaItem, setNewAgendaItem] = useState('');
   
@@ -266,9 +270,9 @@ export default function TimetablePage() {
 
     try {
       const createdMeetings: Meeting[] = [];
-      
-      // Convert to UK time if entered in Myanmar timezone (always store as UK time)
-      const ukTime = newMeeting.timezone === 'MM' ? convertMyanmarToUK(newMeeting.time) : newMeeting.time;
+
+      // Convert to UK time from selected timezone (always store as UK time)
+      const { time: ukTime, dateDelta } = convertToUK(newMeeting.time, newMeeting.timezone);
       
       if (newMeeting.isRecurring && newMeeting.endDate && newMeeting.repeatDays.length > 0) {
         // Create multiple meetings for recurring schedule
@@ -280,8 +284,8 @@ export default function TimetablePage() {
           const dayOfWeek = currentDate.getDay();
           
           if (newMeeting.repeatDays.includes(dayOfWeek)) {
-            const dateStr = currentDate.toISOString().split('T')[0];
-            
+            const dateStr = adjustDate(currentDate.toISOString().split('T')[0], dateDelta);
+
             const meetingData = {
               title: newMeeting.title.trim(),
               description: newMeeting.description.trim(),
@@ -294,6 +298,8 @@ export default function TimetablePage() {
               agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
               meeting_link: newMeeting.meeting_link.trim() || undefined,
               reminder_time: newMeeting.reminder_time || undefined,
+              input_timezone: newMeeting.timezone,
+              display_timezones: newMeeting.display_timezones,
             };
 
             const createdMeeting = await meetingService.createMeeting(meetingData);
@@ -311,7 +317,7 @@ export default function TimetablePage() {
         title: newMeeting.title.trim(),
         description: newMeeting.description.trim(),
         project: newMeeting.project_id,
-        date: newMeeting.date,
+        date: adjustDate(newMeeting.date, dateDelta),
           time: ukTime,
         duration: newMeeting.duration,
         attendees: newMeeting.attendees,
@@ -319,6 +325,8 @@ export default function TimetablePage() {
         agenda_items: newMeeting.agenda_items.length > 0 ? newMeeting.agenda_items : undefined,
         meeting_link: newMeeting.meeting_link.trim() || undefined,
         reminder_time: newMeeting.reminder_time || undefined,
+        input_timezone: newMeeting.timezone,
+        display_timezones: newMeeting.display_timezones,
       };
 
       const createdMeeting = await meetingService.createMeeting(meetingData);
@@ -340,7 +348,8 @@ export default function TimetablePage() {
         isRecurring: false,
         endDate: '',
         repeatDays: [],
-        timezone: 'UK',
+        timezone: 'UK' as TimezoneKey,
+        display_timezones: ['UK', 'MM'] as TimezoneKey[],
       });
       setShowCreateForm(false);
       setError('');
@@ -434,7 +443,8 @@ export default function TimetablePage() {
       isRecurring: false,
       endDate: '',
       repeatDays: [],
-      timezone: 'UK',
+      timezone: 'UK' as any,
+      display_timezones: ['UK', 'MM'] as any[],
     });
     setNewAgendaItem('');
     setShowCreateForm(true);
@@ -485,7 +495,8 @@ export default function TimetablePage() {
         isRecurring: false,
         endDate: '',
         repeatDays: [],
-        timezone: 'UK',
+        timezone: 'UK' as TimezoneKey,
+        display_timezones: ['UK', 'MM'] as TimezoneKey[],
       });
       setShowCreateForm(false);
       setError('');
@@ -706,55 +717,10 @@ export default function TimetablePage() {
     });
   };
 
-  // Convert UK time to Myanmar time (Myanmar is UTC+6:30, UK is UTC+0/+1)
-  const convertUKToMyanmar = (ukTime: string): string => {
-    if (!ukTime) return '';
-    const [hours, minutes] = ukTime.split(':').map(Number);
-    
-    // Myanmar is 5:30 hours ahead of UK (GMT) or 4:30 ahead during BST
-    // Using 5:30 as a general offset (UK winter time)
-    let myanmarHours = hours + 5;
-    let myanmarMinutes = minutes + 30;
-    
-    if (myanmarMinutes >= 60) {
-      myanmarMinutes -= 60;
-      myanmarHours += 1;
-    }
-    
-    if (myanmarHours >= 24) {
-      myanmarHours -= 24;
-    }
-    
-    return `${String(myanmarHours).padStart(2, '0')}:${String(myanmarMinutes).padStart(2, '0')}`;
-  };
-
-  // Convert Myanmar time to UK time (reverse: Myanmar - 5:30 = UK)
-  const convertMyanmarToUK = (mmTime: string): string => {
-    if (!mmTime) return '';
-    const [hours, minutes] = mmTime.split(':').map(Number);
-    
-    // UK is 5:30 hours behind Myanmar
-    let ukHours = hours - 5;
-    let ukMinutes = minutes - 30;
-    
-    if (ukMinutes < 0) {
-      ukMinutes += 60;
-      ukHours -= 1;
-    }
-    
-    if (ukHours < 0) {
-      ukHours += 24;
-    }
-    
-    return `${String(ukHours).padStart(2, '0')}:${String(ukMinutes).padStart(2, '0')}`;
-  };
-
-  // Format time with both UK and Myanmar
-  const formatTimeWithTimezones = (timeString: string) => {
-    const ukTime = formatTime(timeString);
-    const myanmarTimeStr = convertUKToMyanmar(timeString);
-    const myanmarTime = formatTime(myanmarTimeStr);
-    return { uk: ukTime, myanmar: myanmarTime };
+  // Timezone display helper - get display times for a meeting
+  const getMeetingDisplayTimes = (meeting: Meeting) => {
+    const displayTZs = (meeting.display_timezones || ['UK', 'MM']) as TimezoneKey[];
+    return getDisplayTimes(meeting.time, displayTZs);
   };
 
   const formatDuration = (minutes: number) => {
@@ -2942,16 +2908,15 @@ export default function TimetablePage() {
                           <span>{formatDate(meeting.date)}</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <div className="detail-item">
-                          <ClockIcon style={{ width: '16px', height: '16px' }} />
-                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#6B7280', minWidth: '24px' }}>UK</span>
-                            <span>{formatTime(meeting.time)}</span>
-                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>({formatDuration(meeting.duration)})</span>
+                        {getMeetingDisplayTimes(meeting).map((dt, idx) => (
+                          <div key={dt.timezone} className="detail-item" style={idx > 0 ? { paddingLeft: '22px' } : {}}>
+                            {idx === 0 && <ClockIcon style={{ width: '16px', height: '16px' }} />}
+                            <span style={{ fontWeight: '600', fontSize: '11px', color: dt.config.color, minWidth: '24px' }}>{dt.config.shortLabel}</span>
+                            <span style={{ color: dt.config.color }}>{dt.formatted}</span>
+                            {idx === 0 && <span style={{ color: '#9CA3AF', fontSize: '12px' }}>({formatDuration(meeting.duration)})</span>}
+                            {dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '10px', fontWeight: '600' }}>{dt.dateLabel}</span>}
                           </div>
-                          <div className="detail-item" style={{ paddingLeft: '22px' }}>
-                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#D97706', minWidth: '24px' }}>MM</span>
-                            <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
-                          </div>
+                        ))}
                         </div>
                         <div className="detail-item">
                           <UserGroupIcon style={{ width: '16px', height: '16px' }} />
@@ -3061,16 +3026,15 @@ export default function TimetablePage() {
                           <span>{formatDate(meeting.date)}</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <div className="detail-item">
-                          <ClockIcon style={{ width: '16px', height: '16px' }} />
-                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#6B7280', minWidth: '24px' }}>UK</span>
-                            <span>{formatTime(meeting.time)}</span>
-                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>({formatDuration(meeting.duration)})</span>
+                        {getMeetingDisplayTimes(meeting).map((dt, idx) => (
+                          <div key={dt.timezone} className="detail-item" style={idx > 0 ? { paddingLeft: '22px' } : {}}>
+                            {idx === 0 && <ClockIcon style={{ width: '16px', height: '16px' }} />}
+                            <span style={{ fontWeight: '600', fontSize: '11px', color: dt.config.color, minWidth: '24px' }}>{dt.config.shortLabel}</span>
+                            <span style={{ color: dt.config.color }}>{dt.formatted}</span>
+                            {idx === 0 && <span style={{ color: '#9CA3AF', fontSize: '12px' }}>({formatDuration(meeting.duration)})</span>}
+                            {dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '10px', fontWeight: '600' }}>{dt.dateLabel}</span>}
                           </div>
-                          <div className="detail-item" style={{ paddingLeft: '22px' }}>
-                            <span style={{ fontWeight: '600', fontSize: '11px', color: '#D97706', minWidth: '24px' }}>MM</span>
-                            <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
-                          </div>
+                        ))}
                         </div>
                         <div className="detail-item">
                           <UserGroupIcon style={{ width: '16px', height: '16px' }} />
@@ -3344,16 +3308,15 @@ export default function TimetablePage() {
                                   gap: '2px',
                                   fontSize: '0.625rem'
                                 }}>
-                                <div style={{ 
+                                <div style={{
                                   display: 'flex',
                                   justifyContent: 'space-between',
                                   alignItems: 'center',
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                      <span style={{ fontWeight: '600', color: '#1E3A5F', fontSize: '9px' }}>UK</span>
-                                      <span style={{ color: '#0369A1', fontWeight: '500' }}>{formatTime(meeting.time)}</span>
+                                      {(() => { const dt = getMeetingDisplayTimes(meeting)[0]; return dt ? (<><span style={{ fontWeight: '600', color: dt.config.color, fontSize: '9px' }}>{dt.config.shortLabel}</span><span style={{ color: dt.config.color, fontWeight: '500' }}>{dt.formatted}</span>{dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '8px' }}>{dt.dateLabel}</span>}</>) : null; })()}
                                 </div>
-                                  <div style={{ 
+                                  <div style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                       gap: '2px',
@@ -3363,10 +3326,13 @@ export default function TimetablePage() {
                                       <span style={{ fontSize: '9px' }}>{meeting.created_by.name.split(' ')[0]}</span>
                                     </div>
                                   </div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                    <span style={{ fontWeight: '600', color: '#92400E', fontSize: '9px' }}>MM</span>
-                                    <span style={{ color: '#B45309', fontWeight: '500' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
+                                  {getMeetingDisplayTimes(meeting).slice(1).map(dt => (
+                                  <div key={dt.timezone} style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <span style={{ fontWeight: '600', color: dt.config.color, fontSize: '9px' }}>{dt.config.shortLabel}</span>
+                                    <span style={{ color: dt.config.color, fontWeight: '500' }}>{dt.formatted}</span>
+                                    {dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '8px' }}>{dt.dateLabel}</span>}
                                   </div>
+                                  ))}
                                 </div>
                               </div>
                             ))}
@@ -3542,14 +3508,13 @@ export default function TimetablePage() {
                                         gap: '2px',
                                         fontSize: '0.7rem',
                                       }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                          <span style={{ fontWeight: '600', color: '#1E3A5F', fontSize: '10px' }}>UK</span>
-                                          <span style={{ color: '#0369A1' }}>{formatTime(meeting.time)}</span>
+                                        {getMeetingDisplayTimes(meeting).map(dt => (
+                                        <div key={dt.timezone} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                          <span style={{ fontWeight: '600', color: dt.config.color, fontSize: '10px' }}>{dt.config.shortLabel}</span>
+                                          <span style={{ color: dt.config.color }}>{dt.formatted}</span>
+                                          {dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '9px' }}>{dt.dateLabel}</span>}
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                          <span style={{ fontWeight: '600', color: '#92400E', fontSize: '10px' }}>MM</span>
-                                          <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
-                                        </div>
+                                        ))}
                                       </div>
                                     </div>
                                   ))}
@@ -3671,17 +3636,19 @@ export default function TimetablePage() {
                                         marginBottom: '0.25rem',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '8px'
+                                        gap: '8px',
+                                        flexWrap: 'wrap'
                                       }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                          <span style={{ fontWeight: '600', color: '#1E3A5F', fontSize: '11px' }}>UK</span>
-                                          <span style={{ color: '#0369A1' }}>{formatTime(meeting.time)}</span>
-                                        </div>
-                                        <span style={{ color: '#D1D5DB' }}>|</span>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                          <span style={{ fontWeight: '600', color: '#92400E', fontSize: '11px' }}>MM</span>
-                                          <span style={{ color: '#B45309' }}>{formatTime(convertUKToMyanmar(meeting.time))}</span>
-                                        </div>
+                                        {getMeetingDisplayTimes(meeting).map((dt, idx) => (
+                                          <React.Fragment key={dt.timezone}>
+                                            {idx > 0 && <span style={{ color: '#D1D5DB' }}>|</span>}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                              <span style={{ fontWeight: '600', color: dt.config.color, fontSize: '11px' }}>{dt.config.shortLabel}</span>
+                                              <span style={{ color: dt.config.color }}>{dt.formatted}</span>
+                                              {dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '9px' }}>{dt.dateLabel}</span>}
+                                            </div>
+                                          </React.Fragment>
+                                        ))}
                                         <span style={{ color: '#D1D5DB' }}>•</span>
                                         <span style={{ color: '#6B7280' }}>{meeting.project_name}</span>
                                       </div>
@@ -3903,7 +3870,8 @@ export default function TimetablePage() {
             isRecurring: false,
             endDate: '',
             repeatDays: [],
-            timezone: 'UK',
+            timezone: 'UK' as any,
+            display_timezones: ['UK', 'MM'] as any[],
           });
         }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -3931,7 +3899,8 @@ export default function TimetablePage() {
                     isRecurring: false,
                     endDate: '',
                     repeatDays: [],
-                    timezone: 'UK',
+                    timezone: 'UK' as any,
+                    display_timezones: ['UK', 'MM'] as any[],
                   });
                 }}
                 className="modal-close-btn"
@@ -3994,11 +3963,12 @@ export default function TimetablePage() {
                   <select
                     className="form-select"
                     value={newMeeting.timezone}
-                    onChange={(e) => setNewMeeting({ ...newMeeting, timezone: e.target.value as 'UK' | 'MM' })}
+                    onChange={(e) => setNewMeeting({ ...newMeeting, timezone: e.target.value as TimezoneKey })}
                     style={{ marginBottom: '8px' }}
                   >
-                    <option value="UK">UK (GMT/BST)</option>
-                    <option value="MM">Myanmar (MMT)</option>
+                    {TIMEZONE_KEYS.map(tz => (
+                      <option key={tz} value={tz}>{TIMEZONES[tz].label}</option>
+                    ))}
                   </select>
                   <label className="form-label">Time *</label>
                   <input
@@ -4009,32 +3979,51 @@ export default function TimetablePage() {
                     onChange={(e) => setNewMeeting({ ...newMeeting, time: e.target.value })}
                   />
                   {newMeeting.time && (
-                    <div style={{ 
-                      marginTop: '8px', 
-                      padding: '10px 12px', 
-                      background: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)', 
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '10px 12px',
+                      background: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)',
                       borderRadius: '8px',
                       border: '1px solid #BAE6FD',
                       fontSize: '12px',
                     }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontWeight: '700', color: '#1E3A5F', fontSize: '11px' }}>UK</span>
-                          <span style={{ color: '#0369A1', fontWeight: '500' }}>
-                            {formatTime(newMeeting.timezone === 'UK' ? newMeeting.time : convertMyanmarToUK(newMeeting.time))}
-                          </span>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontWeight: '700', color: '#92400E', fontSize: '11px' }}>MM</span>
-                          <span style={{ color: '#B45309', fontWeight: '500' }}>
-                            {formatTime(newMeeting.timezone === 'MM' ? newMeeting.time : convertUKToMyanmar(newMeeting.time))}
-                          </span>
-                        </div>
-                      </div>
+                      {(() => {
+                        const { time: ukTime } = convertToUK(newMeeting.time, newMeeting.timezone);
+                        const displayTimes = getDisplayTimes(ukTime, newMeeting.display_timezones);
+                        return displayTimes.map(dt => (
+                          <div key={dt.timezone} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                            <span style={{ fontWeight: '700', color: dt.config.color, fontSize: '11px' }}>{dt.config.shortLabel}</span>
+                            <span style={{ color: dt.config.color, fontWeight: '500' }}>{dt.formatted}</span>
+                            {dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '10px', fontWeight: '600' }}>{dt.dateLabel}</span>}
+                          </div>
+                        ));
+                      })()}
                     </div>
                   )}
+                  <div style={{ marginTop: '8px' }}>
+                    <label className="form-label" style={{ fontSize: '11px', marginBottom: '4px' }}>Also show in:</label>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      {TIMEZONE_KEYS.map(tz => (
+                        <label key={tz} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#4B5563', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={newMeeting.display_timezones.includes(tz)}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setNewMeeting(prev => ({
+                                ...prev,
+                                display_timezones: checked
+                                  ? [...prev.display_timezones, tz]
+                                  : prev.display_timezones.filter(t => t !== tz)
+                              }));
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          />
+                          <span style={{ color: TIMEZONES[tz].color, fontWeight: '600' }}>{TIMEZONES[tz].shortLabel}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Duration</label>
@@ -4466,7 +4455,8 @@ export default function TimetablePage() {
                     isRecurring: false,
                     endDate: '',
                     repeatDays: [],
-                    timezone: 'UK',
+                    timezone: 'UK' as any,
+                    display_timezones: ['UK', 'MM'] as any[],
                   });
                 }} className="btn-secondary">
                   Cancel
@@ -4599,8 +4589,12 @@ export default function TimetablePage() {
                     onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
                   {followUpForm.time && (
-                    <div style={{ marginTop: '4px', fontSize: '11px', color: '#D97706', fontWeight: '500' }}>
-                      MM: {formatTime(convertUKToMyanmar(followUpForm.time))}
+                    <div style={{ marginTop: '4px', fontSize: '11px', fontWeight: '500' }}>
+                      {getDisplayTimes(followUpForm.time, ['MM', 'TH'] as TimezoneKey[]).map(dt => (
+                        <div key={dt.timezone} style={{ color: dt.config.color }}>
+                          {dt.config.shortLabel}: {dt.formatted} {dt.dateLabel}
+                        </div>
+                      ))}
                 </div>
                   )}
               </div>

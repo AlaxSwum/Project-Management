@@ -43,8 +43,8 @@ interface Project {
 }
 
 interface SidebarProps {
-  projects: Project[];
-  onCreateProject: () => void;
+  projects?: Project[];
+  onCreateProject?: () => void;
   onCollapsedChange?: (isCollapsed: boolean) => void;
 }
 
@@ -59,7 +59,7 @@ const PERSONAL_ITEMS = [
   { name: 'Notifications', href: '/notifications', icon: BellIcon, badge: true },
 ];
 
-export default function Sidebar({ projects: propsProjects, onCreateProject }: SidebarProps) {
+export default function Sidebar({ projects: propsProjects, onCreateProject }: SidebarProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
