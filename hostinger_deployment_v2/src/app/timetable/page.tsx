@@ -55,6 +55,9 @@ interface Meeting {
   reminder_time?: number; // in minutes before meeting
   input_timezone?: string;
   display_timezones?: string[];
+  recurring?: boolean;
+  recurring_end_date?: string;
+  excluded_dates?: string[];
 }
 
 export default function TimetablePage() {
@@ -388,8 +391,12 @@ export default function TimetablePage() {
         project: meetingData.project || projectId,
         attendees: meetingData.attendees,
         attendee_ids: meetingData.attendee_ids,
+        display_timezones: meetingData.display_timezones,
+        recurring: meetingData.recurring,
+        recurring_end_date: meetingData.recurring_end_date,
+        excluded_dates: meetingData.excluded_dates,
       });
-      
+
       setMeetings(meetings.map(m => m.id === selectedMeeting.id ? updatedMeeting : m));
       setSelectedMeeting(updatedMeeting);
       setError('');
@@ -399,14 +406,28 @@ export default function TimetablePage() {
     }
   };
 
-  const handleDeleteMeetingFromDetail = async (meetingId: number) => {
+  const handleDeleteMeetingFromDetail = async (meetingId: number, mode?: 'all' | 'this', occurrenceDate?: string) => {
     try {
-      // Check access (already done in the main delete handler)
-      await handleDeleteMeeting(meetingId);
+      if (mode === 'this' && occurrenceDate) {
+        // Delete only this occurrence by adding the date to excluded_dates
+        const meeting = meetings.find(m => m.id === meetingId);
+        if (meeting) {
+          const currentExcluded = meeting.excluded_dates || [];
+          await meetingService.updateMeeting(meetingId, {
+            excluded_dates: [...currentExcluded, occurrenceDate],
+          });
+          // Refresh meetings to reflect the change
+          await fetchData(true);
+        }
+      } else {
+        // Delete all occurrences
+        await handleDeleteMeeting(meetingId);
+      }
       setShowMeetingDetail(false);
       setSelectedMeeting(null);
     } catch (err: any) {
-      // Error already handled in handleDeleteMeeting
+      console.error('Failed to delete meeting:', err);
+      setError('Failed to delete meeting');
     }
   };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   XMarkIcon,
   PencilIcon,
@@ -83,12 +83,16 @@ export default function MeetingDetailModal({
     recurring_end_date: meeting.recurring_end_date || '',
   });
 
+  // Use a ref for onProjectChange to avoid infinite re-render loops
+  const onProjectChangeRef = useRef(onProjectChange);
+  onProjectChangeRef.current = onProjectChange;
+
   // Fetch project members when project changes
   useEffect(() => {
-    if (isEditing && editedMeeting.project_id && onProjectChange) {
-      onProjectChange(editedMeeting.project_id);
+    if (isEditing && editedMeeting.project_id && onProjectChangeRef.current) {
+      onProjectChangeRef.current(editedMeeting.project_id);
     }
-  }, [editedMeeting.project_id, isEditing, onProjectChange]);
+  }, [editedMeeting.project_id, isEditing]);
 
   const formatDate = (dateString: string) => {
     // Parse date string manually to avoid timezone issues
@@ -1107,20 +1111,22 @@ export default function MeetingDetailModal({
         </div>
       </div>
 
-      {/* Meeting Notes Modal */}
+      {/* Meeting Notes Modal - rendered with stopPropagation wrapper to prevent closing detail modal */}
       {showNotesModal && (
-        <MeetingNotesModal
-          meeting={{
-            id: meeting.id,
-            title: meeting.title,
-            date: meeting.date,
-            time: meeting.time,
-            duration: meeting.duration,
-            attendees_list: getAttendeesList()
-          }}
-          onClose={() => setShowNotesModal(false)}
-          projectMembers={projectMembers}
-        />
+        <div onClick={(e) => e.stopPropagation()} style={{ position: 'fixed', inset: 0, zIndex: 60 }}>
+          <MeetingNotesModal
+            meeting={{
+              id: meeting.id,
+              title: meeting.title,
+              date: meeting.date,
+              time: meeting.time,
+              duration: meeting.duration,
+              attendees_list: getAttendeesList()
+            }}
+            onClose={() => setShowNotesModal(false)}
+            projectMembers={projectMembers}
+          />
+        </div>
       )}
     </div>
   );

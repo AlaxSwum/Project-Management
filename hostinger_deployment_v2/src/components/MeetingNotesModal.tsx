@@ -69,17 +69,19 @@ export default function MeetingNotesModal({
 
   // Load existing notes
   useEffect(() => {
+    let isMounted = true;
     const loadNotes = async () => {
       try {
         const notes = await meetingNotesService.getMeetingNotes(meeting.id);
+        if (!isMounted) return;
         if (notes) {
           setExistingNotes(notes);
           setMeetingNotes({
             ...notes,
-            discussion_points: notes.discussion_points.length > 0 ? notes.discussion_points : [''],
-            decisions_made: notes.decisions_made.length > 0 ? notes.decisions_made : [''],
-            action_items: notes.action_items.length > 0 ? notes.action_items : [''],
-            next_steps: notes.next_steps.length > 0 ? notes.next_steps : [''],
+            discussion_points: (notes.discussion_points && notes.discussion_points.length > 0) ? notes.discussion_points : [''],
+            decisions_made: (notes.decisions_made && notes.decisions_made.length > 0) ? notes.decisions_made : [''],
+            action_items: (notes.action_items && notes.action_items.length > 0) ? notes.action_items : [''],
+            next_steps: (notes.next_steps && notes.next_steps.length > 0) ? notes.next_steps : [''],
             discussion_sections: notes.discussion_sections || [],
             decision_sections: notes.decision_sections || [],
             action_sections: notes.action_sections || [],
@@ -91,13 +93,31 @@ export default function MeetingNotesModal({
         }
       } catch (error) {
         console.error('Failed to load meeting notes:', error);
-        setIsEditing(true); // Default to edit mode on error
+        if (isMounted) {
+          setIsEditing(true); // Default to edit mode on error
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (isMounted && loading) {
+        console.warn('Meeting notes loading timed out');
+        setLoading(false);
+        setIsEditing(true);
+      }
+    }, 8000);
+
     loadNotes();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeout);
+    };
   }, [meeting.id]);
 
   const addArrayField = (field: keyof MeetingNoteType, index?: number) => {

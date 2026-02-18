@@ -784,7 +784,7 @@ export const supabaseDb = {
       // Query all meetings at once
       const { data: meetingsData, error: meetingsError } = await supabase
         .from('projects_meeting')
-        .select('id, title, description, date, time, duration, attendee_ids, agenda_items, meeting_link, reminder_time, created_at, updated_at, created_by_id, project_id')
+        .select('*')
         .order('date', { ascending: false });
       
       if (meetingsError) return { data: null, error: meetingsError };
@@ -819,7 +819,9 @@ export const supabaseDb = {
         attendee_ids: meeting.attendee_ids || [],
         agenda_items: meeting.agenda_items || [],
         meeting_link: meeting.meeting_link || null,
-        reminder_time: meeting.reminder_time || null
+        reminder_time: meeting.reminder_time || null,
+        input_timezone: meeting.input_timezone || 'UK',
+        display_timezones: meeting.display_timezones || ['UK', 'MM']
       }));
       
       return { data: enrichedMeetings, error: null };
@@ -849,15 +851,28 @@ export const supabaseDb = {
         agenda_items: meetingData.agenda_items || null,
         meeting_link: meetingData.meeting_link || null,
         reminder_time: meetingData.reminder_time || null,
+        input_timezone: meetingData.input_timezone || 'UK',
+        display_timezones: meetingData.display_timezones || ['UK', 'MM'],
         created_by_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('projects_meeting')
         .insert([meetingToInsert])
       .select()
+
+      // If timezone columns don't exist yet, retry without them
+      if (error && error.code === '42703') {
+        const { input_timezone, display_timezones, ...meetingWithoutTZ } = meetingToInsert;
+        const retryResult = await supabase
+          .from('projects_meeting')
+          .insert([meetingWithoutTZ])
+          .select();
+        data = retryResult.data;
+        error = retryResult.error;
+      }
 
       if (error) {
         console.error('Error creating meeting:', error);
@@ -889,7 +904,9 @@ export const supabaseDb = {
             email: user.email
           },
           attendees_list: [], // Legacy field for backward compatibility
-          attendee_ids: newMeeting.attendee_ids || []
+          attendee_ids: newMeeting.attendee_ids || [],
+          input_timezone: newMeeting.input_timezone || 'UK',
+          display_timezones: newMeeting.display_timezones || ['UK', 'MM']
         },
         error: null
       };
@@ -917,12 +934,29 @@ export const supabaseDb = {
       if (meetingData.agenda_items !== undefined) updateData.agenda_items = meetingData.agenda_items;
       if (meetingData.meeting_link !== undefined) updateData.meeting_link = meetingData.meeting_link;
       if (meetingData.reminder_time !== undefined) updateData.reminder_time = meetingData.reminder_time;
+      if (meetingData.input_timezone !== undefined) updateData.input_timezone = meetingData.input_timezone;
+      if (meetingData.display_timezones !== undefined) updateData.display_timezones = meetingData.display_timezones;
+      if (meetingData.recurring !== undefined) updateData.recurring = meetingData.recurring;
+      if (meetingData.recurring_end_date !== undefined) updateData.recurring_end_date = meetingData.recurring_end_date;
+      if (meetingData.excluded_dates !== undefined) updateData.excluded_dates = meetingData.excluded_dates;
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('projects_meeting')
         .update(updateData)
       .eq('id', id)
       .select()
+
+      // If timezone columns don't exist yet, retry without them
+      if (error && error.code === '42703') {
+        const { input_timezone, display_timezones, ...updateWithoutTZ } = updateData;
+        const retryResult = await supabase
+          .from('projects_meeting')
+          .update(updateWithoutTZ)
+          .eq('id', id)
+          .select();
+        data = retryResult.data;
+        error = retryResult.error;
+      }
 
       if (error) {
         console.error('Error updating meeting:', error);
@@ -955,7 +989,9 @@ export const supabaseDb = {
           created_by: creatorResult.data || { id: 0, name: 'Unknown User', email: '' },
           attendees_list: [], // Legacy field for backward compatibility
           attendee_ids: updatedMeeting.attendee_ids || [],
-          agenda_items: updatedMeeting.agenda_items || []
+          agenda_items: updatedMeeting.agenda_items || [],
+          input_timezone: updatedMeeting.input_timezone || 'UK',
+          display_timezones: updatedMeeting.display_timezones || ['UK', 'MM']
         },
         error: null
       };

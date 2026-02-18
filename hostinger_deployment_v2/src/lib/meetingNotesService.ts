@@ -30,14 +30,20 @@ class MeetingNotesService {
   async getMeetingNotes(meetingId: number): Promise<MeetingNote | null> {
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
-      
+
+      // Use .maybeSingle() instead of .single() to avoid error when no rows found
       const { data, error } = await supabase
         .from('meeting_notes')
         .select('*')
         .eq('meeting_id', meetingId)
-        .single();
+        .maybeSingle();
 
       if (error) {
+        // Table might not exist - gracefully handle
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+          console.warn('meeting_notes table does not exist yet');
+          return null;
+        }
         console.error('Error fetching meeting notes:', error);
         return null;
       }

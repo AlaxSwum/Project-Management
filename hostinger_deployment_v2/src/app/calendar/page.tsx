@@ -533,11 +533,27 @@ export default function CalendarPage() {
 
   const handleUpdateMeeting = async (meetingData: any) => {
     try {
+      // Map meetingData fields to database column names
+      const updateData: any = {
+        updated_at: new Date().toISOString(),
+      };
+      if (meetingData.title) updateData.title = meetingData.title;
+      if (meetingData.description !== undefined) updateData.description = meetingData.description;
+      if (meetingData.project || meetingData.project_id) updateData.project_id = meetingData.project || meetingData.project_id;
+      if (meetingData.date) updateData.date = meetingData.date;
+      if (meetingData.time) updateData.time = meetingData.time;
+      if (meetingData.duration) updateData.duration = meetingData.duration;
+      if (meetingData.attendee_ids !== undefined) updateData.attendee_ids = meetingData.attendee_ids;
+      if (meetingData.display_timezones !== undefined) updateData.display_timezones = meetingData.display_timezones;
+      if (meetingData.recurring !== undefined) updateData.recurring = meetingData.recurring;
+      if (meetingData.recurring_end_date !== undefined) updateData.recurring_end_date = meetingData.recurring_end_date;
+      if (meetingData.excluded_dates !== undefined) updateData.excluded_dates = meetingData.excluded_dates;
+
       await supabase
         .from('projects_meeting')
-        .update(meetingData)
+        .update(updateData)
         .eq('id', selectedMeeting.id);
-      
+
       // Refresh meetings
       await fetchData();
       setShowMeetingDetail(false);
