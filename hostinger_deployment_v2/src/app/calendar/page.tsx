@@ -551,7 +551,7 @@ export default function CalendarPage() {
     try {
       if (mode === 'this' && occurrenceDate) {
         // Add this date to excluded_dates array
-        const meeting = tasks.find(t => t.id === meetingId)?._meetingData || selectedMeeting;
+        const meeting = (tasks.find(t => t.id === meetingId) as any)?._meetingData || selectedMeeting;
         const currentExcluded = meeting?.excluded_dates || [];
         await supabase
           .from('projects_meeting')
