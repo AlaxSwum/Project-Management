@@ -31,6 +31,7 @@ import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import Sidebar from '@/components/Sidebar';
 import MeetingDetailModal from '@/components/MeetingDetailModal';
 import MobileHeader from '@/components/MobileHeader';
+import { TIMEZONES, TIMEZONE_KEYS, convertToUK, convertTime, adjustDate, getDisplayTimes, type TimezoneKey } from '@/lib/timezone-utils';
 
 interface User {
   id: number;
@@ -86,6 +87,7 @@ export default function CalendarPage() {
   const [isMobile, setIsMobile] = useState(false);
 
   const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
+  const [selectedOccurrenceDate, setSelectedOccurrenceDate] = useState<string | null>(null);
   const [showMeetingDetail, setShowMeetingDetail] = useState(false);
   const [showDayTasks, setShowDayTasks] = useState(false);
   const [selectedDayTasks, setSelectedDayTasks] = useState<Task[]>([]);
@@ -103,12 +105,23 @@ export default function CalendarPage() {
     meeting_link: '',
     reminder_time: '15',
     recurring: false,
+    recurring_end_date: '',
+    timezone: 'UK' as TimezoneKey,
+    display_timezones: ['UK', 'MM'] as TimezoneKey[],
   });
   const [newAgendaItem, setNewAgendaItem] = useState('');
   const [projectMembers, setProjectMembers] = useState<any[]>([]);
   
   // Calendar view state
   const [calendarView, setCalendarView] = useState<'month' | 'week'>('month');
+
+  // Derive user's timezone from their location profile field
+  const userTimezone = useMemo((): TimezoneKey => {
+    const loc = (user?.location || '').toUpperCase();
+    if (loc.includes('MM') || loc.includes('MYANMAR') || loc.includes('BURMA')) return 'MM';
+    if (loc.includes('TH') || loc.includes('THAI')) return 'TH';
+    return 'UK';
+  }, [user?.location]);
 
   // Mobile detection
   useEffect(() => {
@@ -136,15 +149,28 @@ export default function CalendarPage() {
     try {
       setError(null);
       
-      // Fast parallel fetch: meetings + lightweight project list (no members needed)
+      // Fast parallel fetch: meetings + user's assigned projects only
+      const uid = user?.id;
+
+      // Get user's project memberships first
+      const { data: membershipData } = uid ? await supabase
+        .from('projects_project_members')
+        .select('project_id')
+        .eq('user_id', uid) : { data: [] };
+
+      const assignedProjectIds = (membershipData || []).map((m: any) => m.project_id);
+
       const [meetingsResult, projectsResult] = await Promise.all([
         supabase
           .from('projects_meeting')
-          .select('id, title, description, date, time, duration, project_id, created_by_id, attendee_ids, meeting_link, location, notes, created_at, updated_at')
+          .select('*')
           .order('date', { ascending: true }),
-        supabase
-          .from('projects_project')
-          .select('id, name, color')
+        assignedProjectIds.length > 0
+          ? supabase
+              .from('projects_project')
+              .select('id, name, color')
+              .in('id', assignedProjectIds)
+          : Promise.resolve({ data: [], error: null })
       ]);
       
       if (meetingsResult.error) {
@@ -161,7 +187,6 @@ export default function CalendarPage() {
       });
       
       // Filter to user's meetings and transform in one pass
-      const uid = user?.id;
       const transformedMeetings = (meetingsResult.data || [])
         .filter((meeting: any) => {
           if (meeting.created_by_id === uid) return true;
@@ -169,19 +194,24 @@ export default function CalendarPage() {
           return false;
         })
         .map((meeting: any) => {
-          const startDateTime = meeting.date && meeting.time 
-            ? `${meeting.date}T${meeting.time}`
-            : meeting.date;
-          
+          // Convert stored UK time to user's local timezone for correct calendar positioning
+          const ukTime = meeting.time || '00:00';
+          const { time: localTime, dateDelta } = convertTime(ukTime, 'UK', userTimezone);
+          const localDate = meeting.date ? adjustDate(meeting.date, dateDelta) : null;
+
+          const startDateTime = localDate && meeting.time
+            ? `${localDate}T${localTime}`
+            : localDate || null;
+
           let dueDateTime = startDateTime;
           if (meeting.duration && startDateTime) {
             const start = new Date(startDateTime);
             start.setMinutes(start.getMinutes() + meeting.duration);
             dueDateTime = start.toISOString();
           }
-          
+
           const project = projectMap.get(meeting.project_id);
-          
+
           return {
             id: meeting.id,
             name: meeting.title,
@@ -254,8 +284,22 @@ export default function CalendarPage() {
   const getTasksForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
     const filteredTasks = tasks.filter(task => {
-      const taskDueDate = task.due_date ? task.due_date.split('T')[0] : null;
-      return taskDueDate === dateString;
+      const taskStartDate = task.start_date ? task.start_date.split('T')[0] : null;
+      const meetingData = (task as any)._meetingData;
+      const excludedDates: string[] = meetingData?.excluded_dates || [];
+
+      // Skip if this date has been excluded (single occurrence deleted)
+      if (excludedDates.includes(dateString)) return false;
+
+      // Direct match on start date
+      if (taskStartDate === dateString) return true;
+
+      // Daily recurring: show on every day from start date to recurring_end_date
+      if (meetingData?.recurring && meetingData?.recurring_end_date && taskStartDate) {
+        return dateString > taskStartDate && dateString <= meetingData.recurring_end_date;
+      }
+
+      return false;
     });
     
     // Sort by priority (urgent/high first) and then by name
@@ -301,6 +345,9 @@ export default function CalendarPage() {
       meeting_link: '',
       reminder_time: '15',
       recurring: false,
+      recurring_end_date: '',
+      timezone: 'UK' as TimezoneKey,
+      display_timezones: ['UK', 'MM'] as TimezoneKey[],
     });
     setNewAgendaItem('');
     setProjectMembers([]);
@@ -309,12 +356,28 @@ export default function CalendarPage() {
 
   const handleProjectChange = async (projectId: number | null) => {
     setNewMeeting({ ...newMeeting, project_id: projectId, attendee_ids: [] });
-    
+
     if (projectId) {
-      const project = projects.find(p => p.id === projectId);
-      if (project && project.members) {
-        setProjectMembers(project.members);
-      } else {
+      try {
+        // Fetch project members from database
+        const { data: memberData } = await supabase
+          .from('projects_project_members')
+          .select('user_id')
+          .eq('project_id', projectId);
+
+        if (memberData && memberData.length > 0) {
+          const userIds = memberData.map((m: any) => m.user_id);
+          const { data: users } = await supabase
+            .from('auth_user')
+            .select('id, name, email, role')
+            .in('id', userIds);
+
+          setProjectMembers(users || []);
+        } else {
+          setProjectMembers([]);
+        }
+      } catch (err) {
+        console.error('Error fetching project members:', err);
         setProjectMembers([]);
       }
     } else {
@@ -322,9 +385,10 @@ export default function CalendarPage() {
     }
   };
 
-  const handleMeetingClick = (task: any) => {
+  const handleMeetingClick = (task: any, occurrenceDate?: string) => {
     if (task._meetingData) {
       setSelectedMeeting(task._meetingData);
+      setSelectedOccurrenceDate(occurrenceDate || task.start_date?.split('T')[0] || null);
       setShowMeetingDetail(true);
     }
   };
@@ -337,25 +401,48 @@ export default function CalendarPage() {
     setCreatingMeeting(true);
     
     try {
-      // Insert into projects_meeting table with all fields
-      const { error } = await supabase
+      // Convert to UK time from selected timezone
+      const { time: ukTime, dateDelta } = convertToUK(newMeeting.start_time, newMeeting.timezone);
+      const ukDate = adjustDate(newMeeting.start_date, dateDelta);
+
+      // Insert into projects_meeting table (base fields only)
+      const meetingInsert: any = {
+        title: newMeeting.title.trim(),
+        description: newMeeting.description.trim(),
+        date: ukDate,
+        time: ukTime,
+        duration: newMeeting.duration,
+        project_id: newMeeting.project_id,
+        created_by_id: user?.id,
+        attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : [user?.id],
+        agenda_items: newMeeting.agenda_items,
+        meeting_link: newMeeting.meeting_link.trim() || null,
+        reminder_time: newMeeting.reminder_time ? parseInt(newMeeting.reminder_time) : null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Try with all optional columns first, fall back if they don't exist
+      const fullInsert = {
+        ...meetingInsert,
+        input_timezone: newMeeting.timezone,
+        display_timezones: newMeeting.display_timezones,
+        recurring: newMeeting.recurring || false,
+        recurring_end_date: newMeeting.recurring ? (newMeeting.recurring_end_date || null) : null,
+      };
+
+      let { error } = await supabase
         .from('projects_meeting')
-        .insert({
-          title: newMeeting.title.trim(),
-          description: newMeeting.description.trim(),
-          date: newMeeting.start_date,
-          time: newMeeting.start_time,
-          duration: newMeeting.duration,
-          project_id: newMeeting.project_id,
-          created_by_id: user?.id,
-          attendee_ids: newMeeting.attendee_ids.length > 0 ? newMeeting.attendee_ids : [user?.id],
-          agenda_items: newMeeting.agenda_items,
-          meeting_link: newMeeting.meeting_link.trim() || null,
-          reminder_time: newMeeting.reminder_time ? parseInt(newMeeting.reminder_time) : null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-      
+        .insert(fullInsert);
+
+      // If columns don't exist in schema, retry with base fields only
+      if (error && error.code === 'PGRST204') {
+        const retryResult = await supabase
+          .from('projects_meeting')
+          .insert(meetingInsert);
+        error = retryResult.error;
+      }
+
       if (error) {
         console.error('Error creating meeting:', error);
         alert('Failed to create meeting: ' + error.message);
@@ -379,6 +466,9 @@ export default function CalendarPage() {
         meeting_link: '',
         reminder_time: '15',
         recurring: false,
+        recurring_end_date: '',
+        timezone: 'UK' as TimezoneKey,
+        display_timezones: ['UK', 'MM'] as TimezoneKey[],
       });
       setNewAgendaItem('');
       setShowCreateMeeting(false);
@@ -436,9 +526,9 @@ export default function CalendarPage() {
     }
   };
 
-  const handleTaskModalOpen = (task: Task) => {
+  const handleTaskModalOpen = (task: Task, occurrenceDate?: string) => {
     if (showMeetingDetail) return; // Prevent multiple modals
-    handleMeetingClick(task);
+    handleMeetingClick(task, occurrenceDate);
   };
 
   const handleUpdateMeeting = async (meetingData: any) => {
@@ -457,17 +547,29 @@ export default function CalendarPage() {
     }
   };
 
-  const handleDeleteMeeting = async (meetingId: number) => {
+  const handleDeleteMeeting = async (meetingId: number, mode: 'all' | 'this' = 'all', occurrenceDate?: string) => {
     try {
-      await supabase
-        .from('projects_meeting')
-        .delete()
-        .eq('id', meetingId);
-      
+      if (mode === 'this' && occurrenceDate) {
+        // Add this date to excluded_dates array
+        const meeting = tasks.find(t => t.id === meetingId)?._meetingData || selectedMeeting;
+        const currentExcluded = meeting?.excluded_dates || [];
+        await supabase
+          .from('projects_meeting')
+          .update({ excluded_dates: [...currentExcluded, occurrenceDate] })
+          .eq('id', meetingId);
+      } else {
+        // Delete the entire meeting
+        await supabase
+          .from('projects_meeting')
+          .delete()
+          .eq('id', meetingId);
+      }
+
       // Refresh meetings
       await fetchData();
       setShowMeetingDetail(false);
       setSelectedMeeting(null);
+      setSelectedOccurrenceDate(null);
     } catch (err) {
       console.error('Failed to delete meeting:', err);
     }
@@ -2615,7 +2717,7 @@ export default function CalendarPage() {
                             className={`task-item ${task.is_important ? 'important' : ''} ${isOverdue(task.due_date) ? 'overdue' : ''}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleTaskModalOpen(task);
+                              handleTaskModalOpen(task, cellDate.toISOString().split('T')[0]);
                             }}
                           >
                             <div className="task-header">
@@ -2723,7 +2825,7 @@ export default function CalendarPage() {
                               key={task.id}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleTaskModalOpen(task);
+                                handleTaskModalOpen(task, weekStart.toISOString().split('T')[0]);
                               }}
                               style={{
                                 background: task.priority === 'high' ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' :
@@ -2797,9 +2899,11 @@ export default function CalendarPage() {
             {showMeetingDetail && selectedMeeting && (
               <MeetingDetailModal
                 meeting={selectedMeeting}
+                occurrenceDate={selectedOccurrenceDate}
                 onClose={() => {
                   setShowMeetingDetail(false);
                   setSelectedMeeting(null);
+                  setSelectedOccurrenceDate(null);
                 }}
                 onUpdate={handleUpdateMeeting}
                 onDelete={handleDeleteMeeting}
@@ -2860,10 +2964,11 @@ export default function CalendarPage() {
                               borderLeft: `4px solid ${getStatusColor(task.status)}`
                             }}
                             onClick={() => {
+                              const dayDate = selectedDayDate ? selectedDayDate.toISOString().split('T')[0] : undefined;
                               setShowDayTasks(false);
                               setSelectedDayDate(null);
                               setSelectedDayTasks([]);
-                              handleTaskModalOpen(task);
+                              handleTaskModalOpen(task, dayDate);
                             }}
                             onMouseOver={(e) => {
                               e.currentTarget.style.background = '#1F1F1F';
@@ -3156,6 +3261,7 @@ export default function CalendarPage() {
                             color: '#FFFFFF',
                             fontSize: '0.875rem',
                             outline: 'none',
+                            colorScheme: 'dark',
                           }}
                           onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
                           onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
@@ -3187,6 +3293,7 @@ export default function CalendarPage() {
                             color: '#FFFFFF',
                             fontSize: '0.875rem',
                             outline: 'none',
+                            colorScheme: 'dark',
                           }}
                           onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
                           onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
@@ -3241,6 +3348,100 @@ export default function CalendarPage() {
                       </div>
                     </div>
 
+                    {/* Timezone Selection */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                      <div>
+                        <label style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          color: '#E4E4E7',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          marginBottom: '8px'
+                        }}>
+                          <ClockIcon style={{ width: '16px', height: '16px', color: '#C77DFF' }} />
+                          Input Timezone
+                        </label>
+                        <select
+                          value={newMeeting.timezone}
+                          onChange={(e) => setNewMeeting({ ...newMeeting, timezone: e.target.value as TimezoneKey })}
+                          style={{
+                            width: '100%',
+                            padding: '12px 14px',
+                            background: '#141414',
+                            border: '1px solid #3D3D3D',
+                            borderRadius: '8px',
+                            color: '#FFFFFF',
+                            fontSize: '0.875rem',
+                            outline: 'none',
+                            cursor: 'pointer',
+                          }}
+                          onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                        >
+                          {TIMEZONE_KEYS.map(tz => (
+                            <option key={tz} value={tz}>{TIMEZONES[tz].label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{
+                          color: '#E4E4E7',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          marginBottom: '8px',
+                          display: 'block',
+                        }}>
+                          Also show in:
+                        </label>
+                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', padding: '10px 0' }}>
+                          {TIMEZONE_KEYS.map(tz => (
+                            <label key={tz} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#A1A1AA', fontSize: '0.875rem' }}>
+                              <input
+                                type="checkbox"
+                                checked={newMeeting.display_timezones.includes(tz)}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setNewMeeting(prev => ({
+                                    ...prev,
+                                    display_timezones: checked
+                                      ? [...prev.display_timezones, tz]
+                                      : prev.display_timezones.filter(t => t !== tz)
+                                  }));
+                                }}
+                                style={{ cursor: 'pointer', accentColor: '#C77DFF' }}
+                              />
+                              <span style={{ color: TIMEZONES[tz].color, fontWeight: '600' }}>{TIMEZONES[tz].shortLabel}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Time Preview */}
+                    {newMeeting.start_time && (
+                      <div style={{
+                        marginBottom: '20px',
+                        padding: '12px 14px',
+                        background: '#1A1A1A',
+                        borderRadius: '8px',
+                        border: '1px solid #3D3D3D',
+                      }}>
+                        {(() => {
+                          const { time: ukTime } = convertToUK(newMeeting.start_time, newMeeting.timezone);
+                          const displayTimes = getDisplayTimes(ukTime, newMeeting.display_timezones);
+                          return displayTimes.map(dt => (
+                            <div key={dt.timezone} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                              <span style={{ fontWeight: '700', color: dt.config.color, fontSize: '12px', minWidth: '24px' }}>{dt.config.shortLabel}</span>
+                              <span style={{ color: dt.config.color, fontWeight: '500', fontSize: '13px' }}>{dt.formatted}</span>
+                              {dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '11px', fontWeight: '600' }}>{dt.dateLabel}</span>}
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    )}
+
                     {/* Recurring Meeting Toggle */}
                     <div style={{ 
                       marginBottom: '20px',
@@ -3287,6 +3488,43 @@ export default function CalendarPage() {
                         }} />
                       </div>
                     </div>
+
+                    {/* Recurring End Date - shown when recurring is enabled */}
+                    {newMeeting.recurring && (
+                      <div style={{ marginBottom: '20px' }}>
+                        <label style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          color: '#E4E4E7',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          marginBottom: '8px'
+                        }}>
+                          <CalendarIcon style={{ width: '18px', height: '18px', color: '#FF9A6C' }} />
+                          End Date
+                        </label>
+                        <input
+                          type="date"
+                          value={newMeeting.recurring_end_date}
+                          onChange={(e) => setNewMeeting({ ...newMeeting, recurring_end_date: e.target.value })}
+                          min={newMeeting.start_date || undefined}
+                          style={{
+                            width: '100%',
+                            padding: '12px 14px',
+                            background: '#141414',
+                            border: '1px solid #3D3D3D',
+                            borderRadius: '8px',
+                            color: '#FFFFFF',
+                            fontSize: '0.9375rem',
+                            outline: 'none',
+                            colorScheme: 'dark',
+                          }}
+                          onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
+                          onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                        />
+                      </div>
+                    )}
 
                     {/* Attendees Section */}
                     <div style={{ marginBottom: '20px' }}>
@@ -3698,9 +3936,11 @@ export default function CalendarPage() {
             {showMeetingDetail && selectedMeeting && (
               <MeetingDetailModal
                 meeting={selectedMeeting}
+                occurrenceDate={selectedOccurrenceDate}
                 onClose={() => {
                   setShowMeetingDetail(false);
                   setSelectedMeeting(null);
+                  setSelectedOccurrenceDate(null);
                 }}
                 onUpdate={handleUpdateMeeting}
                 onDelete={handleDeleteMeeting}

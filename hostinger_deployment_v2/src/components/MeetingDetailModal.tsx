@@ -17,6 +17,7 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import MeetingNotesModal from './MeetingNotesModal';
+import { TIMEZONES, TIMEZONE_KEYS, getDisplayTimes, type TimezoneKey } from '@/lib/timezone-utils';
 
 interface Meeting {
   id: number;
@@ -36,13 +37,19 @@ interface Meeting {
   attendees_list?: string[];
   attendee_ids?: number[];
   agenda_items?: string[];
+  input_timezone?: string;
+  display_timezones?: string[];
+  recurring?: boolean;
+  recurring_end_date?: string;
+  excluded_dates?: string[];
 }
 
 interface MeetingDetailModalProps {
   meeting: Meeting;
+  occurrenceDate?: string | null;
   onClose: () => void;
   onUpdate: (meetingData: any) => Promise<void>;
-  onDelete: (meetingId: number) => Promise<void>;
+  onDelete: (meetingId: number, mode?: 'all' | 'this', occurrenceDate?: string) => Promise<void>;
   onFollowUp?: (meeting: Meeting) => void;
   projectMembers?: any[];
   projects?: any[];
@@ -51,6 +58,7 @@ interface MeetingDetailModalProps {
 
 export default function MeetingDetailModal({
   meeting,
+  occurrenceDate,
   onClose,
   onUpdate,
   onDelete,
@@ -70,6 +78,9 @@ export default function MeetingDetailModal({
     project_id: meeting.project_id || 0,
     attendees: meeting.attendees || '',
     attendee_ids: meeting.attendee_ids || [],
+    display_timezones: (meeting.display_timezones || ['UK', 'MM']) as TimezoneKey[],
+    recurring: meeting.recurring || false,
+    recurring_end_date: meeting.recurring_end_date || '',
   });
 
   // Fetch project members when project changes
@@ -116,7 +127,10 @@ export default function MeetingDetailModal({
       await onUpdate({
         ...editedMeeting,
         project: editedMeeting.project_id,
-        attendee_ids: editedMeeting.attendee_ids, // Always send the array (even if empty to clear attendees)
+        attendee_ids: editedMeeting.attendee_ids,
+        display_timezones: editedMeeting.display_timezones,
+        recurring: editedMeeting.recurring,
+        recurring_end_date: editedMeeting.recurring ? (editedMeeting.recurring_end_date || null) : null,
       });
       setIsEditing(false);
     } catch (error) {
@@ -124,14 +138,40 @@ export default function MeetingDetailModal({
     }
   };
 
+  const [showDeleteOptions, setShowDeleteOptions] = useState(false);
+
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this meeting?')) {
-      try {
-        await onDelete(meeting.id);
-        onClose();
-      } catch (error) {
-        console.error('Failed to delete meeting:', error);
+    if (meeting.recurring) {
+      setShowDeleteOptions(true);
+    } else {
+      if (window.confirm('Are you sure you want to delete this meeting?')) {
+        try {
+          await onDelete(meeting.id, 'all');
+          onClose();
+        } catch (error) {
+          console.error('Failed to delete meeting:', error);
+        }
       }
+    }
+  };
+
+  const handleDeleteThis = async () => {
+    try {
+      await onDelete(meeting.id, 'this', occurrenceDate || undefined);
+      setShowDeleteOptions(false);
+      onClose();
+    } catch (error) {
+      console.error('Failed to delete meeting:', error);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    try {
+      await onDelete(meeting.id, 'all');
+      setShowDeleteOptions(false);
+      onClose();
+    } catch (error) {
+      console.error('Failed to delete meeting:', error);
     }
   };
 
@@ -204,19 +244,19 @@ export default function MeetingDetailModal({
           .meeting-modal {
             background: #1A1A1A;
             border: 1px solid #2D2D2D;
-            border-radius: 12px;
+            border-radius: 16px;
             width: 100%;
-            max-width: 450px;
+            max-width: 520px;
             max-height: 90vh;
             overflow-y: auto;
             animation: slideIn 0.3s ease-out;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             margin: 0 auto;
           }
           .meeting-modal-fixed {
             border: 1px solid #2D2D2D !important;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-            max-width: 450px !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+            max-width: 520px !important;
             background: #1A1A1A !important;
           }
           .modal-content {
@@ -225,12 +265,13 @@ export default function MeetingDetailModal({
             box-shadow: none !important;
           }
           .modal-header {
-            padding: 1rem;
-            border-bottom: 2px solid #2D2D2D;
+            padding: 1.25rem 1.5rem;
+            border-bottom: none;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            background: #141414;
+            background: linear-gradient(135deg, #C77DFF 0%, #7B2FBE 50%, #3B82F6 100%);
+            border-radius: 16px 16px 0 0;
           }
           .modal-title {
             font-size: 1.25rem;
@@ -239,6 +280,7 @@ export default function MeetingDetailModal({
             margin: 0;
             flex: 1;
             margin-right: 1rem;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
           }
           .modal-actions {
             display: flex;
@@ -247,44 +289,50 @@ export default function MeetingDetailModal({
           }
           .action-btn {
             padding: 0.5rem;
-            border: 2px solid #3D3D3D;
-            border-radius: 6px;
-            background: #141414;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #E4E4E7;
+            color: #FFFFFF;
           }
           .action-btn:hover {
-            border-color: #FFFFFF;
+            background: rgba(255,255,255,0.35);
             transform: translateY(-1px);
           }
-          .action-btn.edit { background: #2D2D2D; }
-          .action-btn.save { background: #000000; color: #ffffff; }
-          .action-btn.delete { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
-          .action-btn.close { background: #FFFFFF; border: 2px solid #FFFFFF; color: #1A1A1A; box-shadow: 0 2px 8px rgba(255,255,255,0.3); }
-          .action-btn.close:hover { background: #1F1F1F; color: #EF4444; transform: translateY(-2px) scale(1.05); box-shadow: 0 4px 12px rgba(255,255,255,0.4); }
+          .action-btn.edit { background: rgba(255,255,255,0.2); }
+          .action-btn.save { background: rgba(255,255,255,0.3); color: #ffffff; }
+          .action-btn.delete { background: rgba(220,38,38,0.3); color: #FCA5A5; }
+          .action-btn.delete:hover { background: rgba(220,38,38,0.5); }
+          .action-btn.close { background: rgba(255,255,255,0.25); color: #FFFFFF; }
+          .action-btn.close:hover { background: rgba(255,255,255,0.4); transform: translateY(-1px); }
           .modal-body {
-            padding: 1rem;
+            padding: 1.25rem 1.5rem;
           }
           .meeting-info {
             display: grid;
-            gap: 0.5rem;
+            gap: 0.625rem;
             margin-bottom: 1rem;
           }
           .info-row {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.6rem;
+            gap: 0.875rem;
+            padding: 0.75rem 1rem;
             background: #141414;
             border: 1px solid #2D2D2D;
-            border-radius: 8px;
+            border-radius: 10px;
+            transition: border-color 0.2s;
+          }
+          .info-row:hover {
+            border-color: #3D3D3D;
           }
           .info-icon {
-            color: #71717A;
+            color: #C77DFF;
             flex-shrink: 0;
           }
           .info-content {
@@ -320,6 +368,7 @@ export default function MeetingDetailModal({
             box-sizing: border-box;
             background: #141414;
             color: #FFFFFF;
+            color-scheme: dark;
           }
           .form-input:focus, .form-textarea:focus, .form-select:focus {
             outline: none;
@@ -404,12 +453,13 @@ export default function MeetingDetailModal({
             gap: 0.4rem;
           }
           .attendee-tag {
-            background: #000000;
-            color: #ffffff;
-            padding: 0.25rem 0.5rem;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            font-weight: 500;
+            background: linear-gradient(135deg, #C77DFF22, #3B82F622);
+            color: #E4E4E7;
+            padding: 0.3rem 0.65rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid #3D3D3D;
           }
           @media (max-width: 768px) {
             .meeting-modal {
@@ -476,13 +526,88 @@ export default function MeetingDetailModal({
                 >
                   <PencilIcon style={{ width: '16px', height: '16px' }} />
                 </button>
-                <button
-                  onClick={handleDelete}
-                  className="action-btn delete"
-                  title="Delete meeting"
-                >
-                  <TrashIcon style={{ width: '16px', height: '16px' }} />
-                </button>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    onClick={handleDelete}
+                    className="action-btn delete"
+                    title="Delete meeting"
+                  >
+                    <TrashIcon style={{ width: '16px', height: '16px' }} />
+                  </button>
+                  {showDeleteOptions && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      marginTop: '8px',
+                      background: '#1A1A1A',
+                      border: '1px solid #3D3D3D',
+                      borderRadius: '10px',
+                      padding: '8px',
+                      zIndex: 100,
+                      minWidth: '200px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                    }}>
+                      <button
+                        onClick={handleDeleteThis}
+                        style={{
+                          display: 'block',
+                          width: '100%',
+                          padding: '10px 14px',
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#E4E4E7',
+                          fontSize: '0.875rem',
+                          textAlign: 'left',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#2D2D2D'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        Delete this day only
+                      </button>
+                      <button
+                        onClick={handleDeleteAll}
+                        style={{
+                          display: 'block',
+                          width: '100%',
+                          padding: '10px 14px',
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#EF4444',
+                          fontSize: '0.875rem',
+                          textAlign: 'left',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#2D2D2D'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        Delete all occurrences
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteOptions(false)}
+                        style={{
+                          display: 'block',
+                          width: '100%',
+                          padding: '10px 14px',
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#71717A',
+                          fontSize: '0.875rem',
+                          textAlign: 'left',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#2D2D2D'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <button
@@ -515,12 +640,21 @@ export default function MeetingDetailModal({
                   </div>
                 </div>
                 
-                <div className="info-row">
-                  <ClockIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
+                <div className="info-row" style={{ alignItems: 'flex-start' }}>
+                  <ClockIcon className="info-icon" style={{ width: '20px', height: '20px', marginTop: '2px' }} />
                   <div className="info-content">
                     <div className="info-label">Time & Duration</div>
-                    <div className="info-value">
-                      {formatTime(meeting.time)} • {formatDuration(meeting.duration)}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {getDisplayTimes(meeting.time, (meeting.display_timezones || ['UK', 'MM']) as TimezoneKey[]).map(dt => (
+                        <div key={dt.timezone} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontWeight: '700', color: dt.config.color, fontSize: '11px', minWidth: '22px' }}>{dt.config.shortLabel}</span>
+                          <span className="info-value" style={{ color: dt.config.color }}>{dt.formatted}</span>
+                          {dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '10px', fontWeight: '600' }}>{dt.dateLabel}</span>}
+                        </div>
+                      ))}
+                      <div style={{ color: '#71717A', fontSize: '12px', marginTop: '2px' }}>
+                        {formatDuration(meeting.duration)}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -554,6 +688,18 @@ export default function MeetingDetailModal({
                             {attendee}
                           </span>
                         ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {meeting.recurring && (
+                  <div className="info-row">
+                    <ArrowPathIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
+                    <div className="info-content">
+                      <div className="info-label">Recurring</div>
+                      <div className="info-value">
+                        Daily until {meeting.recurring_end_date ? formatDate(meeting.recurring_end_date) : 'N/A'}
                       </div>
                     </div>
                   </div>
@@ -686,6 +832,31 @@ export default function MeetingDetailModal({
                 </div>
 
                 <div className="form-group">
+                  <label className="form-label">Show timezones</label>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', padding: '8px 0' }}>
+                    {TIMEZONE_KEYS.map(tz => (
+                      <label key={tz} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#A1A1AA', fontSize: '0.875rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={editedMeeting.display_timezones.includes(tz)}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setEditedMeeting(prev => ({
+                              ...prev,
+                              display_timezones: checked
+                                ? [...prev.display_timezones, tz]
+                                : prev.display_timezones.filter(t => t !== tz)
+                            }));
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <span style={{ color: TIMEZONES[tz].color, fontWeight: '600' }}>{TIMEZONES[tz].label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="form-group">
                   <label className="form-label">Invite Attendees (Optional)</label>
                   
                   {/* Selected Attendees Display */}
@@ -799,6 +970,68 @@ export default function MeetingDetailModal({
                     </div>
                   )}
                 </div>
+
+                {/* Recurring Toggle */}
+                <div className="form-group">
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 14px',
+                    background: '#141414',
+                    border: '2px solid #3D3D3D',
+                    borderRadius: '6px',
+                  }}>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      color: '#FFFFFF',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                    }}>
+                      <ArrowPathIcon style={{ width: '18px', height: '18px', color: '#C77DFF' }} />
+                      Recurring Meeting
+                    </label>
+                    <div
+                      onClick={() => setEditedMeeting({ ...editedMeeting, recurring: !editedMeeting.recurring })}
+                      style={{
+                        width: '48px',
+                        height: '24px',
+                        background: editedMeeting.recurring ? '#C77DFF' : '#3D3D3D',
+                        borderRadius: '12px',
+                        position: 'relative',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s',
+                      }}
+                    >
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        background: '#FFFFFF',
+                        borderRadius: '50%',
+                        position: 'absolute',
+                        top: '2px',
+                        left: editedMeeting.recurring ? '26px' : '2px',
+                        transition: 'left 0.2s',
+                      }} />
+                    </div>
+                  </div>
+                </div>
+
+                {editedMeeting.recurring && (
+                  <div className="form-group">
+                    <label className="form-label">End Date</label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={editedMeeting.recurring_end_date}
+                      onChange={(e) => setEditedMeeting({ ...editedMeeting, recurring_end_date: e.target.value })}
+                      min={editedMeeting.date || undefined}
+                      style={{ colorScheme: 'dark' }}
+                    />
+                  </div>
+                )}
 
                 <div className="form-actions">
                   <button onClick={handleSave} className="btn btn-primary">
