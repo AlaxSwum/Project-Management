@@ -306,7 +306,7 @@ export default function CompanyDetailPage() {
             {company.description && <p style={{ color: '#71717A', fontSize: '0.875rem', marginTop: '0.25rem' }}>{company.description}</p>}
           </div>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            {isAdmin && (
+            {(isAdmin || userRole === 'admin') && (
               <button onClick={() => router.push(`/company/${companyId}/org-chart`)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1rem', background: '#1A1A1A', color: '#A1A1AA', border: '1px solid #2D2D2D', borderRadius: '0.5rem', fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#8B5CF6'; e.currentTarget.style.color = '#FFFFFF'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}>
                 <ShareIcon style={{ width: '16px', height: '16px' }} /> Org Chart
               </button>
