@@ -87,9 +87,18 @@ export default function OrgChartPage() {
       // Get all user IDs
       const allUserIds = [...new Set((allDeptMembers || []).map((m: any) => m.user_id))];
       let usersMap: Record<number, any> = {};
+      let companyPositionMap: Record<number, string> = {};
       if (allUserIds.length > 0) {
-        const { data: users } = await supabase.from('auth_user').select('id, name, email, position').in('id', allUserIds);
+        // Fetch user names/emails and company positions in parallel
+        const [{ data: users }, { data: companyMembers }] = await Promise.all([
+          supabase.from('auth_user').select('id, name, email').in('id', allUserIds),
+          supabase.from('org_company_members').select('user_id, position').eq('company_id', companyId).in('user_id', allUserIds),
+        ]);
         (users || []).forEach((u: any) => { usersMap[u.id] = u; });
+        // Position comes from org_company_members (set on the company page)
+        (companyMembers || []).forEach((m: any) => {
+          if (m.position) companyPositionMap[m.user_id] = m.position;
+        });
       }
 
       // Group members by department and build trees
@@ -104,7 +113,7 @@ export default function OrgChartPage() {
           manager_id: m.manager_id || null,
           user_name: usersMap[m.user_id]?.name || 'Unknown',
           user_email: usersMap[m.user_id]?.email || '',
-          position: usersMap[m.user_id]?.position || null,
+          position: companyPositionMap[m.user_id] || null,
         }));
         membersByDept[dept.id] = enriched;
         treesByDept[dept.id] = buildHierarchyTree(enriched);
