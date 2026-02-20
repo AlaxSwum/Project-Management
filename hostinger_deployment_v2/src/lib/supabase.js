@@ -190,10 +190,10 @@ export const supabaseDb = {
 
       const accessibleProjectIds = membershipData.map(m => m.project_id)
 
-      // Step 2: Fetch projects (single query) - select only needed fields
+      // Step 2: Fetch projects (single query) - select only existing columns
       const { data: projects, error } = await supabase
         .from('projects_project')
-        .select('id, name, description, color, status, project_type, is_archived, task_count, completed_task_count, created_by_id, created_at, updated_at')
+        .select('id, name, description, color, status, project_type, is_archived, due_date, start_date, created_by_id, created_at, updated_at')
         .in('id', accessibleProjectIds)
       
       if (error) return { data: null, error }

@@ -45,7 +45,7 @@ export default function DashboardPage() {
       const [{ data: myProjects }, { data: recentTasks }] = await Promise.all([
         supabase
           .from('projects_project')
-          .select('id, name, color, task_count, completed_task_count')
+          .select('id, name, color, status, due_date')
           .in('id', projectIds),
         supabase
           .from('projects_task')

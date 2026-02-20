@@ -781,43 +781,43 @@ export default function CalendarPage() {
         .calendar-stats {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 1rem;
-          padding-top: 1.5rem;
+          gap: 0.75rem;
+          padding-top: 1rem;
           max-width: ${isMobile ? 'none' : '1000px'};
           margin: 0 auto;
           width: ${isMobile ? '100%' : 'auto'};
         }
-        
+
         .calendar-stats .stat-item {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.25rem;
           background: #1A1A1A;
-          padding: 1.25rem 1rem;
-          border-radius: 16px;
+          padding: 0.75rem 0.875rem;
+          border-radius: 12px;
           border: 1px solid #2D2D2D;
           transition: all 0.2s ease;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
-        
+
         .calendar-stats .stat-item:hover {
-          transform: translateY(-2px);
+          transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
           border-color: #FFB333;
         }
-        
+
         .stat-label {
-          font-size: 0.75rem;
+          font-size: 0.6875rem;
           color: #71717A;
           font-weight: 500;
           font-family: 'Mabry Pro', 'Inter', sans-serif;
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
-        
+
         .stat-value {
-          font-size: 1.875rem;
+          font-size: 1.5rem;
           font-weight: 700;
           color: #FFFFFF;
           font-family: 'Mabry Pro', 'Inter', sans-serif;
@@ -2774,13 +2774,13 @@ export default function CalendarPage() {
               </div>
             </div>
             ) : calendarView === 'week' ? (
-              // Week View - Large rounded boxes for each day
-              <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(7, 1fr)', 
-                  gap: '1rem',
-                  marginBottom: '2rem'
+              // Week View - Compact day columns
+              <div style={{ padding: '1rem 1.25rem', maxWidth: '1400px', margin: '0 auto' }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, 1fr)',
+                  gap: '0.5rem',
+                  marginBottom: '1rem'
                 }}>
                   {Array.from({ length: 7 }).map((_, dayIndex) => {
                     const weekStart = new Date(currentDate);
@@ -2789,18 +2789,18 @@ export default function CalendarPage() {
                     const isToday = weekStart.toDateString() === today.toDateString();
                     const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayIndex];
                     const dayNumber = weekStart.getDate();
-                  
+
                   return (
                       <div
                         key={dayIndex}
                         onClick={() => handleDayClick(weekStart)}
                         style={{
                           background: '#141414',
-                          borderRadius: '24px',
-                          padding: '1.5rem',
-                          minHeight: '280px',
+                          borderRadius: '14px',
+                          padding: '0.75rem',
+                          minHeight: '180px',
                           border: isToday ? '2px solid #3B82F6' : '1px solid #2D2D2D',
-                          transition: 'all 0.3s ease',
+                          transition: 'border-color 0.2s ease',
                           display: 'flex',
                           flexDirection: 'column',
                           cursor: 'pointer',
@@ -2813,29 +2813,30 @@ export default function CalendarPage() {
                         }}
                       >
                         {/* Day name */}
-                        <div style={{ 
-                          fontSize: '0.75rem', 
-                          fontWeight: 600, 
+                        <div style={{
+                          fontSize: '0.6875rem',
+                          fontWeight: 600,
                           color: '#71717A',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                          marginBottom: '0.5rem'
+                          letterSpacing: '0.04em',
+                          marginBottom: '0.25rem'
                         }}>
                           {dayName.slice(0, 3)}
                         </div>
-                        
+
                         {/* Day number */}
-                        <div style={{ 
-                          fontSize: '2rem', 
-                          fontWeight: 700, 
+                        <div style={{
+                          fontSize: '1.375rem',
+                          fontWeight: 700,
                           color: isToday ? '#3B82F6' : '#FFFFFF',
-                          marginBottom: '1rem'
+                          marginBottom: '0.5rem',
+                          lineHeight: 1,
                         }}>
                           {dayNumber}
                         </div>
-                        
+
                         {/* Tasks */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
                           {dayTasks.slice(0, 4).map((task) => (
                             <div
                               key={task.id}
@@ -2847,25 +2848,18 @@ export default function CalendarPage() {
                                 background: task.priority === 'high' ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' :
                                            task.priority === 'urgent' ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' :
                                            'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-                                padding: '0.75rem',
-                                borderRadius: '12px',
+                                padding: '0.4rem 0.5rem',
+                                borderRadius: '8px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
+                                transition: 'opacity 0.15s ease',
                               }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-2px)';
-                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = 'none';
-                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
                             >
-                              <div style={{ 
-                                fontSize: '0.8125rem', 
-                                fontWeight: 600, 
+                              <div style={{
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
                                 color: '#FFFFFF',
-                                marginBottom: '0.25rem',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap'
@@ -2873,15 +2867,16 @@ export default function CalendarPage() {
                                 {task.name}
                               </div>
                               {task.start_date && (
-                                <div style={{ 
-                                  fontSize: '0.6875rem', 
-                                  color: 'rgba(255,255,255,0.8)',
-                                  fontWeight: 500
+                                <div style={{
+                                  fontSize: '0.625rem',
+                                  color: 'rgba(255,255,255,0.75)',
+                                  fontWeight: 500,
+                                  marginTop: '0.125rem',
                                 }}>
-                                  @ {new Date(task.start_date).toLocaleTimeString('en-US', { 
-                                    hour: 'numeric', 
+                                  @ {new Date(task.start_date).toLocaleTimeString('en-US', {
+                                    hour: 'numeric',
                                     minute: '2-digit',
-                                    hour12: true 
+                                    hour12: true
                                   })}
                                 </div>
                               )}
@@ -2889,10 +2884,10 @@ export default function CalendarPage() {
                           ))}
                           {dayTasks.length > 4 && (
                             <div style={{
-                              fontSize: '0.75rem',
+                              fontSize: '0.6875rem',
                               color: '#71717A',
                               textAlign: 'center',
-                              padding: '0.5rem',
+                              padding: '0.25rem',
                               cursor: 'pointer'
                             }}
                             onClick={(e) => {
