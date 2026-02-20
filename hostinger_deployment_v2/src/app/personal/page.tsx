@@ -472,7 +472,7 @@ export default function PersonalPage() {
   const [personalGoals, setPersonalGoals] = useState<Goal[]>([]);
   const [goalCompletions, setGoalCompletions] = useState<GoalCompletion[]>([]);
   const [sidebarTab, setSidebarTab] = useState<'tasks' | 'timeline' | 'content' | 'todo'>('tasks');
-  const [showRightPanel, setShowRightPanel] = useState(true);
+  const [showRightPanel, setShowRightPanel] = useState(false);
   const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0]);
   
   // Detail view modals for external items
@@ -711,15 +711,15 @@ export default function PersonalPage() {
     };
   };
 
-  // Auth check and data fetching
+  // Auth check and data fetching - run both in parallel
   useEffect(() => {
     if (authLoading) return;
     if (!isAuthenticated) {
       router.push('/login');
-        return;
-      }
-    fetchBlocks();
-    fetchExternalData();
+      return;
+    }
+    // Fire both fetches simultaneously instead of sequentially
+    Promise.all([fetchBlocks(), fetchExternalData()]).catch(() => {});
   }, [isAuthenticated, authLoading, router, user]);
 
   // Automatic notification sender - checks every minute for upcoming blocks
@@ -1046,64 +1046,70 @@ export default function PersonalPage() {
       });
       setMeetings(userMeetings);
 
-      // Fetch timeline items assigned to user
-      const { data: timelineData, error: timelineError } = await supabase
-        .from('timeline_items')
-        .select(`*, timeline_categories (name, color)`)
-        .neq('status', 'cancelled')
-        .order('start_date', { ascending: true });
+      // Fetch timeline items and goals in parallel
+      const today = new Date().toISOString().split('T')[0];
+      const [
+        { data: timelineData, error: timelineError },
+        goalsResult,
+        completionsResult,
+      ] = await Promise.allSettled([
+        supabase
+          .from('timeline_items')
+          .select('id, title, description, status, start_date, end_date, team_leader_id, team_member_ids, timeline_categories(name, color)')
+          .neq('status', 'cancelled')
+          .order('start_date', { ascending: true }),
+        goalsService.getGoals(user.id),
+        goalsService.getCompletions(user.id, undefined, today, today),
+      ]).then(([tl, g, c]) => [
+        tl.status === 'fulfilled' ? tl.value : { data: null, error: tl.reason },
+        g.status === 'fulfilled' ? g.value : { data: null },
+        c.status === 'fulfilled' ? c.value : { data: null },
+      ]);
 
       if (!timelineError && timelineData) {
         const userId = parseInt(user.id?.toString() || '0');
-        const userTimeline = timelineData
-          .filter((item: any) => 
-            item.team_leader_id === userId || 
+        const userTimeline = (timelineData as any[])
+          .filter((item: any) =>
+            item.team_leader_id === userId ||
             (item.team_member_ids || []).includes(userId)
           )
           .map((item: any) => ({
             ...item,
-            category_name: item.timeline_categories?.name
+            category_name: item.timeline_categories?.name,
           }));
         setTimelineItems(userTimeline);
       }
 
-      // Fetch personal goals
-      try {
-        const { data: goalsData } = await goalsService.getGoals(user.id);
-        if (goalsData) {
-          setPersonalGoals(goalsData);
-        }
-        
-        // Fetch today's goal completions
-        const today = new Date().toISOString().split('T')[0];
-        const { data: completionsData } = await goalsService.getCompletions(user.id, undefined, today, today);
-        if (completionsData) {
-          setGoalCompletions(completionsData);
-        }
-      } catch (goalError) {
-        console.log('Goals not available (table may not exist):', goalError);
+      if ((goalsResult as any)?.data) {
+        setPersonalGoals((goalsResult as any).data);
+      }
+      if ((completionsResult as any)?.data) {
+        setGoalCompletions((completionsResult as any).data);
       }
 
       // Fetch content posts from calendars the user is a member of
-      // Check multiple tables to find user's company memberships
-      
-      // 1. First try company_members table (direct membership)
-      const { data: directMembershipData } = await supabase
-        .from('company_members')
-        .select('company_id')
-        .eq('user_id', user.id?.toString());
-
-      // 2. Also try content_calendar_members (content calendar specific)
-      const { data: ccMembershipData } = await supabase
-        .from('content_calendar_members')
-        .select('id, role')
-        .eq('user_id', user.id);
-
-      // 3. Try content_calendar_folder_members
-      const { data: folderMembershipData } = await supabase
-        .from('content_calendar_folder_members')
-        .select('id, role')
-        .eq('user_id', user.id);
+      // Check multiple tables in parallel to find user's company memberships
+      const [
+        { data: directMembershipData },
+        { data: ccMembershipData },
+        { data: folderMembershipData },
+      ] = await Promise.all([
+        // 1. company_members table (direct membership)
+        supabase
+          .from('company_members')
+          .select('company_id')
+          .eq('user_id', user.id?.toString()),
+        // 2. content_calendar_members (content calendar specific)
+        supabase
+          .from('content_calendar_members')
+          .select('id')
+          .eq('user_id', user.id),
+        // 3. content_calendar_folder_members
+        supabase
+          .from('content_calendar_folder_members')
+          .select('id')
+          .eq('user_id', user.id),
+      ]);
 
       console.log('📅 Content Calendar - Direct memberships:', directMembershipData?.length || 0);
       console.log('📅 Content Calendar - CC memberships:', ccMembershipData?.length || 0);
@@ -1204,11 +1210,11 @@ export default function PersonalPage() {
   const fetchBlocks = async () => {
     try {
       setIsLoading(true);
-      const supabase = (await import('@/lib/supabase')).supabase;
+      // supabase is already imported at the top of the file - no dynamic import needed
 
       const { data, error } = await supabase
         .from('time_blocks')
-        .select('*')
+        .select('id, user_id, title, date, start_time, end_time, type, color, description, is_recurring, recurring_days, recurring_start_date, recurring_end_date, notification_time, meeting_link, checklist, category, created_at, updated_at')
         .eq('user_id', user?.id)
         .order('date', { ascending: true });
 
@@ -1249,8 +1255,7 @@ export default function PersonalPage() {
     localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
     
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
-      
+      // supabase is already imported at the top of the file
       // Map to database format
       const dbRecord = mapBlockToDb(block, user?.id);
       dbRecord.updated_at = new Date().toISOString();
@@ -1531,8 +1536,7 @@ export default function PersonalPage() {
   const deleteBlock = async (blockId: string) => {
     console.log('deleteBlock called with id:', blockId);
     try {
-      const supabase = (await import('@/lib/supabase')).supabase;
-
+      // supabase is already imported at the top of the file
       const { error } = await supabase
         .from('time_blocks')
         .delete()
@@ -2082,7 +2086,7 @@ export default function PersonalPage() {
         style={{
           minHeight: '100vh',
           marginLeft: '280px',
-          marginRight: isMobile ? '0' : (showRightPanel ? '380px' : '0'),
+          marginRight: isMobile ? '0' : (showRightPanel ? '320px' : '0'),
           background: '#0D0D0D',
           transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         }}
@@ -2093,7 +2097,7 @@ export default function PersonalPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
               style={{
-            padding: '20px 32px',
+            padding: '14px 28px',
             background: '#141414',
             borderBottom: '1px solid #2D2D2D',
             position: 'sticky',
@@ -2110,7 +2114,7 @@ export default function PersonalPage() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
                   style={{
-                    fontSize: '24px',
+                    fontSize: '20px',
                     fontWeight: '700',
                     color: '#FFFFFF',
                     letterSpacing: '-0.025em',
@@ -2205,8 +2209,8 @@ export default function PersonalPage() {
                     onClick={() => setViewMode(mode)}
                     whileTap={{ scale: 0.97 }}
                     style={{
-                      padding: '9px 20px',
-                      fontSize: '14px',
+                      padding: '7px 16px',
+                      fontSize: '12px',
                       fontWeight: '600',
                       border: 'none',
                       borderRadius: '8px',
@@ -2233,16 +2237,16 @@ export default function PersonalPage() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 20px',
-                  fontSize: '13px',
+                  gap: '6px',
+                  padding: '7px 14px',
+                  fontSize: '12px',
                   fontWeight: '600',
                   border: 'none',
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
                   background: 'linear-gradient(135deg, #10B981, #059669)',
                   color: '#FFFFFF',
-                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
                   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
@@ -2258,16 +2262,16 @@ export default function PersonalPage() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 24px',
-                  fontSize: '14px',
+                  gap: '6px',
+                  padding: '7px 16px',
+                  fontSize: '12px',
                   fontWeight: '600',
                   border: 'none',
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
                   background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
                   color: '#FFFFFF',
-                  boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)',
+                  boxShadow: '0 2px 12px rgba(59, 130, 246, 0.3)',
                   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
@@ -2317,11 +2321,11 @@ export default function PersonalPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
                 style={{
-                  fontSize: '17px',
+                  fontSize: '14px',
                   fontWeight: '700',
                   color: '#FFFFFF',
                   margin: 0,
-                  minWidth: '200px',
+                  minWidth: '180px',
                   textAlign: 'center',
                   letterSpacing: '0.01em',
                 }}
@@ -2371,15 +2375,15 @@ export default function PersonalPage() {
               whileHover={{ scale: 1.03, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' }}
               whileTap={{ scale: 0.97 }}
               style={{
-                padding: '9px 18px',
-                fontSize: '13px',
+                padding: '7px 14px',
+                fontSize: '11px',
                 fontWeight: '600',
                 border: 'none',
-                borderRadius: '10px',
+                borderRadius: '8px',
                 background: 'linear-gradient(135deg, #10B981, #059669)',
                 cursor: 'pointer',
                 color: '#FFFFFF',
-                boxShadow: '0 3px 10px rgba(16, 185, 129, 0.2)',
+                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.2)',
                 transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
@@ -2389,7 +2393,7 @@ export default function PersonalPage() {
         </motion.header>
 
       {/* Main Content */}
-      <main style={{ padding: '32px 48px', maxWidth: '1800px', margin: '0 auto' }}>
+      <main style={{ padding: '20px 28px', maxWidth: '1400px', margin: '0 auto' }}>
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div
@@ -2428,13 +2432,13 @@ export default function PersonalPage() {
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                   style={{
                     background: '#1A1A1A',
-                    borderRadius: '16px',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                    borderRadius: '12px',
+                    boxShadow: '0 2px 12px rgba(0, 0, 0, 0.3)',
                     border: '1px solid #2D2D2D',
                     overflow: 'hidden',
                   }}
                 >
-                  <div 
+                  <div
                     ref={dayViewRef}
                     style={{ position: 'relative', cursor: isDragging ? 'ns-resize' : 'crosshair' }}
                     onMouseDown={(e) => {
@@ -2450,14 +2454,14 @@ export default function PersonalPage() {
                         style={{
                           display: 'flex',
                           borderBottom: '1px solid #2D2D2D',
-                          minHeight: '52px',
+                          minHeight: '42px',
                         }}
                       >
                         <div
                           style={{
-                            width: '80px',
-                            padding: '8px 16px',
-                            fontSize: '12px',
+                            width: '64px',
+                            padding: '4px 10px',
+                            fontSize: '10px',
                             fontWeight: '500',
                             color: '#71717A',
                             textAlign: 'right',
@@ -2620,7 +2624,7 @@ export default function PersonalPage() {
                             {block.type === 'project' && <FolderIcon style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.9)' }} />}
                             <span
                               style={{
-                                fontSize: '14px',
+                                fontSize: '12px',
                                 fontWeight: '600',
                                 color: block.completed ? 'rgba(255,255,255,0.5)' : '#FFFFFF',
                                 textDecoration: block.completed ? 'line-through' : 'none',
@@ -2775,7 +2779,7 @@ export default function PersonalPage() {
                   <div
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '80px repeat(7, 1fr)',
+                      gridTemplateColumns: '64px repeat(7, 1fr)',
                       borderBottom: '1px solid #2D2D2D',
                       background: '#0D0D0D',
                       position: 'sticky',
@@ -2784,8 +2788,8 @@ export default function PersonalPage() {
                       flexShrink: 0,
                     }}
                   >
-                    <div style={{ padding: '20px 12px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                      <span style={{ fontSize: '11px', color: '#52525B', fontWeight: 500 }}>GMT+5</span>
+                    <div style={{ padding: '12px 8px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                      <span style={{ fontSize: '10px', color: '#52525B', fontWeight: 500 }}>GMT+5</span>
                     </div>
                     {getWeekDays(currentDate).map((day, index) => {
                       const isToday = formatDate(day) === formatDate(new Date());
@@ -2795,7 +2799,7 @@ export default function PersonalPage() {
                           key={index}
                           whileHover={{ scale: 1.02 }}
                           style={{
-                            padding: '10px 8px 12px',
+                            padding: '8px 6px 10px',
                             textAlign: 'center',
                             borderLeft: '1px solid #2D2D2D',
                             background: isToday ? 'linear-gradient(180deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%)' : 'transparent',
@@ -2805,19 +2809,19 @@ export default function PersonalPage() {
                         >
                           <div
                             style={{
-                              fontSize: '13px',
+                              fontSize: '11px',
                               fontWeight: '600',
                               color: isToday ? '#3B82F6' : '#71717A',
                               textTransform: 'lowercase',
                               letterSpacing: '0.8px',
-                              marginBottom: '10px',
+                              marginBottom: '6px',
                             }}
                           >
                             {dayNames[day.getDay()]}
                           </div>
                           <div
                             style={{
-                              fontSize: '24px',
+                              fontSize: '18px',
                               fontWeight: '700',
                               color: isToday ? '#3B82F6' : '#FFFFFF',
                               lineHeight: 1,
@@ -2835,8 +2839,8 @@ export default function PersonalPage() {
                   <div
                     style={{ 
                       display: 'grid',
-                      gridTemplateColumns: '80px repeat(7, 1fr)',
-                      minHeight: '1196px',
+                      gridTemplateColumns: '64px repeat(7, 1fr)',
+                      minHeight: '966px',
                     }}
                   >
                     {/* Time labels column */}
@@ -2845,9 +2849,9 @@ export default function PersonalPage() {
                         <div
                           key={hour}
                           style={{
-                            height: '52px',
-                            padding: '6px 10px',
-                            fontSize: '11px',
+                            height: '42px',
+                            padding: '4px 8px',
+                            fontSize: '10px',
                             fontWeight: 500,
                             color: '#71717A',
                             textAlign: 'right',
@@ -3318,7 +3322,7 @@ export default function PersonalPage() {
             position: 'fixed',
             right: 0,
             top: '0',
-            width: '380px',
+            width: '320px',
             height: '100vh',
             background: '#141414',
             borderLeft: '1px solid #2D2D2D',
@@ -3386,101 +3390,36 @@ export default function PersonalPage() {
                   background: '#0D0D0D',
                   margin: '8px',
                   borderRadius: '8px',
-                  gap: '3px',
+                  gap: '2px',
                 }}
               >
-                        <button
-                  onClick={() => setSidebarTab('tasks')}
-                          style={{ 
-                    flex: 1,
-                    padding: '8px 12px',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                            border: 'none', 
-                    borderRadius: '6px',
-                    background: sidebarTab === 'tasks' ? '#3B82F6' : 'transparent',
-                    color: sidebarTab === 'tasks' ? '#FFFFFF' : '#71717A',
-                            cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
-                    transition: 'all 0.2s ease',
-                    boxShadow: sidebarTab === 'tasks' ? '0 2px 4px rgba(59,130,246,0.3)' : 'none',
-                  }}
-                >
-                  <BriefcaseIcon style={{ width: '12px', height: '12px' }} />
-                  Tasks
-                        </button>
-                        <button
-                  onClick={() => setSidebarTab('timeline')}
-                  style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    border: 'none',
-                    borderRadius: '6px',
-                    background: sidebarTab === 'timeline' ? '#8B5CF6' : 'transparent',
-                    color: sidebarTab === 'timeline' ? '#FFFFFF' : '#71717A',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
-                    transition: 'all 0.2s ease',
-                    boxShadow: sidebarTab === 'timeline' ? '0 2px 4px rgba(139,92,246,0.3)' : 'none',
-                  }}
-                >
-                  <RocketLaunchIcon style={{ width: '12px', height: '12px' }} />
-                  Timeline
-                        </button>
-                        <button
-                  onClick={() => setSidebarTab('content')}
-                  style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    border: 'none',
-                    borderRadius: '6px',
-                    background: sidebarTab === 'content' ? '#EC4899' : 'transparent',
-                    color: sidebarTab === 'content' ? '#FFFFFF' : '#71717A',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
-                    transition: 'all 0.2s ease',
-                    boxShadow: sidebarTab === 'content' ? '0 2px 4px rgba(236,72,153,0.3)' : 'none',
-                  }}
-                >
-                  <Squares2X2Icon style={{ width: '12px', height: '12px' }} />
-                  Content
-                        </button>
-                        <button
-                  onClick={() => setSidebarTab('todo')}
-                  style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    border: 'none',
-                    borderRadius: '6px',
-                    background: sidebarTab === 'todo' ? '#10B981' : 'transparent',
-                    color: sidebarTab === 'todo' ? '#FFFFFF' : '#71717A',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
-                    transition: 'all 0.2s ease',
-                    boxShadow: sidebarTab === 'todo' ? '0 2px 4px rgba(16,185,129,0.3)' : 'none',
-                  }}
-                >
-                  <ListBulletIcon style={{ width: '12px', height: '12px' }} />
-                  To-Do
-                        </button>
+                {([
+                  { key: 'tasks' as const, label: 'Tasks', activeColor: '#3B82F6', shadow: 'rgba(59,130,246,0.3)' },
+                  { key: 'timeline' as const, label: 'Timeline', activeColor: '#8B5CF6', shadow: 'rgba(139,92,246,0.3)' },
+                  { key: 'content' as const, label: 'Content', activeColor: '#EC4899', shadow: 'rgba(236,72,153,0.3)' },
+                  { key: 'todo' as const, label: 'To-Do', activeColor: '#10B981', shadow: 'rgba(16,185,129,0.3)' },
+                ]).map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setSidebarTab(tab.key)}
+                    style={{
+                      flex: 1,
+                      padding: '7px 4px',
+                      fontSize: '10px',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderRadius: '6px',
+                      background: sidebarTab === tab.key ? tab.activeColor : 'transparent',
+                      color: sidebarTab === tab.key ? '#FFFFFF' : '#71717A',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.2s ease',
+                      boxShadow: sidebarTab === tab.key ? `0 2px 4px ${tab.shadow}` : 'none',
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
                     
               {/* Content */}
@@ -4086,10 +4025,13 @@ export default function PersonalPage() {
                         width: '100%',
                       padding: '12px 16px',
                   fontSize: '15px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '10px',
                       outline: 'none',
                       transition: 'border-color 0.2s ease',
+                      background: '#141414',
+                      color: '#FFFFFF',
+                      boxSizing: 'border-box',
                 }}
                     />
                   </div>
@@ -4133,9 +4075,9 @@ export default function PersonalPage() {
                             flexDirection: 'column',
                             alignItems: 'center',
                             gap: '6px',
-                            border: blockForm.type === type ? `2px solid ${colors.solid}` : '1px solid rgba(0, 0, 0, 0.1)',
+                            border: blockForm.type === type ? `2px solid ${colors.solid}` : '1px solid #3D3D3D',
                   borderRadius: '12px',
-                            background: blockForm.type === type ? colors.bg : '#fff',
+                            background: blockForm.type === type ? colors.bg : '#141414',
                             cursor: 'pointer',
                   transition: 'all 0.2s ease',
                           }}
@@ -4184,9 +4126,9 @@ export default function PersonalPage() {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '6px',
-                            border: blockForm.category === cat.id ? `2px solid ${cat.color}` : '1px solid rgba(0, 0, 0, 0.1)',
+                            border: blockForm.category === cat.id ? `2px solid ${cat.color}` : '1px solid #3D3D3D',
                             borderRadius: '20px',
-                            background: blockForm.category === cat.id ? `${cat.color}15` : '#fff',
+                            background: blockForm.category === cat.id ? `${cat.color}15` : '#141414',
                     cursor: 'pointer',
                             transition: 'all 0.2s ease',
                             position: 'relative',
@@ -4241,9 +4183,9 @@ export default function PersonalPage() {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '4px',
-                          border: '1px dashed rgba(0, 0, 0, 0.2)',
+                          border: '1px dashed #3D3D3D',
                           borderRadius: '20px',
-                          background: '#1A1A1A',
+                          background: '#141414',
                             cursor: 'pointer',
                           color: '#86868b',
                           fontSize: '12px',
@@ -4262,9 +4204,9 @@ export default function PersonalPage() {
                           alignItems: 'center',
                           gap: '6px',
                           padding: '6px 10px',
-                          background: 'rgba(0, 0, 0, 0.02)',
+                          background: '#141414',
                           borderRadius: '20px',
-                          border: '1px solid rgba(0, 0, 0, 0.1)',
+                          border: '1px solid #3D3D3D',
                         }}
                       >
                         <div style={{ display: 'flex', gap: '4px' }}>
@@ -4294,9 +4236,11 @@ export default function PersonalPage() {
                             width: '80px',
                             padding: '4px 8px',
                             fontSize: '12px',
-                            border: '1px solid rgba(0, 0, 0, 0.1)',
+                            border: '1px solid #3D3D3D',
                             borderRadius: '8px',
                             outline: 'none',
+                            background: '#0D0D0D',
+                            color: '#FFFFFF',
                           }}
                         />
                         <button
@@ -4356,9 +4300,13 @@ export default function PersonalPage() {
                     width: '100%',
                         padding: '12px 16px',
                     fontSize: '15px',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '10px',
                         outline: 'none',
+                        background: '#141414',
+                        color: '#FFFFFF',
+                        boxSizing: 'border-box',
+                        colorScheme: 'dark',
                       }}
                     />
               </div>
@@ -4382,9 +4330,13 @@ export default function PersonalPage() {
                     width: '100%',
                         padding: '12px 16px',
                     fontSize: '15px',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '10px',
                         outline: 'none',
+                        background: '#141414',
+                        color: '#FFFFFF',
+                        boxSizing: 'border-box',
+                        colorScheme: 'dark',
                       }}
                     />
                     </div>
@@ -4412,10 +4364,13 @@ export default function PersonalPage() {
                     width: '100%',
                       padding: '12px 16px',
                     fontSize: '15px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '10px',
                       outline: 'none',
                       resize: 'none',
+                      background: '#141414',
+                      color: '#FFFFFF',
+                      boxSizing: 'border-box',
                   }}
                 />
               </div>
@@ -4455,9 +4410,12 @@ export default function PersonalPage() {
                     width: '100%',
                           padding: '12px 16px 12px 42px',
                     fontSize: '15px',
-                          border: '1px solid rgba(0, 0, 0, 0.1)',
+                          border: '1px solid #3D3D3D',
                           borderRadius: '10px',
                           outline: 'none',
+                          background: '#141414',
+                          color: '#FFFFFF',
+                          boxSizing: 'border-box',
                   }}
                 />
               </div>

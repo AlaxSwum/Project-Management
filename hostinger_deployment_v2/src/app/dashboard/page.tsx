@@ -27,22 +27,36 @@ export default function DashboardPage() {
     if (!user?.id) return;
 
     try {
-      const { data: allProjects } = await supabase.from('projects_project').select('*');
-      const myProjects = (allProjects || []).filter((p: any) => 
-        p.members && p.members.some((m: any) => m.id === user.id)
-      );
-      setProjects(myProjects);
+      // Step 1: Get only user's project IDs via membership table (server-side filter)
+      const { data: membershipData } = await supabase
+        .from('projects_project_members')
+        .select('project_id')
+        .eq('user_id', user.id);
 
-      const projectIds = myProjects.map(p => p.id);
-      if (projectIds.length > 0) {
-        const { data: allTasks } = await supabase
-          .from('projects_task')
-          .select('*')
-          .in('project_id', projectIds)
-          .limit(20);
-        
-        setTasks(allTasks || []);
+      const projectIds = (membershipData || []).map((m: any) => m.project_id);
+
+      if (projectIds.length === 0) {
+        setProjects([]);
+        setTasks([]);
+        return;
       }
+
+      // Step 2: Fetch projects and recent tasks in parallel, select only needed fields
+      const [{ data: myProjects }, { data: recentTasks }] = await Promise.all([
+        supabase
+          .from('projects_project')
+          .select('id, name, color, task_count, completed_task_count')
+          .in('id', projectIds),
+        supabase
+          .from('projects_task')
+          .select('id, name, status, due_date, project_id')
+          .in('project_id', projectIds)
+          .order('due_date', { ascending: true })
+          .limit(20),
+      ]);
+
+      setProjects(myProjects || []);
+      setTasks(recentTasks || []);
     } catch (error) {
       // Error
     } finally {

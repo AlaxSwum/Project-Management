@@ -15,6 +15,7 @@ import {
   DocumentTextIcon,
   KeyIcon,
   CurrencyDollarIcon,
+  BuildingOfficeIcon,
   Cog6ToothIcon,
   UserCircleIcon,
   Squares2X2Icon,
@@ -69,6 +70,24 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
   const [newProjectColor, setNewProjectColor] = useState('#3B82F6');
   const [creatingProject, setCreatingProject] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hasCompanyAccess, setHasCompanyAccess] = useState(false);
+
+  // Check if user belongs to any company (via org_company_members)
+  useEffect(() => {
+    const checkCompanyAccess = async () => {
+      if (!user?.id) return;
+      if (user.role === 'admin') { setHasCompanyAccess(true); return; }
+      try {
+        const { data } = await supabase
+          .from('org_company_members')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1);
+        setHasCompanyAccess((data && data.length > 0) || false);
+      } catch { setHasCompanyAccess(false); }
+    };
+    checkCompanyAccess();
+  }, [user]);
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -342,6 +361,78 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
             );
           })}
         </div>
+
+        {/* Company Link - visible to anyone with company membership */}
+        {hasCompanyAccess && (
+          <div style={{ marginTop: '0.25rem' }}>
+            <Link
+              href="/company"
+              className="sidebar-link"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.625rem 0.75rem',
+                borderRadius: '0.5rem',
+                background: pathname?.startsWith('/company') ? '#10B981' : 'transparent',
+                color: pathname?.startsWith('/company') ? '#FFFFFF' : '#A1A1AA',
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                if (!pathname?.startsWith('/company')) {
+                  e.currentTarget.style.background = '#1A1A1A';
+                  e.currentTarget.style.color = '#FFFFFF';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!pathname?.startsWith('/company')) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#A1A1AA';
+                }
+              }}
+            >
+              <BuildingOfficeIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+              <span style={{ fontSize: '0.875rem', fontWeight: 500, fontFamily: 'Mabry Pro, sans-serif' }}>Company</span>
+            </Link>
+          </div>
+        )}
+
+        {/* Reports Link - visible to anyone with company membership */}
+        {hasCompanyAccess && (
+          <div style={{ marginTop: '0.25rem' }}>
+            <Link
+              href="/reports"
+              className="sidebar-link"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.625rem 0.75rem',
+                borderRadius: '0.5rem',
+                background: pathname?.startsWith('/reports') ? '#10B981' : 'transparent',
+                color: pathname?.startsWith('/reports') ? '#FFFFFF' : '#A1A1AA',
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                if (!pathname?.startsWith('/reports')) {
+                  e.currentTarget.style.background = '#1A1A1A';
+                  e.currentTarget.style.color = '#FFFFFF';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!pathname?.startsWith('/reports')) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#A1A1AA';
+                }
+              }}
+            >
+              <ChartBarIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+              <span style={{ fontSize: '0.875rem', fontWeight: 500, fontFamily: 'Mabry Pro, sans-serif' }}>Reports</span>
+            </Link>
+          </div>
+        )}
 
         {/* Personal Section */}
         <div style={{ marginTop: '1.5rem' }}>

@@ -110,10 +110,10 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     refreshProjects();
   }, [user?.id, hasFetched, refreshProjects]);
 
-  // Fetch unread notification count - poll every 30s
+  // Fetch unread notification count - initial fetch + real-time updates
   useEffect(() => {
     if (!user?.id) return;
-    
+
     const fetchCount = async () => {
       try {
         const { count } = await supabase
@@ -126,10 +126,44 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
         // Silent fail
       }
     };
-    
+
     fetchCount();
-    const interval = setInterval(fetchCount, 30000);
-    return () => clearInterval(interval);
+
+    // Real-time subscription instead of polling every 30s
+    const channel = supabase
+      .channel(`notifications-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'task_notifications',
+          filter: `recipient_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (!(payload.new as any).is_read) {
+            setUnreadNotifications((prev) => prev + 1);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'task_notifications',
+          filter: `recipient_id=eq.${user.id}`,
+        },
+        () => {
+          // Re-fetch on update (e.g. mark-as-read)
+          fetchCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.id]);
 
   // Real-time message listener - get notified when ANY new message arrives
