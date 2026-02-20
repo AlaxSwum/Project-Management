@@ -5,6 +5,7 @@ export interface HierarchyMember {
   department_id: number;
   user_id: number;
   role: string;
+  position?: string | null;
   manager_id: number | null;
   user_name: string;
   user_email: string;

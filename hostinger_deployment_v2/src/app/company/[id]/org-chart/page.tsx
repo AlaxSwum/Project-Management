@@ -104,6 +104,7 @@ export default function OrgChartPage() {
           manager_id: m.manager_id || null,
           user_name: usersMap[m.user_id]?.name || 'Unknown',
           user_email: usersMap[m.user_id]?.email || '',
+          position: usersMap[m.user_id]?.position || null,
         }));
         membersByDept[dept.id] = enriched;
         treesByDept[dept.id] = buildHierarchyTree(enriched);
@@ -228,7 +229,7 @@ export default function OrgChartPage() {
               {node.user_name}
             </div>
             <div style={{ color: roleColor, fontSize: '0.6875rem', fontWeight: 500 }}>
-              {node.role}
+              {node.position || node.role}
             </div>
           </div>
           {hasChildren && (
