@@ -310,60 +310,76 @@ export default function MemberDashboardPage() {
   const handleAddChecklist = async () => {
     if (!newChecklistTitle.trim() || !user) return;
     setSaving(true);
+    const title = newChecklistTitle.trim();
+    setNewChecklistTitle('');
     try {
-      const { error } = await supabase.from('org_checklists').insert({
+      const { data, error } = await supabase.from('org_checklists').insert({
         department_id: deptId,
         user_id: memberId,
         type: activeTab,
-        title: newChecklistTitle.trim(),
+        title,
         is_completed: false,
         created_by: user.id,
-      });
+      }).select().single();
       if (error) throw error;
-      setNewChecklistTitle('');
-      fetchData();
+      // Add new item to local state without full re-fetch
+      if (data) setChecklists(prev => [...prev, data as ChecklistItem]);
     } catch (err) {
       console.error(err);
       alert('Failed to add checklist item');
+      setNewChecklistTitle(title); // restore on error
     }
     setSaving(false);
   };
 
   const handleToggleChecklist = async (item: ChecklistItem) => {
     if (!isSelf && !canManage) return;
+    const newCompleted = !item.is_completed;
+    // Optimistic update - flip state immediately, no page reload
+    setChecklists(prev =>
+      prev.map(c =>
+        c.id === item.id
+          ? { ...c, is_completed: newCompleted, completed_at: newCompleted ? new Date().toISOString() : null }
+          : c
+      )
+    );
     try {
       await supabase
         .from('org_checklists')
         .update({
-          is_completed: !item.is_completed,
-          completed_at: !item.is_completed ? new Date().toISOString() : null,
+          is_completed: newCompleted,
+          completed_at: newCompleted ? new Date().toISOString() : null,
         })
         .eq('id', item.id);
-      fetchData();
     } catch (err) {
       console.error(err);
+      // Revert on DB error
+      setChecklists(prev => prev.map(c => (c.id === item.id ? item : c)));
     }
   };
 
   const handleEditChecklist = async (id: number) => {
     if (!editChecklistValue.trim()) return;
+    const newTitle = editChecklistValue.trim();
+    setEditingChecklistId(null);
+    setEditChecklistValue('');
+    // Update local state immediately
+    setChecklists(prev => prev.map(c => (c.id === id ? { ...c, title: newTitle } : c)));
     try {
       await supabase
         .from('org_checklists')
-        .update({ title: editChecklistValue.trim() })
+        .update({ title: newTitle })
         .eq('id', id);
-      setEditingChecklistId(null);
-      setEditChecklistValue('');
-      fetchData();
     } catch (err) {
       console.error(err);
     }
   };
 
   const handleDeleteChecklist = async (id: number) => {
+    // Remove from local state immediately
+    setChecklists(prev => prev.filter(c => c.id !== id));
     try {
       await supabase.from('org_checklists').delete().eq('id', id);
-      fetchData();
     } catch (err) {
       console.error(err);
     }
