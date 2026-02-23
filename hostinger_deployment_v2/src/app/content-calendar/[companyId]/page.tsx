@@ -76,6 +76,7 @@ export default function CompanyCalendarPage() {
   // Sheet editing state
   const [editingCell, setEditingCell] = useState<{ weekIdx: number; dayIdx: number; field: SheetFieldKey } | null>(null)
   const [editValue, setEditValue] = useState('')
+  const editValueRef = useRef('')
   const [editPlatforms, setEditPlatforms] = useState<Platform[]>([])
   const [editingPlatformCell, setEditingPlatformCell] = useState<{ weekIdx: number; dayIdx: number; postId?: string } | null>(null)
   const editInputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
@@ -379,6 +380,7 @@ export default function CompanyCalendarPage() {
     }
     
     setEditingCell({ weekIdx, dayIdx, field })
+    editValueRef.current = currentValue
     setEditValue(currentValue)
     setTimeout(() => editInputRef.current?.focus(), 0)
   }
@@ -469,48 +471,50 @@ export default function CompanyCalendarPage() {
         const post = dayPosts[0]
         const updateData: any = {}
         
+        const val = editValueRef.current
         switch (field) {
-          case 'topic': updateData.description = editValue; break
-          case 'post_type': updateData.content_type = editValue.toLowerCase(); break
-          case 'posting_time': updateData.planned_time = editValue; break
-          case 'visual_concept': updateData.visual_concept = editValue; break
-          case 'content_theme': updateData.category = editValue; break
-          case 'graphic_link': updateData.graphic_link = editValue; break
-          case 'video_link': updateData.video_link = editValue; break
-          case 'content_link': updateData.content_link = editValue; break
+          case 'topic': updateData.description = val; break
+          case 'post_type': updateData.content_type = val.toLowerCase(); break
+          case 'posting_time': updateData.planned_time = val; break
+          case 'visual_concept': updateData.visual_concept = val; break
+          case 'content_theme': updateData.category = val; break
+          case 'graphic_link': updateData.graphic_link = val; break
+          case 'video_link': updateData.video_link = val; break
+          case 'content_link': updateData.content_link = val; break
           case 'post_link':
             // post_link is stored on the target, not the post itself
             if (post.targets?.[0]?.id) {
-              await supabase.from('content_post_targets').update({ permalink: editValue }).eq('id', post.targets[0].id)
+              await supabase.from('content_post_targets').update({ permalink: val }).eq('id', post.targets[0].id)
             }
             break
         }
-        
+
         if (Object.keys(updateData).length > 0) {
           await supabase.from('content_posts').update(updateData).eq('id', post.id)
         }
-      } else if (editValue.trim()) {
+      } else if (editValueRef.current.trim()) {
         // Create new post if field has value
+        const val = editValueRef.current
         const newPostData: any = {
           company_id: companyId,
-          title: field === 'topic' ? editValue.substring(0, 50) : 'Untitled Post',
+          title: field === 'topic' ? val.substring(0, 50) : 'Untitled Post',
           planned_date: dateStr,
           status: 'draft',
           content_type: 'static',
           created_by: String(user?.id)
         }
-        
+
         let postLinkValue = ''
         switch (field) {
-          case 'topic': newPostData.description = editValue; break
-          case 'post_type': newPostData.content_type = editValue.toLowerCase(); break
-          case 'posting_time': newPostData.planned_time = editValue; break
-          case 'visual_concept': newPostData.visual_concept = editValue; break
-          case 'content_theme': newPostData.category = editValue; break
-          case 'graphic_link': newPostData.graphic_link = editValue; break
-          case 'video_link': newPostData.video_link = editValue; break
-          case 'content_link': newPostData.content_link = editValue; break
-          case 'post_link': postLinkValue = editValue; break
+          case 'topic': newPostData.description = val; break
+          case 'post_type': newPostData.content_type = val.toLowerCase(); break
+          case 'posting_time': newPostData.planned_time = val; break
+          case 'visual_concept': newPostData.visual_concept = val; break
+          case 'content_theme': newPostData.category = val; break
+          case 'graphic_link': newPostData.graphic_link = val; break
+          case 'video_link': newPostData.video_link = val; break
+          case 'content_link': newPostData.content_link = val; break
+          case 'post_link': postLinkValue = val; break
         }
         
         const { data: newPost } = await supabase.from('content_posts').insert(newPostData).select().single()
@@ -532,6 +536,7 @@ export default function CompanyCalendarPage() {
     }
     
     setEditingCell(null)
+    editValueRef.current = ''
     setEditValue('')
   }
 
@@ -541,6 +546,7 @@ export default function CompanyCalendarPage() {
       handleCellBlur()
     } else if (e.key === 'Escape') {
       setEditingCell(null)
+      editValueRef.current = ''
       setEditValue('')
     }
   }
@@ -982,7 +988,7 @@ export default function CompanyCalendarPage() {
                                       <select
                                         ref={editInputRef as any}
                                         value={editValue}
-                                        onChange={(e) => { setEditValue(e.target.value); setTimeout(handleCellBlur, 100) }}
+                                        onChange={(e) => { editValueRef.current = e.target.value; setEditValue(e.target.value) }}
                                         onBlur={handleCellBlur}
                                         className="ms-input"
                                       >

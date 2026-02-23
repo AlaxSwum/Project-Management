@@ -282,7 +282,7 @@ export default function CalendarPage() {
   };
 
   const getTasksForDate = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
     const filteredTasks = tasks.filter(task => {
       const taskStartDate = task.start_date ? task.start_date.split('T')[0] : null;
       const meetingData = (task as any)._meetingData;
@@ -336,7 +336,7 @@ export default function CalendarPage() {
     setNewMeeting({
       title: '',
       description: '',
-      start_date: date.toISOString().split('T')[0],
+      start_date: `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`,
       start_time: '09:00',
       duration: 60,
       project_id: null,
@@ -2733,7 +2733,7 @@ export default function CalendarPage() {
                             className={`task-item ${task.is_important ? 'important' : ''} ${isOverdue(task.due_date) ? 'overdue' : ''}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleTaskModalOpen(task, cellDate.toISOString().split('T')[0]);
+                              handleTaskModalOpen(task, `${cellDate.getFullYear()}-${String(cellDate.getMonth()+1).padStart(2,'0')}-${String(cellDate.getDate()).padStart(2,'0')}`);
                             }}
                           >
                             <div className="task-header">
@@ -2842,7 +2842,7 @@ export default function CalendarPage() {
                               key={task.id}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleTaskModalOpen(task, weekStart.toISOString().split('T')[0]);
+                                handleTaskModalOpen(task, `${weekStart.getFullYear()}-${String(weekStart.getMonth()+1).padStart(2,'0')}-${String(weekStart.getDate()).padStart(2,'0')}`);
                               }}
                               style={{
                                 background: task.priority === 'high' ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' :
@@ -2975,7 +2975,7 @@ export default function CalendarPage() {
                               borderLeft: `4px solid ${getStatusColor(task.status)}`
                             }}
                             onClick={() => {
-                              const dayDate = selectedDayDate ? selectedDayDate.toISOString().split('T')[0] : undefined;
+                              const dayDate = selectedDayDate ? `${selectedDayDate.getFullYear()}-${String(selectedDayDate.getMonth()+1).padStart(2,'0')}-${String(selectedDayDate.getDate()).padStart(2,'0')}` : undefined;
                               setShowDayTasks(false);
                               setSelectedDayDate(null);
                               setSelectedDayTasks([]);
