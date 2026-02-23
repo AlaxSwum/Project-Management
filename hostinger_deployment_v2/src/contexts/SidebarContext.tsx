@@ -91,24 +91,33 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch projects — show cache instantly, then refresh in background
   const refreshProjects = useCallback(async () => {
-    if (!user?.id) return;
+    // Use AuthContext user ID, or fall back to stored ID for parallel startup
+    let uid = user?.id;
+    if (!uid) {
+      try {
+        const stored = localStorage.getItem('supabase_user');
+        const token = localStorage.getItem('supabase_token');
+        if (stored && token) uid = JSON.parse(stored)?.id ?? undefined;
+      } catch {}
+    }
+    if (!uid) return;
 
-    const cacheKey = `sidebar_projects_${user.id}`;
+    const cacheKey = `sidebar_projects_${uid}`;
 
     // Load cache immediately (instant render)
     const cached = appCache.get<Project[]>(cacheKey);
     if (cached) {
-      applyProjects(cached, user.id);
+      applyProjects(cached, uid);
       setLoadingProjects(false);
     }
 
     // Fetch fresh data in background
     try {
-      const { data, error } = await supabaseDb.getProjectsLean(user.id);
+      const { data, error } = await supabaseDb.getProjectsLean(uid);
       const fetchedProjects = (data || []) as unknown as Project[];
       if (error) console.error('Error fetching projects:', error);
       appCache.set(cacheKey, fetchedProjects);
-      applyProjects(fetchedProjects, user.id);
+      applyProjects(fetchedProjects, uid);
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {
@@ -116,12 +125,22 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user?.id, applyProjects]);
 
-  // Only fetch once on mount
+  // Fetch on mount using stored user ID — no waiting for AuthContext
   useEffect(() => {
-    if (!user?.id || hasFetched) return;
+    if (hasFetched) return;
+    // Read user ID from localStorage directly (same data AuthContext uses)
+    let storedId: number | null = null;
+    try {
+      const stored = localStorage.getItem('supabase_user');
+      const token = localStorage.getItem('supabase_token');
+      if (stored && token) storedId = JSON.parse(stored)?.id ?? null;
+    } catch {}
+    const uid = user?.id ?? storedId;
+    if (!uid) return;
     setHasFetched(true);
     refreshProjects();
-  }, [user?.id, hasFetched, refreshProjects]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]); // re-check if auth user changes (login/logout)
 
   // Fetch unread notification count - initial fetch + real-time updates
   useEffect(() => {

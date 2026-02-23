@@ -640,7 +640,7 @@ export default function MeetingDetailModal({
                   <CalendarDaysIcon className="info-icon" style={{ width: '20px', height: '20px' }} />
                   <div className="info-content">
                     <div className="info-label">Date</div>
-                    <div className="info-value">{formatDate(meeting.date)}</div>
+                    <div className="info-value">{formatDate(occurrenceDate || meeting.date)}</div>
                   </div>
                 </div>
                 

@@ -52,95 +52,79 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false);
-
-  // Handle SSR
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   useEffect(() => {
-    if (!isClient) {
-      return;
-    }
-
-    const initializeAuth = async () => {
-      try {
-        const { user: currentUser, error } = await supabaseAuth.getUser();
-        
-        if (currentUser && !error) {
-          const cacheKey = `user_profile_${currentUser.id}`;
-
-          // Show cached profile immediately (instant render)
-          const cached = appCache.get<User>(cacheKey);
-          if (cached) {
-            setUser(cached);
-          }
-
-          // Fetch fresh profile from DB in background
-          try {
-            const { data: profileData } = await supabase
-              .from('auth_user')
-              .select('name, email, phone, role, position, avatar_url, location, bio')
-              .eq('id', currentUser.id)
-              .single();
-
-            const userData: User = {
-              id: currentUser.id,
-              email: profileData?.email || currentUser.email,
-              name: profileData?.name || currentUser.user_metadata?.name || currentUser.email,
-              phone: profileData?.phone || currentUser.user_metadata?.phone || '',
-              role: profileData?.role || currentUser.user_metadata?.role || 'member',
-              position: profileData?.position || currentUser.user_metadata?.position || '',
-              avatar_url: profileData?.avatar_url || '',
-              location: profileData?.location || '',
-              bio: profileData?.bio || '',
-              date_joined: new Date().toISOString()
-            };
-            appCache.set(cacheKey, userData);
-            setUser(userData);
-          } catch (profileError) {
-            if (!cached) {
-              setUser({
-                id: currentUser.id,
-                email: currentUser.email,
-                name: currentUser.user_metadata?.name || currentUser.email,
-                phone: currentUser.user_metadata?.phone || '',
-                role: currentUser.user_metadata?.role || 'member',
-                position: currentUser.user_metadata?.position || '',
-                avatar_url: '',
-                location: '',
-                bio: '',
-                date_joined: new Date().toISOString()
-              });
-            }
-          }
+    // Read localStorage synchronously — no network, instant
+    let basicUser: User | null = null;
+    try {
+      const stored = localStorage.getItem('supabase_user');
+      const token = localStorage.getItem('supabase_token');
+      if (stored && token) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.id) {
+          basicUser = {
+            id: parsed.id,
+            email: parsed.email,
+            name: parsed.user_metadata?.name || parsed.email,
+            phone: parsed.user_metadata?.phone || '',
+            role: parsed.user_metadata?.role || 'member',
+            position: parsed.user_metadata?.position || '',
+            avatar_url: '',
+            location: '',
+            bio: '',
+            date_joined: new Date().toISOString(),
+          };
+          // Use richer cached profile if available
+          const cached = appCache.get<User>(`user_profile_${parsed.id}`);
+          setUser(cached || basicUser);
+          setIsLoading(false);
+        } else {
+          setIsLoading(false);
         }
-      } catch (error) {
-        // Silent error handling
-      } finally {
+      } else {
         setIsLoading(false);
       }
-    };
-
-    // Safety timeout for auth initialization
-    const timeoutId = setTimeout(() => {
+    } catch {
       setIsLoading(false);
-    }, 3000);
+    }
 
-    initializeAuth().finally(() => {
-      clearTimeout(timeoutId);
-    });
+    // Background: fetch fresh full profile from DB (doesn't block sidebar)
+    const refreshProfile = async () => {
+      if (!basicUser) return;
+      try {
+        const { data: profileData } = await supabase
+          .from('auth_user')
+          .select('name, email, phone, role, position, avatar_url, location, bio')
+          .eq('id', basicUser!.id)
+          .single();
 
-    return () => {
-      clearTimeout(timeoutId);
+        if (profileData) {
+          const userData: User = {
+            id: basicUser!.id,
+            email: profileData.email || basicUser!.email,
+            name: profileData.name || basicUser!.name,
+            phone: profileData.phone || '',
+            role: profileData.role || basicUser!.role,
+            position: profileData.position || '',
+            avatar_url: profileData.avatar_url || '',
+            location: profileData.location || '',
+            bio: profileData.bio || '',
+            date_joined: new Date().toISOString(),
+          };
+          appCache.set(`user_profile_${basicUser!.id}`, userData);
+          setUser(userData);
+        }
+      } catch {
+        // Silent — basicUser already set above
+      }
     };
-  }, [isClient]);
+    refreshProfile();
+  }, []); // runs once on mount, client-side only
 
   const login = async (email: string, password: string) => {
     try {
       const { user: authUser, error } = await supabaseAuth.signIn(email, password);
-      
+
       if (error) {
         throw new Error(error instanceof Error ? error.message : 'Login failed');
       }
@@ -153,7 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             .select('name, email, phone, role, position, avatar_url, location, bio')
             .eq('id', authUser.id)
             .single();
-          
+
           const userData: User = {
             id: authUser.id,
             email: profileData?.email || authUser.email,
@@ -166,6 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             bio: profileData?.bio || '',
             date_joined: new Date().toISOString()
           };
+          appCache.set(`user_profile_${authUser.id}`, userData);
           setUser(userData);
         } catch (profileError) {
           // Fallback to basic user data if profile fetch fails
@@ -226,4 +211,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}; 
+};
