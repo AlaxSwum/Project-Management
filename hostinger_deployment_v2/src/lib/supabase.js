@@ -464,6 +464,73 @@ export const supabaseDb = {
     return { data, error }
   },
 
+  // Combined fetch: project + members + tasks in 2 round trips instead of 3
+  getProjectWithTasks: async (projectId) => {
+    try {
+      // Round trip 1: fetch project, member IDs, and tasks all in parallel
+      const [
+        { data: project, error: projectError },
+        { data: memberRows, error: memberError },
+        { data: tasks, error: tasksError }
+      ] = await Promise.all([
+        supabase.from('projects_project').select('*').eq('id', projectId).single(),
+        supabase.from('projects_project_members').select('user_id').eq('project_id', projectId),
+        supabase.from('projects_task').select(`
+          id, name, description, status, priority, due_date, start_date,
+          completed_at, estimated_hours, actual_hours, position, tags,
+          created_at, updated_at, assignee_ids, created_by_id, project_id,
+          report_to_ids, projects_project!inner(id, name)
+        `).eq('project_id', projectId)
+      ]);
+
+      if (projectError) return { project: null, tasks: [], error: projectError };
+
+      // Round trip 2: collect ALL unique user IDs from members + tasks, fetch in one query
+      const allUserIds = new Set();
+      (memberRows || []).forEach(m => allUserIds.add(m.user_id));
+      (tasks || []).forEach(t => {
+        if (t.assignee_ids) t.assignee_ids.forEach(id => allUserIds.add(id));
+        if (t.created_by_id) allUserIds.add(t.created_by_id);
+      });
+
+      let usersMap = {};
+      if (allUserIds.size > 0) {
+        const { data: users } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role, avatar_url')
+          .in('id', [...allUserIds]);
+        if (users) usersMap = Object.fromEntries(users.map(u => [u.id, u]));
+      }
+
+      // Enrich project members
+      const members = (memberRows || []).map(m => {
+        const u = usersMap[m.user_id];
+        return u ? { id: u.id, name: u.name || 'Unknown', email: u.email || '', role: u.role || 'member', avatar_url: u.avatar_url } : null;
+      }).filter(Boolean);
+
+      // Enrich tasks
+      const enrichedTasks = (tasks || []).map(task => {
+        const assignees = (task.assignee_ids || []).map(id => usersMap[id]).filter(Boolean);
+        return {
+          ...task,
+          assignees,
+          assignee: assignees[0] || null,
+          created_by: task.created_by_id ? usersMap[task.created_by_id] || null : null,
+          project: task.projects_project,
+          tags_list: task.tags ? task.tags.split(',').map(t => t.trim()).filter(Boolean) : []
+        };
+      });
+
+      return {
+        project: { ...project, members, project_members: members },
+        tasks: enrichedTasks,
+        error: null
+      };
+    } catch (error) {
+      return { project: null, tasks: [], error };
+    }
+  },
+
   // Get tasks for a specific user - only from projects they have access to
   getUserTasks: async (userId) => {
     try {
@@ -619,17 +686,11 @@ export const supabaseDb = {
     }
   },
 
-  updateTask: async (id, taskData) => {
+  updateTask: async (id, taskData, options = {}) => {
     try {
-      // Update the task with timestamp
-      const taskUpdateData = {
-        ...taskData,
-        updated_at: new Date().toISOString()
-      };
-
       const { data, error } = await supabase
         .from('projects_task')
-        .update(taskUpdateData)
+        .update({ ...taskData, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()
 
@@ -643,36 +704,34 @@ export const supabaseDb = {
         return { data: null, error: new Error('Task not found after update') };
       }
 
-      // ✅ Enrich the updated task with user data like createTask and getTasks do
-      const assigneesPromise = updatedTask.assignee_ids && updatedTask.assignee_ids.length > 0
-        ? supabase.from('auth_user').select('id, name, email, role, avatar_url').in('id', updatedTask.assignee_ids)
-        : Promise.resolve({ data: [] });
-      
-      const createdByPromise = updatedTask.created_by_id
-        ? supabase.from('auth_user').select('id, name, email').eq('id', updatedTask.created_by_id).single()
-        : Promise.resolve({ data: null });
-
-      const projectPromise = updatedTask.project_id
-        ? supabase.from('projects_project').select('id, name').eq('id', updatedTask.project_id).single()
-        : Promise.resolve({ data: null });
+      // Skip enrichment when caller does not need the return value (e.g. optimistic updates)
+      if (options.skipEnrich) {
+        return { data: updatedTask, error: null };
+      }
 
       const [assigneesResult, createdByResult, projectResult] = await Promise.all([
-        assigneesPromise, 
-        createdByPromise, 
-        projectPromise
+        updatedTask.assignee_ids?.length
+          ? supabase.from('auth_user').select('id, name, email, role, avatar_url').in('id', updatedTask.assignee_ids)
+          : Promise.resolve({ data: [] }),
+        updatedTask.created_by_id
+          ? supabase.from('auth_user').select('id, name, email').eq('id', updatedTask.created_by_id).single()
+          : Promise.resolve({ data: null }),
+        updatedTask.project_id
+          ? supabase.from('projects_project').select('id, name').eq('id', updatedTask.project_id).single()
+          : Promise.resolve({ data: null }),
       ]);
 
-      // Return enriched task data matching the format from getTasks/createTask
-      const enrichedTask = {
-        ...updatedTask,
-        assignees: assigneesResult.data || [],
-        assignee: (assigneesResult.data && assigneesResult.data.length > 0) ? assigneesResult.data[0] : null, // Backwards compatibility
-        created_by: createdByResult.data,
-        project: projectResult.data,
-        tags_list: updatedTask.tags ? updatedTask.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+      return {
+        data: {
+          ...updatedTask,
+          assignees: assigneesResult.data || [],
+          assignee: assigneesResult.data?.[0] || null,
+          created_by: createdByResult.data,
+          project: projectResult.data,
+          tags_list: updatedTask.tags ? updatedTask.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+        },
+        error: null
       };
-
-      return { data: enrichedTask, error: null };
     } catch (error) {
       console.error('Exception in updateTask:', error);
       return { data: null, error };

@@ -215,26 +215,29 @@ export default function ProjectDetailPage() {
         return;
       }
 
-      // Fetch current project and tasks (don't re-fetch all projects - sidebar has them)
-      const [projectData, tasksData] = await Promise.all([
-        projectService.getProject(Number(params?.id)),
-        taskService.getProjectTasks(Number(params?.id))
-      ]);
-      const allProjectsData = null; // Use sidebar context instead
-      
-      // Check if user has access by seeing if they're a member in the project data
-      if (projectData && projectData.members && Array.isArray(projectData.members)) {
+      // Single combined fetch: 2 round trips instead of 3
+      const { supabaseDb } = await import('@/lib/supabase');
+      const result = await supabaseDb.getProjectWithTasks(Number(params?.id));
+
+      if (result.error || !result.project) {
+        router.push('/dashboard');
+        return;
+      }
+
+      const { project: projectData, tasks: tasksData } = result;
+
+      // Check user membership
+      if (projectData.members && Array.isArray(projectData.members)) {
         const isMember = projectData.members.some((m: any) => m.id === user.id);
         if (!isMember) {
-          console.log('User not a member, redirecting to dashboard');
           router.push('/dashboard');
           return;
         }
       }
-      
+
       setProject(projectData);
       setTasks(tasksData);
-      setAllProjects(allProjectsData || []);
+      setAllProjects([]);
     } catch (err: any) {
       if (err.response?.status === 404) {
         router.push('/dashboard');
@@ -330,7 +333,7 @@ export default function ProjectDetailPage() {
     setDraggedTask(null);
 
     try {
-      await taskService.updateTask(taskSnapshot.id, { status: newStatus });
+      await taskService.updateTask(taskSnapshot.id, { status: newStatus }, { skipEnrich: true });
 
       // Use already-available taskSnapshot data — no extra fetch needed
       if (user?.id && taskSnapshot.report_to_ids?.length) {
@@ -722,7 +725,7 @@ export default function ProjectDetailPage() {
         status: updatedFields.status,
         due_date: updatedFields.due_date,
         assignee_ids: newAssigneeIds,
-      });
+      }, { skipEnrich: true });
 
       if (oldStatus !== newStatus) {
         const statusMessages: Record<string, string> = {
