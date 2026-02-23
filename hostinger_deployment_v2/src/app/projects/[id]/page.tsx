@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectService, taskService } from '@/lib/api-compatibility';
+import { appCache } from '@/lib/appCache';
 import { supabase } from '@/lib/supabase';
 import { 
   PlusIcon, 
@@ -216,25 +217,22 @@ export default function ProjectDetailPage() {
       }
 
       const projectId = Number(params?.id);
-      const cacheKey = `project_data_${projectId}`;
+      const cacheKey = `project_${projectId}`;
 
-      // Show cached data immediately (instant render, no spinner)
-      try {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          const { project: cachedProject, tasks: cachedTasks } = JSON.parse(cached);
-          setProject(cachedProject);
-          setTasks(cachedTasks);
-          setIsLoading(false);
-        }
-      } catch {}
+      // Show cached data immediately — instant render, no spinner
+      const cached = appCache.get<{ project: any; tasks: any[] }>(cacheKey);
+      if (cached) {
+        setProject(cached.project);
+        setTasks(cached.tasks);
+        setIsLoading(false);
+      }
 
-      // Fetch fresh data in background
+      // Fetch fresh data (background if cache hit, blocking if first load)
       const { supabaseDb } = await import('@/lib/supabase');
       const result = await supabaseDb.getProjectWithTasks(projectId);
 
       if (result.error || !result.project) {
-        if (!project) router.push('/dashboard');
+        if (!cached) router.push('/dashboard');
         return;
       }
 
@@ -249,10 +247,7 @@ export default function ProjectDetailPage() {
         }
       }
 
-      // Save to cache and update state
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify({ project: projectData, tasks: tasksData }));
-      } catch {}
+      appCache.set(cacheKey, { project: projectData, tasks: tasksData });
       setProject(projectData);
       setTasks(tasksData);
       setAllProjects([]);

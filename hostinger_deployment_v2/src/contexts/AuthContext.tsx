@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase, supabaseAuth } from '@/lib/supabase';
+import { appCache } from '@/lib/appCache';
 
 interface User {
   id: number;
@@ -69,13 +70,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (currentUser && !error) {
           const cacheKey = `user_profile_${currentUser.id}`;
-          const cached = localStorage.getItem(cacheKey);
 
           // Show cached profile immediately (instant render)
+          const cached = appCache.get<User>(cacheKey);
           if (cached) {
-            try {
-              setUser(JSON.parse(cached));
-            } catch {}
+            setUser(cached);
           }
 
           // Fetch fresh profile from DB in background
@@ -98,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               bio: profileData?.bio || '',
               date_joined: new Date().toISOString()
             };
-            localStorage.setItem(cacheKey, JSON.stringify(userData));
+            appCache.set(cacheKey, userData);
             setUser(userData);
           } catch (profileError) {
             if (!cached) {
@@ -206,8 +205,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Clear all caches
       if (user?.id) {
-        localStorage.removeItem(`user_profile_${user.id}`);
-        localStorage.removeItem(`sidebar_projects_${user.id}`);
+        appCache.delete(`user_profile_${user.id}`);
+        appCache.delete(`sidebar_projects_${user.id}`);
       }
       await supabaseAuth.signOut();
       setUser(null);

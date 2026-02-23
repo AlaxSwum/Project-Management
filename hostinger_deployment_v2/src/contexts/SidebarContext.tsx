@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, supabaseDb } from '@/lib/supabase';
+import { appCache } from '@/lib/appCache';
 
 interface Project {
   id: number;
@@ -94,22 +95,19 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
     const cacheKey = `sidebar_projects_${user.id}`;
 
-    // Load cache immediately (synchronous, instant render)
-    try {
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        const cachedProjects = JSON.parse(cached) as Project[];
-        applyProjects(cachedProjects, user.id);
-        setLoadingProjects(false);
-      }
-    } catch {}
+    // Load cache immediately (instant render)
+    const cached = appCache.get<Project[]>(cacheKey);
+    if (cached) {
+      applyProjects(cached, user.id);
+      setLoadingProjects(false);
+    }
 
     // Fetch fresh data in background
     try {
       const { data, error } = await supabaseDb.getProjectsLean(user.id);
       const fetchedProjects = (data || []) as unknown as Project[];
       if (error) console.error('Error fetching projects:', error);
-      localStorage.setItem(cacheKey, JSON.stringify(fetchedProjects));
+      appCache.set(cacheKey, fetchedProjects);
       applyProjects(fetchedProjects, user.id);
     } catch (error) {
       console.error('Error fetching projects:', error);
