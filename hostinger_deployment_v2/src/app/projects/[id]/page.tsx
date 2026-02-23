@@ -215,12 +215,26 @@ export default function ProjectDetailPage() {
         return;
       }
 
-      // Single combined fetch: 2 round trips instead of 3
+      const projectId = Number(params?.id);
+      const cacheKey = `project_data_${projectId}`;
+
+      // Show cached data immediately (instant render, no spinner)
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { project: cachedProject, tasks: cachedTasks } = JSON.parse(cached);
+          setProject(cachedProject);
+          setTasks(cachedTasks);
+          setIsLoading(false);
+        }
+      } catch {}
+
+      // Fetch fresh data in background
       const { supabaseDb } = await import('@/lib/supabase');
-      const result = await supabaseDb.getProjectWithTasks(Number(params?.id));
+      const result = await supabaseDb.getProjectWithTasks(projectId);
 
       if (result.error || !result.project) {
-        router.push('/dashboard');
+        if (!project) router.push('/dashboard');
         return;
       }
 
@@ -235,6 +249,10 @@ export default function ProjectDetailPage() {
         }
       }
 
+      // Save to cache and update state
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({ project: projectData, tasks: tasksData }));
+      } catch {}
       setProject(projectData);
       setTasks(tasksData);
       setAllProjects([]);
