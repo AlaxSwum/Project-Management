@@ -65,20 +65,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuth = async () => {
       try {
-        // Small delay to ensure localStorage is fully available
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
         const { user: currentUser, error } = await supabaseAuth.getUser();
         
         if (currentUser && !error) {
-          // Fetch full profile from database including avatar_url, location, bio
+          const cacheKey = `user_profile_${currentUser.id}`;
+          const cached = localStorage.getItem(cacheKey);
+
+          // Show cached profile immediately (instant render)
+          if (cached) {
+            try {
+              setUser(JSON.parse(cached));
+            } catch {}
+          }
+
+          // Fetch fresh profile from DB in background
           try {
             const { data: profileData } = await supabase
               .from('auth_user')
               .select('name, email, phone, role, position, avatar_url, location, bio')
               .eq('id', currentUser.id)
               .single();
-            
+
             const userData: User = {
               id: currentUser.id,
               email: profileData?.email || currentUser.email,
@@ -91,22 +98,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               bio: profileData?.bio || '',
               date_joined: new Date().toISOString()
             };
+            localStorage.setItem(cacheKey, JSON.stringify(userData));
             setUser(userData);
           } catch (profileError) {
-            // Fallback to basic user data if profile fetch fails
-            const userData: User = {
-              id: currentUser.id,
-              email: currentUser.email,
-              name: currentUser.user_metadata?.name || currentUser.email,
-              phone: currentUser.user_metadata?.phone || '',
-              role: currentUser.user_metadata?.role || 'member',
-              position: currentUser.user_metadata?.position || '',
-              avatar_url: '',
-              location: '',
-              bio: '',
-              date_joined: new Date().toISOString()
-            };
-            setUser(userData);
+            if (!cached) {
+              setUser({
+                id: currentUser.id,
+                email: currentUser.email,
+                name: currentUser.user_metadata?.name || currentUser.email,
+                phone: currentUser.user_metadata?.phone || '',
+                role: currentUser.user_metadata?.role || 'member',
+                position: currentUser.user_metadata?.position || '',
+                avatar_url: '',
+                location: '',
+                bio: '',
+                date_joined: new Date().toISOString()
+              });
+            }
           }
         }
       } catch (error) {
@@ -116,21 +124,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    // Set a maximum timeout for auth initialization
+    // Safety timeout for auth initialization
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
     }, 3000);
 
-    // Delay initialization slightly to avoid hydration mismatch
-    const delayedInit = setTimeout(() => {
-      initializeAuth().finally(() => {
-        clearTimeout(timeoutId);
-      });
-    }, 100);
+    initializeAuth().finally(() => {
+      clearTimeout(timeoutId);
+    });
 
     return () => {
       clearTimeout(timeoutId);
-      clearTimeout(delayedInit);
     };
   }, [isClient]);
 
@@ -200,6 +204,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
+      // Clear all caches
+      if (user?.id) {
+        localStorage.removeItem(`user_profile_${user.id}`);
+        localStorage.removeItem(`sidebar_projects_${user.id}`);
+      }
       await supabaseAuth.signOut();
       setUser(null);
     } catch (error) {

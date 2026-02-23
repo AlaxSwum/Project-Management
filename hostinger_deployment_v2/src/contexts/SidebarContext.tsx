@@ -73,36 +73,50 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  // Fetch projects ONCE when user logs in
+  const applyProjects = useCallback((fetchedProjects: Project[], currentUserId: number) => {
+    setProjects(fetchedProjects);
+    const allMembersMap = new Map<number, TeamMember>();
+    fetchedProjects.forEach((project: Project) => {
+      if (project.members && Array.isArray(project.members)) {
+        project.members.forEach((member) => {
+          if (member.id !== currentUserId && !allMembersMap.has(member.id)) {
+            allMembersMap.set(member.id, member);
+          }
+        });
+      }
+    });
+    setTeamMembers(Array.from(allMembersMap.values()).slice(0, 15));
+  }, []);
+
+  // Fetch projects — show cache instantly, then refresh in background
   const refreshProjects = useCallback(async () => {
     if (!user?.id) return;
-    
-    setLoadingProjects(true);
+
+    const cacheKey = `sidebar_projects_${user.id}`;
+
+    // Load cache immediately (synchronous, instant render)
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const cachedProjects = JSON.parse(cached) as Project[];
+        applyProjects(cachedProjects, user.id);
+        setLoadingProjects(false);
+      }
+    } catch {}
+
+    // Fetch fresh data in background
     try {
       const { data, error } = await supabaseDb.getProjectsLean(user.id);
       const fetchedProjects = (data || []) as unknown as Project[];
       if (error) console.error('Error fetching projects:', error);
-      setProjects(fetchedProjects);
-      
-      // Extract team members from projects
-      const allMembersMap = new Map<number, TeamMember>();
-      (fetchedProjects || []).forEach((project: Project) => {
-        if (project.members && Array.isArray(project.members)) {
-          project.members.forEach((member) => {
-            if (member.id !== user.id && !allMembersMap.has(member.id)) {
-              allMembersMap.set(member.id, member);
-            }
-          });
-        }
-      });
-      setTeamMembers(Array.from(allMembersMap.values()).slice(0, 15));
+      localStorage.setItem(cacheKey, JSON.stringify(fetchedProjects));
+      applyProjects(fetchedProjects, user.id);
     } catch (error) {
       console.error('Error fetching projects:', error);
-      setProjects([]);
     } finally {
       setLoadingProjects(false);
     }
-  }, [user?.id]);
+  }, [user?.id, applyProjects]);
 
   // Only fetch once on mount
   useEffect(() => {
