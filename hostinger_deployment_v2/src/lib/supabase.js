@@ -170,6 +170,46 @@ export const supabaseDb = {
     return { data, error }
   },
 
+  // Lean project list for sidebar: 2 RTTs instead of 3 using PostgREST FK joins
+  getProjectsLean: async (userId) => {
+    if (!userId) return { data: [], error: null };
+    try {
+      // RTT 1: get project IDs + project details in one joined query
+      const { data: memberships, error: membErr } = await supabase
+        .from('projects_project_members')
+        .select('project_id, projects_project(id, name, color, status, project_type, is_archived, due_date, start_date, created_by_id, created_at, updated_at)')
+        .eq('user_id', userId);
+
+      if (membErr) return { data: null, error: membErr };
+      if (!memberships?.length) return { data: [], error: null };
+
+      const projectIds = memberships.map(m => m.project_id);
+
+      // RTT 2: get all co-members + their user details in one joined query
+      const { data: memberRows } = await supabase
+        .from('projects_project_members')
+        .select('project_id, user_id, auth_user(id, name, email, role, avatar_url)')
+        .in('project_id', projectIds);
+
+      // Group members by project
+      const membersByProject = {};
+      (memberRows || []).forEach(m => {
+        if (!membersByProject[m.project_id]) membersByProject[m.project_id] = [];
+        const u = m.auth_user;
+        if (u) membersByProject[m.project_id].push({ id: u.id, name: u.name || 'Unknown', email: u.email || '', role: u.role || 'member', avatar_url: u.avatar_url });
+      });
+
+      const projects = memberships
+        .map(m => m.projects_project)
+        .filter(Boolean)
+        .map(p => ({ ...p, members: membersByProject[p.id] || [], project_members: membersByProject[p.id] || [] }));
+
+      return { data: projects, error: null };
+    } catch (error) {
+      return { data: null, error };
+    }
+  },
+
   // Projects - with user-based access control
   getProjects: async (userId) => {
     if (!userId) {

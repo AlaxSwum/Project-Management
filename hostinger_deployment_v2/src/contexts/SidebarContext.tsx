@@ -2,8 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { projectService } from '@/lib/api-compatibility';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseDb } from '@/lib/supabase';
 
 interface Project {
   id: number;
@@ -80,8 +79,10 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     
     setLoadingProjects(true);
     try {
-      const fetchedProjects = await projectService.getProjects();
-      setProjects(fetchedProjects || []);
+      const { data, error } = await supabaseDb.getProjectsLean(user.id);
+      const fetchedProjects = (data || []) as unknown as Project[];
+      if (error) console.error('Error fetching projects:', error);
+      setProjects(fetchedProjects);
       
       // Extract team members from projects
       const allMembersMap = new Map<number, TeamMember>();
