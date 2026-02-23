@@ -72,6 +72,7 @@ interface Task {
   subtasks?: Subtask[];
   activity?: ActivityLog[];
   report_to_ids?: number[];
+  assignee_ids?: number[];
 }
 
 interface Project {
