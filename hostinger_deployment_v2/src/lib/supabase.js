@@ -190,20 +190,19 @@ export const supabaseDb = {
 
       const accessibleProjectIds = membershipData.map(m => m.project_id)
 
-      // Step 2: Fetch projects (single query) - select only existing columns
-      const { data: projects, error } = await supabase
-        .from('projects_project')
-        .select('id, name, description, color, status, project_type, is_archived, due_date, start_date, created_by_id, created_at, updated_at')
-        .in('id', accessibleProjectIds)
-      
-      if (error) return { data: null, error }
-      
-      // Step 3: Fetch ALL members for ALL projects in ONE query (not per-project!)
-      const { data: allMembers, error: allMembersError } = await supabase
-        .from('projects_project_members')
-        .select('project_id, user_id')
-        .in('project_id', accessibleProjectIds)
+      // Steps 2+3 in parallel: fetch projects and members at the same time
+      const [{ data: projects, error }, { data: allMembers, error: allMembersError }] = await Promise.all([
+        supabase
+          .from('projects_project')
+          .select('id, name, description, color, status, project_type, is_archived, due_date, start_date, created_by_id, created_at, updated_at')
+          .in('id', accessibleProjectIds),
+        supabase
+          .from('projects_project_members')
+          .select('project_id, user_id')
+          .in('project_id', accessibleProjectIds)
+      ])
 
+      if (error) return { data: null, error }
       if (allMembersError) {
         console.error('Error fetching all members:', allMembersError);
       }

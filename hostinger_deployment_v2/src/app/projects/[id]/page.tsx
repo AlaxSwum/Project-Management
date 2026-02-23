@@ -158,7 +158,7 @@ export default function ProjectDetailPage() {
   const [newSubtask, setNewSubtask] = useState('');
   const [newComment, setNewComment] = useState('');
   const [isEditingTask, setIsEditingTask] = useState(false);
-  const [editTaskForm, setEditTaskForm] = useState({ name: '', description: '', priority: '', status: '', due_date: '' });
+  const [editTaskForm, setEditTaskForm] = useState({ name: '', description: '', priority: '', status: '', due_date: '', assignee_ids: [] as number[] });
   const [newAttachmentUrl, setNewAttachmentUrl] = useState('');
   const [newAttachmentName, setNewAttachmentName] = useState('');
   const [activeTab, setActiveTab] = useState<'subtask' | 'attachment' | 'comments'>('subtask');
@@ -318,37 +318,24 @@ export default function ProjectDetailPage() {
   const handleDrop = async (e: React.DragEvent, newStatus: string) => {
     e.preventDefault();
     setDragOverColumn(null);
-    
+
     if (!draggedTask || draggedTask.status === newStatus) return;
-    
+
     const oldStatus = draggedTask.status;
-    
+    const taskSnapshot = { ...draggedTask };
+
+    // Optimistic update — instant UI response before any await
+    setTasks(prev => prev.map(t => t.id === taskSnapshot.id ? { ...t, status: newStatus } : t));
+    setDraggedTask(null);
+
     try {
-      await taskService.updateTask(draggedTask.id, { status: newStatus });
-      setTasks(tasks.map(t => t.id === draggedTask.id ? { ...t, status: newStatus } : t));
-      
-      // Send notification for status change
-      if (user?.id && draggedTask) {
-        const { supabase } = await import('@/lib/supabase');
-        
-        // Get task details to find who to notify
-        const { data: taskData } = await supabase
-          .from('projects_task')
-          .select('assignee_ids, report_to_ids, name, project_id')
-          .eq('id', draggedTask.id)
-          .single();
-        
-        if (taskData) {
-          const notifyUserIds = new Set<number>();
-          
-          // Only notify report_to users when task is moved (not assignees)
-          if (taskData.report_to_ids && Array.isArray(taskData.report_to_ids)) {
-            taskData.report_to_ids.forEach((id: number) => {
-              if (id !== user.id) notifyUserIds.add(id);
-            });
-          }
-          
-          // Create notifications
+      await taskService.updateTask(taskSnapshot.id, { status: newStatus });
+
+      // Use already-available taskSnapshot data — no extra fetch needed
+      if (user?.id && taskSnapshot.report_to_ids?.length) {
+        const notifyUserIds = (taskSnapshot.report_to_ids as number[]).filter((id: number) => id !== user.id);
+        if (notifyUserIds.length > 0) {
+          const { supabase } = await import('@/lib/supabase');
           const statusMessages: Record<string, string> = {
             'backlog': 'moved to backlog',
             'in_progress': 'started working on',
@@ -356,29 +343,26 @@ export default function ProjectDetailPage() {
             'archived': 'archived'
           };
           const action = statusMessages[newStatus] || `changed status to ${newStatus}`;
-          
-          const notifications = Array.from(notifyUserIds).map(recipientId => ({
-            task_id: draggedTask.id,
-            project_id: taskData.project_id,
+          const notifications = notifyUserIds.map((recipientId: number) => ({
+            task_id: taskSnapshot.id,
+            project_id: taskSnapshot.project_id,
             recipient_id: recipientId,
             sender_id: user.id,
             notification_type: 'status_changed',
-            message: `${user?.name || 'Someone'} ${action} task: ${taskData.name}`,
-            task_name: taskData.name,
+            message: `${user?.name || 'Someone'} ${action} task: ${taskSnapshot.name}`,
+            task_name: taskSnapshot.name,
             task_status: newStatus,
             old_status: oldStatus,
             new_status: newStatus,
           }));
-          
-          if (notifications.length > 0) {
-            await supabase.from('task_notifications').insert(notifications);
-          }
+          supabase.from('task_notifications').insert(notifications); // fire-and-forget
         }
       }
     } catch (err) {
+      // Rollback on failure
+      setTasks(prev => prev.map(t => t.id === taskSnapshot.id ? { ...t, status: oldStatus } : t));
       console.error('Error updating task:', err);
     }
-    setDraggedTask(null);
   };
 
   // Filter for Kanban: only show tasks within 1 month
@@ -705,39 +689,40 @@ export default function ProjectDetailPage() {
 
   const saveTaskEdit = async () => {
     if (!selectedTask || !editTaskForm.name.trim()) return;
-    
+
     const oldStatus = selectedTask.status;
     const newStatus = editTaskForm.status;
-    
+    const newAssigneeIds = editTaskForm.assignee_ids;
+
+    // Resolve assignee objects from project members for optimistic update
+    const newAssignees = (project?.members || []).filter((m: any) => newAssigneeIds.includes(m.id));
+
+    const updatedFields = {
+      name: editTaskForm.name.trim(),
+      description: editTaskForm.description.trim(),
+      priority: editTaskForm.priority,
+      status: editTaskForm.status,
+      due_date: editTaskForm.due_date || null,
+      assignee_ids: newAssigneeIds,
+      assignees: newAssignees,
+      assignee: newAssignees[0] || null,
+    };
+
+    // Optimistic update — instant UI response
+    setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, ...updatedFields } : t));
+    setSelectedTask({ ...selectedTask, ...updatedFields });
+    setIsEditingTask(false);
+
     try {
       await taskService.updateTask(selectedTask.id, {
-        name: editTaskForm.name.trim(),
-        description: editTaskForm.description.trim(),
-        priority: editTaskForm.priority,
-        status: editTaskForm.status,
-        due_date: editTaskForm.due_date || null
+        name: updatedFields.name,
+        description: updatedFields.description,
+        priority: updatedFields.priority,
+        status: updatedFields.status,
+        due_date: updatedFields.due_date,
+        assignee_ids: newAssigneeIds,
       });
-      
-      // Update local state
-      setTasks(tasks.map(t => t.id === selectedTask.id ? {
-        ...t,
-        name: editTaskForm.name.trim(),
-        description: editTaskForm.description.trim(),
-        priority: editTaskForm.priority,
-        status: editTaskForm.status,
-        due_date: editTaskForm.due_date || null
-      } : t));
-      
-      setSelectedTask({
-        ...selectedTask,
-        name: editTaskForm.name.trim(),
-        description: editTaskForm.description.trim(),
-        priority: editTaskForm.priority,
-        status: editTaskForm.status,
-        due_date: editTaskForm.due_date || null
-      });
-      
-      // Send notification if status changed
+
       if (oldStatus !== newStatus) {
         const statusMessages: Record<string, string> = {
           'backlog': 'moved to backlog',
@@ -746,17 +731,19 @@ export default function ProjectDetailPage() {
           'archived': 'archived'
         };
         const action = statusMessages[newStatus] || `changed status to ${newStatus}`;
-        await createNotification(
+        createNotification(
           selectedTask.id,
           'status_changed',
           `${user?.name || 'Someone'} ${action} task: ${selectedTask.name}`,
           oldStatus,
           newStatus
-        );
+        ); // fire-and-forget
       }
-      
-      setIsEditingTask(false);
     } catch (error) {
+      // Rollback on failure
+      setTasks(prev => prev.map(t => t.id === selectedTask.id ? { ...t, ...selectedTask } : t));
+      setSelectedTask(selectedTask);
+      setIsEditingTask(true);
       alert('Error updating task');
     }
   };
@@ -768,7 +755,8 @@ export default function ProjectDetailPage() {
       description: selectedTask.description || '',
       priority: selectedTask.priority || 'low',
       status: selectedTask.status || 'todo',
-      due_date: selectedTask.due_date ? selectedTask.due_date.split('T')[0] : ''
+      due_date: selectedTask.due_date ? selectedTask.due_date.split('T')[0] : '',
+      assignee_ids: (selectedTask.assignee_ids as number[]) || [],
     });
     setIsEditingTask(true);
   };
@@ -3569,18 +3557,42 @@ n              {/* Team Members Button - Avatar Style */}
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#71717A', marginBottom: '0.5rem' }}>Assigned to</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {(selectedTask.assignees || []).map((assignee) => (
-                        <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
-                          <UserAvatar user={assignee} size="xs" />
-                          <span style={{ fontSize: '0.8125rem', color: '#FFFFFF', fontWeight: 500 }}>{assignee.name}</span>
-                </div>
-                      ))}
-                      {(!selectedTask.assignees || selectedTask.assignees.length === 0) && (
-                        <span style={{ fontSize: '0.875rem', color: '#52525B' }}>No assignees</span>
-                              )}
+                    {isEditingTask ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        {(project?.members || []).map((member: any) => {
+                          const isSelected = editTaskForm.assignee_ids.includes(member.id);
+                          return (
+                            <div
+                              key={member.id}
+                              onClick={() => setEditTaskForm({
+                                ...editTaskForm,
+                                assignee_ids: isSelected
+                                  ? editTaskForm.assignee_ids.filter(id => id !== member.id)
+                                  : [...editTaskForm.assignee_ids, member.id]
+                              })}
+                              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem 0.625rem', background: isSelected ? '#1A2E22' : '#0D0D0D', border: `1px solid ${isSelected ? '#10B981' : '#2D2D2D'}`, borderRadius: '0.375rem', cursor: 'pointer' }}
+                            >
+                              <UserAvatar user={member} size="xs" />
+                              <span style={{ fontSize: '0.8125rem', color: '#FFFFFF', fontWeight: 500, flex: 1 }}>{member.name}</span>
+                              {isSelected && <span style={{ fontSize: '0.75rem', color: '#10B981' }}>✓</span>}
                             </div>
-                               </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {(selectedTask.assignees || []).map((assignee) => (
+                          <div key={assignee.id} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', background: '#0D0D0D', border: '1px solid #2D2D2D', borderRadius: '0.375rem' }}>
+                            <UserAvatar user={assignee} size="xs" />
+                            <span style={{ fontSize: '0.8125rem', color: '#FFFFFF', fontWeight: 500 }}>{assignee.name}</span>
+                          </div>
+                        ))}
+                        {(!selectedTask.assignees || selectedTask.assignees.length === 0) && (
+                          <span style={{ fontSize: '0.875rem', color: '#52525B' }}>No assignees</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   {selectedTask.start_date && (
                     <div>
