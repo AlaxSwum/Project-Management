@@ -13,6 +13,8 @@ import {
   XMarkIcon,
   ShieldExclamationIcon,
   DocumentTextIcon,
+  CheckCircleIcon,
+  CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 
 interface DeptMember {
@@ -66,13 +68,12 @@ export default function ReportsCalendarPage() {
   // All reports for the month (for member list counts)
   const [allMonthReports, setAllMonthReports] = useState<Report[]>([]);
 
-  // Modal
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [modalReports, setModalReports] = useState<Report[]>([]);
+  // Selected day on calendar (drives the sidebar)
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<string | null>(null);
 
-  // Member report detail modal
-  const [selectedMemberDetail, setSelectedMemberDetail] = useState<DeptMember | null>(null);
-  const [memberDetailReports, setMemberDetailReports] = useState<Report[]>([]);
+  // Modal: clicked member report popup
+  const [modalMember, setModalMember] = useState<DeptMember | null>(null);
+  const [modalReport, setModalReport] = useState<Report | null>(null);
 
   const isAdmin = user?.role === 'admin';
 
@@ -81,7 +82,6 @@ export default function ReportsCalendarPage() {
     setLoading(true);
     setAccessDenied(false);
     try {
-      // Fetch company and department names
       const [companyRes, deptRes] = await Promise.all([
         supabase.from('org_companies').select('name').eq('id', companyId).single(),
         supabase.from('org_departments').select('name, created_by').eq('id', deptId).single(),
@@ -90,7 +90,6 @@ export default function ReportsCalendarPage() {
       setDeptName(deptRes.data?.name || '');
       const deptCreatedBy = deptRes.data?.created_by || null;
 
-      // Fetch user's company role
       const { data: membershipData } = await supabase
         .from('org_company_members')
         .select('role')
@@ -99,14 +98,12 @@ export default function ReportsCalendarPage() {
         .single();
       const companyRole = membershipData?.role || null;
 
-      // Fetch all department members
       const { data: allMembers } = await supabase
         .from('org_department_members')
         .select('*')
         .eq('department_id', deptId);
       const memberList = allMembers || [];
 
-      // Check if current user is a member of this department
       const currentUserMember = memberList.find((m: any) => m.user_id === user.id);
       if (!currentUserMember && !isAdmin) {
         setAccessDenied(true);
@@ -114,7 +111,6 @@ export default function ReportsCalendarPage() {
         return;
       }
 
-      // Get user names
       const userIds = memberList.map((m: any) => m.user_id);
       let usersMap: Record<number, any> = {};
       if (userIds.length > 0) {
@@ -130,7 +126,6 @@ export default function ReportsCalendarPage() {
       }));
       setMembers(enrichedMembers);
 
-      // Determine access level
       const isDeptCreator = deptCreatedBy === user.id;
       const isCompanyAdmin = companyRole === 'admin';
       const isCompanyManager = companyRole === 'manager';
@@ -141,7 +136,6 @@ export default function ReportsCalendarPage() {
         setViewableUserIds(enrichedMembers.map((m) => m.user_id));
         setSelectedMemberId(null);
       } else {
-        // Check hierarchy - can see self + subordinates
         const hierarchyMembers: HierarchyMember[] = enrichedMembers.map((m) => ({
           id: m.id,
           department_id: deptId,
@@ -169,7 +163,6 @@ export default function ReportsCalendarPage() {
     setLoading(false);
   }, [user, companyId, deptId, isAdmin]);
 
-  // Fetch reports for current month
   const fetchReports = useCallback(async () => {
     if (!user || viewableUserIds.length === 0) return;
     try {
@@ -178,7 +171,6 @@ export default function ReportsCalendarPage() {
       const startDate = new Date(year, month, 1).toISOString().split('T')[0];
       const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
 
-      // Fetch all viewable reports for the month (for member list counts)
       const { data: allData } = await supabase
         .from('org_employee_reports')
         .select('*')
@@ -194,7 +186,6 @@ export default function ReportsCalendarPage() {
       });
       setAllMonthReports(allEnriched);
 
-      // Filter for the active tab and selected member
       const targetUserIds = selectedMemberId ? [selectedMemberId] : viewableUserIds;
       const filtered = allEnriched.filter((r: Report) =>
         r.report_type === reportTab && targetUserIds.includes(r.user_id)
@@ -216,6 +207,13 @@ export default function ReportsCalendarPage() {
   useEffect(() => {
     if (!authLoading && !user) router.push('/login');
   }, [authLoading, user, router]);
+
+  // Reset selected day when month changes
+  useEffect(() => {
+    setSelectedCalendarDay(null);
+    setModalMember(null);
+    setModalReport(null);
+  }, [currentDate, reportTab]);
 
   // Calendar helpers
   const year = currentDate.getFullYear();
@@ -241,29 +239,13 @@ export default function ReportsCalendarPage() {
 
   const handleDayClick = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    if (reportTab === 'daily') {
-      const dayReports = getReportsForDate(dateStr);
-      if (dayReports.length > 0) {
-        setSelectedDate(dateStr);
-        setModalReports(dayReports);
-      }
-    } else if (reportTab === 'weekly') {
-      const date = new Date(year, month, day);
-      const monday = getMonday(date);
-      const mondayStr = monday.toISOString().split('T')[0];
-      const weekReports = getReportsForWeek(mondayStr);
-      if (weekReports.length > 0) {
-        setSelectedDate(mondayStr);
-        setModalReports(weekReports);
-      }
+    if (selectedCalendarDay === dateStr) {
+      setSelectedCalendarDay(null);
     } else {
-      const monthStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
-      const monthReports = reports.filter((r) => r.report_date === monthStr);
-      if (monthReports.length > 0) {
-        setSelectedDate(monthStr);
-        setModalReports(monthReports);
-      }
+      setSelectedCalendarDay(dateStr);
     }
+    setModalMember(null);
+    setModalReport(null);
   };
 
   const dayHasReports = (day: number): boolean => {
@@ -281,27 +263,37 @@ export default function ReportsCalendarPage() {
     }
   };
 
-  // Get report count per member for current month (daily reports)
   const getMemberReportCount = (userId: number): number => {
     return allMonthReports.filter((r) => r.user_id === userId && r.report_type === 'daily' && r.status === 'submitted').length;
   };
 
-  // Handle clicking a member in the member list
-  const handleMemberClick = (member: DeptMember) => {
-    const memberReports = allMonthReports.filter((r) => r.user_id === member.user_id && r.report_type === 'daily');
-    memberReports.sort((a, b) => b.report_date.localeCompare(a.report_date));
-    setSelectedMemberDetail(member);
-    setMemberDetailReports(memberReports);
+  const getMemberReportForDay = (userId: number): Report | null => {
+    if (!selectedCalendarDay) return null;
+    return allMonthReports.find(
+      (r) => r.user_id === userId && r.report_date === selectedCalendarDay && r.report_type === reportTab
+    ) || null;
   };
 
-  // Filter viewable members for the member list
+  // Click member in sidebar -> open popup modal
+  const handleSidebarMemberClick = (member: DeptMember) => {
+    const report = getMemberReportForDay(member.user_id);
+    setModalMember(member);
+    setModalReport(report);
+  };
+
   const viewableMembers = members.filter((m) => viewableUserIds.includes(m.user_id));
+
+  const formatSelectedDate = (dateStr: string) => {
+    const d = new Date(dateStr + 'T00:00:00');
+    const dayNum = d.getDate();
+    const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
+    return `${dayOfWeek}, ${monthNames[d.getMonth()]} ${dayNum}`;
+  };
 
   if (authLoading || !user) {
     return <div style={{ background: '#0D0D0D', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A1A1AA', fontFamily: 'Mabry Pro, sans-serif' }}>Loading...</div>;
   }
 
-  // Access Denied
   if (accessDenied) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: '#0D0D0D', fontFamily: 'Mabry Pro, sans-serif' }}>
@@ -341,7 +333,7 @@ export default function ReportsCalendarPage() {
         {/* Header */}
         <div style={{ marginBottom: '1.5rem' }}>
           <h1 style={{ color: '#FFFFFF', fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>{deptName} Reports</h1>
-          <p style={{ color: '#71717A', fontSize: '0.875rem', marginTop: '0.25rem' }}>View employee reports on the calendar</p>
+          <p style={{ color: '#71717A', fontSize: '0.875rem', marginTop: '0.25rem' }}>Click a day to view team member reports</p>
         </div>
 
         {loading ? (
@@ -350,7 +342,6 @@ export default function ReportsCalendarPage() {
           <>
             {/* Controls Row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-              {/* Member Filter */}
               {canViewAll && viewableMembers.length > 1 && (
                 <select
                   value={selectedMemberId ?? 'all'}
@@ -374,7 +365,6 @@ export default function ReportsCalendarPage() {
                 </select>
               )}
 
-              {/* Report Type Tabs */}
               <div style={{ display: 'flex', gap: '0.25rem', background: '#1A1A1A', borderRadius: '0.5rem', padding: '0.25rem', border: '1px solid #2D2D2D' }}>
                 {(['daily', 'weekly', 'monthly'] as const).map((tab) => (
                   <button
@@ -399,8 +389,8 @@ export default function ReportsCalendarPage() {
               </div>
             </div>
 
-            {/* Two-column layout: Calendar + Member List */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1.5rem', alignItems: 'start' }}>
+            {/* Two-column layout: Calendar + Sidebar */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '1.5rem', alignItems: 'start' }}>
               {/* Calendar */}
               <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', padding: '1.5rem' }}>
                 {/* Month Navigation */}
@@ -446,6 +436,8 @@ export default function ReportsCalendarPage() {
                     const hasReports = dayHasReports(day);
                     const today = new Date();
                     const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const isSelected = selectedCalendarDay === dateStr;
 
                     return (
                       <div
@@ -454,30 +446,32 @@ export default function ReportsCalendarPage() {
                         style={{
                           padding: '0.5rem',
                           minHeight: '60px',
-                          background: isToday ? '#141414' : 'transparent',
-                          border: isToday ? '1px solid #3D3D3D' : '1px solid transparent',
+                          background: isSelected ? '#10B981' : isToday ? '#141414' : 'transparent',
+                          border: isSelected ? '1px solid #10B981' : isToday ? '1px solid #3D3D3D' : '1px solid transparent',
                           borderRadius: '0.5rem',
-                          cursor: hasReports ? 'pointer' : 'default',
+                          cursor: 'pointer',
                           transition: 'all 0.2s',
                           position: 'relative',
                         }}
                         onMouseEnter={(e) => {
-                          if (hasReports) {
+                          if (!isSelected) {
                             e.currentTarget.style.background = '#141414';
-                            e.currentTarget.style.borderColor = '#10B981';
+                            e.currentTarget.style.borderColor = hasReports ? '#10B981' : '#3D3D3D';
                           }
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.background = isToday ? '#141414' : 'transparent';
-                          e.currentTarget.style.borderColor = isToday ? '#3D3D3D' : 'transparent';
+                          if (!isSelected) {
+                            e.currentTarget.style.background = isToday ? '#141414' : 'transparent';
+                            e.currentTarget.style.borderColor = isToday ? '#3D3D3D' : 'transparent';
+                          }
                         }}
                       >
-                        <span style={{ color: isToday ? '#10B981' : '#FFFFFF', fontSize: '0.875rem', fontWeight: isToday ? 700 : 400 }}>
+                        <span style={{ color: isSelected ? '#FFFFFF' : isToday ? '#10B981' : '#FFFFFF', fontSize: '0.875rem', fontWeight: isSelected || isToday ? 700 : 400 }}>
                           {day}
                         </span>
                         {hasReports && (
                           <div style={{ position: 'absolute', bottom: '6px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '3px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} />
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isSelected ? '#FFFFFF' : '#10B981' }} />
                           </div>
                         )}
                       </div>
@@ -490,243 +484,280 @@ export default function ReportsCalendarPage() {
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
                   <span style={{ color: '#71717A', fontSize: '0.75rem' }}>Has submitted reports</span>
                   <span style={{ color: '#52525B', fontSize: '0.75rem', marginLeft: 'auto' }}>
-                    {reports.length} report{reports.length !== 1 ? 's' : ''}
+                    {reports.length} report{reports.length !== 1 ? 's' : ''} this month
                   </span>
                 </div>
               </div>
 
-              {/* Members Panel */}
-              <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', padding: '1.25rem' }}>
-                <h3 style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 600, margin: '0 0 1rem' }}>
-                  Members ({viewableMembers.length})
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '500px', overflowY: 'auto' }}>
-                  {viewableMembers.map((member) => {
-                    const reportCount = getMemberReportCount(member.user_id);
-                    const isSelected = selectedMemberId === member.user_id;
-                    return (
-                      <div
-                        key={member.id}
-                        onClick={() => handleMemberClick(member)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.75rem',
-                          padding: '0.75rem',
-                          background: isSelected ? '#141414' : 'transparent',
-                          border: isSelected ? '1px solid #10B981' : '1px solid #2D2D2D',
-                          borderRadius: '0.75rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isSelected) {
-                            e.currentTarget.style.background = '#141414';
-                            e.currentTarget.style.borderColor = '#3D3D3D';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isSelected) {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.borderColor = '#2D2D2D';
-                          }
-                        }}
-                      >
-                        {/* Avatar */}
-                        <div style={{
-                          width: '36px', height: '36px', borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color: '#FFF', fontSize: '0.875rem', fontWeight: 600, flexShrink: 0,
-                        }}>
-                          {member.user_name.charAt(0).toUpperCase()}
-                        </div>
-                        {/* Info */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {member.user_name}
+              {/* Right Sidebar Panel */}
+              <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', padding: '1.25rem', position: 'sticky', top: '2rem' }}>
+                {!selectedCalendarDay ? (
+                  /* DEFAULT: Show members with monthly report count */
+                  <>
+                    <h3 style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 600, margin: '0 0 0.5rem' }}>
+                      Members ({viewableMembers.length})
+                    </h3>
+                    <p style={{ color: '#52525B', fontSize: '0.75rem', marginBottom: '1rem' }}>
+                      Select a day to view reports
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '600px', overflowY: 'auto' }}>
+                      {viewableMembers.map((member) => {
+                        const reportCount = getMemberReportCount(member.user_id);
+                        return (
+                          <div
+                            key={member.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.75rem',
+                              padding: '0.75rem',
+                              background: 'transparent',
+                              border: '1px solid #2D2D2D',
+                              borderRadius: '0.75rem',
+                            }}
+                          >
+                            <div style={{
+                              width: '36px', height: '36px', borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color: '#FFF', fontSize: '0.875rem', fontWeight: 600, flexShrink: 0,
+                            }}>
+                              {member.user_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {member.user_name}
+                              </div>
+                              <div style={{ color: '#71717A', fontSize: '0.75rem' }}>
+                                {member.role}
+                              </div>
+                            </div>
+                            <div style={{
+                              display: 'flex', alignItems: 'center', gap: '0.25rem',
+                              padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
+                              background: reportCount > 0 ? 'rgba(16,185,129,0.15)' : '#141414',
+                              color: reportCount > 0 ? '#10B981' : '#52525B',
+                              fontSize: '0.75rem', fontWeight: 600, flexShrink: 0,
+                            }}>
+                              <DocumentTextIcon style={{ width: '12px', height: '12px' }} />
+                              {reportCount}
+                            </div>
                           </div>
-                          <div style={{ color: '#71717A', fontSize: '0.75rem' }}>
-                            {member.role}
-                          </div>
-                        </div>
-                        {/* Report Count Badge */}
-                        <div style={{
-                          display: 'flex', alignItems: 'center', gap: '0.25rem',
-                          padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
-                          background: reportCount > 0 ? 'rgba(16,185,129,0.15)' : '#141414',
-                          color: reportCount > 0 ? '#10B981' : '#52525B',
-                          fontSize: '0.75rem', fontWeight: 600, flexShrink: 0,
-                        }}>
-                          <DocumentTextIcon style={{ width: '12px', height: '12px' }} />
-                          {reportCount}
-                        </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  /* DAY SELECTED: Show members with report status for that day */
+                  <>
+                    {/* Date header */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <CalendarDaysIcon style={{ width: '18px', height: '18px', color: '#10B981' }} />
+                        <h3 style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 600, margin: 0 }}>
+                          {formatSelectedDate(selectedCalendarDay)}
+                        </h3>
                       </div>
-                    );
-                  })}
-                </div>
+                      <button
+                        onClick={() => { setSelectedCalendarDay(null); setModalMember(null); setModalReport(null); }}
+                        style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: '0.25rem' }}
+                      >
+                        <XMarkIcon style={{ width: '18px', height: '18px' }} />
+                      </button>
+                    </div>
+
+                    {/* Summary bar */}
+                    {(() => {
+                      const submittedCount = viewableMembers.filter((m) => getMemberReportForDay(m.user_id) !== null).length;
+                      return (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: '0.75rem',
+                          padding: '0.625rem 0.75rem', background: '#141414', borderRadius: '0.5rem',
+                          marginBottom: '1rem', border: '1px solid #2D2D2D',
+                        }}>
+                          <span style={{ color: '#10B981', fontSize: '0.8125rem', fontWeight: 600 }}>
+                            {submittedCount}/{viewableMembers.length}
+                          </span>
+                          <span style={{ color: '#71717A', fontSize: '0.8125rem' }}>submitted</span>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Members list for this day */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '550px', overflowY: 'auto' }}>
+                      {viewableMembers.map((member) => {
+                        const dayReport = getMemberReportForDay(member.user_id);
+                        const hasReport = dayReport !== null;
+
+                        return (
+                          <div
+                            key={member.id}
+                            onClick={() => handleSidebarMemberClick(member)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.75rem',
+                              padding: '0.75rem',
+                              background: 'transparent',
+                              border: '1px solid #2D2D2D',
+                              borderRadius: '0.75rem',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#141414';
+                              e.currentTarget.style.borderColor = '#3D3D3D';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'transparent';
+                              e.currentTarget.style.borderColor = '#2D2D2D';
+                            }}
+                          >
+                            <div style={{
+                              width: '36px', height: '36px', borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color: '#FFF', fontSize: '0.875rem', fontWeight: 600, flexShrink: 0,
+                            }}>
+                              {member.user_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {member.user_name}
+                              </div>
+                              <div style={{
+                                fontSize: '0.75rem',
+                                color: hasReport ? '#10B981' : '#71717A',
+                                fontWeight: hasReport ? 500 : 400,
+                              }}>
+                                {hasReport ? 'Submitted' : 'No report yet'}
+                              </div>
+                            </div>
+                            {hasReport ? (
+                              <CheckCircleIcon style={{ width: '18px', height: '18px', color: '#10B981', flexShrink: 0 }} />
+                            ) : (
+                              <DocumentTextIcon style={{ width: '18px', height: '18px', color: '#52525B', flexShrink: 0 }} />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </>
         )}
 
-        {/* Calendar Day Report Detail Modal */}
-        {selectedDate && (
+        {/* Member Report Popup Modal */}
+        {modalMember && (
           <div
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}
-            onClick={() => setSelectedDate(null)}
+            onClick={() => { setModalMember(null); setModalReport(null); }}
           >
             <div
-              style={{ background: '#1A1A1A', borderRadius: '1rem', padding: '1.5rem', width: '600px', maxWidth: '90vw', maxHeight: '80vh', overflowY: 'auto', border: '1px solid #2D2D2D' }}
+              style={{ background: '#1A1A1A', borderRadius: '1rem', padding: '1.5rem', width: '560px', maxWidth: '90vw', maxHeight: '80vh', overflowY: 'auto', border: '1px solid #2D2D2D' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                <h3 style={{ color: '#FFFFFF', fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>
-                  {reportTab === 'daily' ? 'Daily' : reportTab === 'weekly' ? 'Weekly' : 'Monthly'} Report{modalReports.length > 1 ? 's' : ''} — {selectedDate}
-                </h3>
-                <button onClick={() => setSelectedDate(null)} style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: '0.25rem' }}>
-                  <XMarkIcon style={{ width: '20px', height: '20px' }} />
-                </button>
-              </div>
-
-              {modalReports.length === 0 ? (
-                <p style={{ color: '#71717A', fontSize: '0.875rem' }}>No reports for this date.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {modalReports.map((report) => (
-                    <ReportCard key={report.id} report={report} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Member Detail Modal - shows all reports for a member in this month */}
-        {selectedMemberDetail && (
-          <div
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}
-            onClick={() => setSelectedMemberDetail(null)}
-          >
-            <div
-              style={{ background: '#1A1A1A', borderRadius: '1rem', padding: '1.5rem', width: '600px', maxWidth: '90vw', maxHeight: '80vh', overflowY: 'auto', border: '1px solid #2D2D2D' }}
-              onClick={(e) => e.stopPropagation()}
-            >
+              {/* Modal Header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div style={{
-                    width: '40px', height: '40px', borderRadius: '50%',
+                    width: '44px', height: '44px', borderRadius: '50%',
                     background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#FFF', fontSize: '1rem', fontWeight: 600,
+                    color: '#FFF', fontSize: '1.125rem', fontWeight: 600,
                   }}>
-                    {selectedMemberDetail.user_name.charAt(0).toUpperCase()}
+                    {modalMember.user_name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 style={{ color: '#FFFFFF', fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>{selectedMemberDetail.user_name}</h3>
+                    <h3 style={{ color: '#FFFFFF', fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>
+                      {modalMember.user_name}
+                    </h3>
                     <p style={{ color: '#71717A', fontSize: '0.8125rem', margin: '0.125rem 0 0' }}>
-                      Daily reports for {monthNames[month]} {year}
+                      {selectedCalendarDay && formatSelectedDate(selectedCalendarDay)}
                     </p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedMemberDetail(null)} style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: '0.25rem' }}>
-                  <XMarkIcon style={{ width: '20px', height: '20px' }} />
+                <button
+                  onClick={() => { setModalMember(null); setModalReport(null); }}
+                  style={{ background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', padding: '0.25rem' }}
+                >
+                  <XMarkIcon style={{ width: '22px', height: '22px' }} />
                 </button>
               </div>
 
-              {memberDetailReports.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#71717A' }}>
-                  <DocumentTextIcon style={{ width: '40px', height: '40px', margin: '0 auto 0.75rem', opacity: 0.5 }} />
-                  <p style={{ fontSize: '0.9375rem' }}>No reports submitted this month</p>
+              {/* Modal Body */}
+              {!modalReport ? (
+                /* No report */
+                <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                  <DocumentTextIcon style={{ width: '48px', height: '48px', color: '#52525B', margin: '0 auto 1rem', opacity: 0.5 }} />
+                  <p style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 500, margin: '0 0 0.375rem' }}>No report yet</p>
+                  <p style={{ color: '#71717A', fontSize: '0.875rem', margin: 0 }}>
+                    {modalMember.user_name} has not submitted a report for this day.
+                  </p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {memberDetailReports.map((report) => (
-                    <ReportCard key={report.id} report={report} />
-                  ))}
+                /* Has report */
+                <div>
+                  {/* Status + time */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                    <span style={{
+                      padding: '0.25rem 0.625rem', borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: 600,
+                      background: modalReport.status === 'submitted' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                      color: modalReport.status === 'submitted' ? '#10B981' : '#F59E0B',
+                      textTransform: 'capitalize',
+                    }}>
+                      {modalReport.status}
+                    </span>
+                    {modalReport.submitted_at && (
+                      <span style={{ color: '#52525B', fontSize: '0.75rem' }}>
+                        Submitted at {new Date(modalReport.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+
+                  {modalReport.content && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.375rem', textTransform: 'uppercase' }}>What I did</div>
+                      <div style={{ color: '#FFFFFF', fontSize: '0.875rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', background: '#141414', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
+                        {modalReport.content}
+                      </div>
+                    </div>
+                  )}
+
+                  {modalReport.tasks_completed && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.375rem', textTransform: 'uppercase' }}>Tasks Completed</div>
+                      <div style={{ color: '#FFFFFF', fontSize: '0.875rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', background: '#141414', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
+                        {modalReport.tasks_completed}
+                      </div>
+                    </div>
+                  )}
+
+                  {modalReport.challenges && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.375rem', textTransform: 'uppercase' }}>Challenges / Blockers</div>
+                      <div style={{ color: '#FFFFFF', fontSize: '0.875rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', background: '#141414', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
+                        {modalReport.challenges}
+                      </div>
+                    </div>
+                  )}
+
+                  {modalReport.plans_for_next && (
+                    <div>
+                      <div style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.375rem', textTransform: 'uppercase' }}>Plans for Next</div>
+                      <div style={{ color: '#FFFFFF', fontSize: '0.875rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', background: '#141414', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
+                        {modalReport.plans_for_next}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-
-              {/* Filter calendar to this member */}
-              <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #2D2D2D', display: 'flex', justifyContent: 'center' }}>
-                <button
-                  onClick={() => {
-                    setSelectedMemberId(selectedMemberDetail.user_id);
-                    setSelectedMemberDetail(null);
-                  }}
-                  style={{
-                    padding: '0.5rem 1.25rem', background: '#141414', border: '1px solid #2D2D2D',
-                    borderRadius: '0.5rem', color: '#A1A1AA', fontSize: '0.8125rem', cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#10B981'; e.currentTarget.style.color = '#FFFFFF'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}
-                >
-                  Filter calendar to {selectedMemberDetail.user_name}
-                </button>
-              </div>
             </div>
           </div>
         )}
       </main>
-    </div>
-  );
-}
-
-// Reusable report card component
-function ReportCard({ report }: { report: Report }) {
-  return (
-    <div style={{ background: '#141414', border: '1px solid #2D2D2D', borderRadius: '0.75rem', padding: '1.25rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontSize: '0.875rem', fontWeight: 600, flexShrink: 0 }}>
-          {(report.user_name || '?').charAt(0).toUpperCase()}
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 600 }}>{report.user_name}</div>
-          <div style={{ color: '#71717A', fontSize: '0.75rem' }}>{report.report_date}</div>
-        </div>
-        <span style={{
-          padding: '0.25rem 0.625rem', borderRadius: '0.375rem', fontSize: '0.75rem', fontWeight: 600,
-          background: report.status === 'submitted' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
-          color: report.status === 'submitted' ? '#10B981' : '#F59E0B',
-        }}>
-          {report.status}
-        </span>
-      </div>
-
-      {report.content && (
-        <div style={{ marginBottom: '0.75rem' }}>
-          <div style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.375rem', textTransform: 'uppercase' }}>What I did</div>
-          <div style={{ color: '#FFFFFF', fontSize: '0.875rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{report.content}</div>
-        </div>
-      )}
-
-      {report.tasks_completed && (
-        <div style={{ marginBottom: '0.75rem' }}>
-          <div style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.375rem', textTransform: 'uppercase' }}>Tasks Completed</div>
-          <div style={{ color: '#FFFFFF', fontSize: '0.875rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{report.tasks_completed}</div>
-        </div>
-      )}
-
-      {report.challenges && (
-        <div style={{ marginBottom: '0.75rem' }}>
-          <div style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.375rem', textTransform: 'uppercase' }}>Challenges / Blockers</div>
-          <div style={{ color: '#FFFFFF', fontSize: '0.875rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{report.challenges}</div>
-        </div>
-      )}
-
-      {report.plans_for_next && (
-        <div style={{ marginBottom: '0.75rem' }}>
-          <div style={{ color: '#A1A1AA', fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.375rem', textTransform: 'uppercase' }}>Plans for Next</div>
-          <div style={{ color: '#FFFFFF', fontSize: '0.875rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{report.plans_for_next}</div>
-        </div>
-      )}
-
-      {report.submitted_at && (
-        <div style={{ color: '#52525B', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-          Submitted: {new Date(report.submitted_at).toLocaleString()}
-        </div>
-      )}
     </div>
   );
 }

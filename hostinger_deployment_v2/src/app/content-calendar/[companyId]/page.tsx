@@ -327,7 +327,7 @@ export default function CompanyCalendarPage() {
       return {
         date: `${date.getDate()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`,
         topic: post.description || post.title || '',
-        post_type: post.content_type || 'Static',
+        post_type: post.content_type || 'static',
         posting_time: post.planned_time || '',
         post_link: post.targets?.[0]?.permalink || '',
         post_photo: '',
@@ -376,6 +376,11 @@ export default function CompanyCalendarPage() {
     if (field === 'platform' && cellData) {
       setEditingPlatformCell({ weekIdx, dayIdx, postId: cellData.post_id })
       setEditPlatforms(cellData.platforms || [])
+      return
+    }
+    
+    // Skip if already editing this exact cell (prevents re-init on click bubbling)
+    if (editingCell?.weekIdx === weekIdx && editingCell?.dayIdx === dayIdx && editingCell?.field === field) {
       return
     }
     
@@ -549,6 +554,15 @@ export default function CompanyCalendarPage() {
       editValueRef.current = ''
       setEditValue('')
     }
+  }
+
+  // Handle select change - save immediately since onBlur fires before onChange on selects
+  const handleSelectChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newVal = e.target.value
+    editValueRef.current = newVal
+    setEditValue(newVal)
+    // Save immediately
+    await handleCellBlur()
   }
 
   if (authLoading || !company) return (
@@ -948,7 +962,7 @@ export default function CompanyCalendarPage() {
                                         ref={editInputRef as React.RefObject<HTMLInputElement>}
                                         type="url"
                                         value={editValue}
-                                        onChange={(e) => setEditValue(e.target.value)}
+                                        onChange={(e) => { editValueRef.current = e.target.value; setEditValue(e.target.value) }}
                                         onBlur={handleCellBlur}
                                         onKeyDown={handleCellKeyDown}
                                         className="ms-input"
@@ -979,7 +993,7 @@ export default function CompanyCalendarPage() {
                                       <textarea
                                         ref={editInputRef as React.RefObject<HTMLTextAreaElement>}
                                         value={editValue}
-                                        onChange={(e) => setEditValue(e.target.value)}
+                                        onChange={(e) => { editValueRef.current = e.target.value; setEditValue(e.target.value) }}
                                         onBlur={handleCellBlur}
                                         onKeyDown={handleCellKeyDown}
                                         className="ms-input"
@@ -988,8 +1002,8 @@ export default function CompanyCalendarPage() {
                                       <select
                                         ref={editInputRef as any}
                                         value={editValue}
-                                        onChange={(e) => { editValueRef.current = e.target.value; setEditValue(e.target.value) }}
-                                        onBlur={handleCellBlur}
+                                        onChange={handleSelectChange}
+                                        onBlur={() => { setEditingCell(null); editValueRef.current = ''; setEditValue('') }}
                                         className="ms-input"
                                       >
                                         <option value="">Select...</option>
@@ -1002,7 +1016,7 @@ export default function CompanyCalendarPage() {
                                         ref={editInputRef as React.RefObject<HTMLInputElement>}
                                         type={('type' in field && field.type) || 'text'}
                                         value={editValue}
-                                        onChange={(e) => setEditValue(e.target.value)}
+                                        onChange={(e) => { editValueRef.current = e.target.value; setEditValue(e.target.value) }}
                                         onBlur={handleCellBlur}
                                         onKeyDown={handleCellKeyDown}
                                         className="ms-input"
