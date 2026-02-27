@@ -548,6 +548,8 @@ export default function CalendarPage() {
       if (meetingData.recurring !== undefined) updateData.recurring = meetingData.recurring;
       if (meetingData.recurring_end_date !== undefined) updateData.recurring_end_date = meetingData.recurring_end_date;
       if (meetingData.excluded_dates !== undefined) updateData.excluded_dates = meetingData.excluded_dates;
+      if (meetingData.agenda_items !== undefined) updateData.agenda_items = meetingData.agenda_items;
+      if (meetingData.agenda_overrides !== undefined) updateData.agenda_overrides = meetingData.agenda_overrides;
 
       await supabase
         .from('projects_meeting')

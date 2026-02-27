@@ -22,29 +22,33 @@ export async function POST(request: NextRequest) {
       query: `
         DROP INDEX IF EXISTS idx_meeting_notes_unique_meeting;
         CREATE UNIQUE INDEX IF NOT EXISTS idx_meeting_notes_unique_meeting_date ON meeting_notes(meeting_id, date);
+        ALTER TABLE projects_meeting ADD COLUMN IF NOT EXISTS agenda_overrides jsonb DEFAULT '{}';
       `
     })
 
     if (!rpcError) {
       return apiResponse({
         status: 'success',
-        message: 'Migration complete: meeting_notes now supports per-day notes for recurring meetings.',
+        message: 'Migration complete: per-day notes + per-occurrence agenda for recurring meetings.',
       })
     }
 
     // rpc('sql') not available - provide manual SQL
     return apiResponse({
       status: 'manual_required',
-      message: 'Please run this SQL in Supabase Dashboard → SQL Editor to fix recurring meeting notes:',
-      sql: `-- Fix: Allow per-day notes for recurring meetings
+      message: 'Please run this SQL in Supabase Dashboard → SQL Editor:',
+      sql: `-- Fix 1: Allow per-day notes for recurring meetings
 DROP INDEX IF EXISTS idx_meeting_notes_unique_meeting;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_meeting_notes_unique_meeting_date ON meeting_notes(meeting_id, date);`,
+CREATE UNIQUE INDEX IF NOT EXISTS idx_meeting_notes_unique_meeting_date ON meeting_notes(meeting_id, date);
+
+-- Fix 2: Allow per-occurrence agenda items for recurring meetings
+ALTER TABLE projects_meeting ADD COLUMN IF NOT EXISTS agenda_overrides jsonb DEFAULT '{}';`,
       instructions: [
         '1. Go to https://supabase.com/dashboard',
         '2. Select your project (bayyefskgflbyyuwrlgm)',
         '3. Click "SQL Editor" in the left sidebar',
         '4. Paste the SQL above and click "Run"',
-        '5. Done! Recurring meetings will now have separate notes per day.',
+        '5. Done! Recurring meetings will now have separate notes and agenda per day.',
       ],
     })
   } catch (err: any) {

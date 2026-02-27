@@ -37,6 +37,7 @@ interface Meeting {
   attendees_list?: string[];
   attendee_ids?: number[];
   agenda_items?: string[];
+  agenda_overrides?: Record<string, string[]>;
   input_timezone?: string;
   display_timezones?: string[];
   recurring?: boolean;
@@ -69,6 +70,17 @@ export default function MeetingDetailModal({
 }: MeetingDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
+  const [newAgendaItem, setNewAgendaItem] = useState('');
+
+  // For recurring meetings, load per-occurrence agenda from agenda_overrides
+  const effectiveDate = occurrenceDate || meeting.date;
+  const getEffectiveAgenda = () => {
+    if (meeting.recurring && meeting.agenda_overrides && meeting.agenda_overrides[effectiveDate]) {
+      return meeting.agenda_overrides[effectiveDate];
+    }
+    return meeting.agenda_items || [];
+  };
+
   const [editedMeeting, setEditedMeeting] = useState({
     title: meeting.title,
     description: meeting.description,
@@ -81,6 +93,7 @@ export default function MeetingDetailModal({
     display_timezones: (meeting.display_timezones || ['UK', 'MM']) as TimezoneKey[],
     recurring: meeting.recurring || false,
     recurring_end_date: meeting.recurring_end_date || '',
+    agenda_items: getEffectiveAgenda(),
   });
 
   // Use a ref for onProjectChange to avoid infinite re-render loops
@@ -128,14 +141,28 @@ export default function MeetingDetailModal({
 
   const handleSave = async () => {
     try {
-      await onUpdate({
+      const updateData: any = {
         ...editedMeeting,
         project: editedMeeting.project_id,
         attendee_ids: editedMeeting.attendee_ids,
         display_timezones: editedMeeting.display_timezones,
         recurring: editedMeeting.recurring,
         recurring_end_date: editedMeeting.recurring ? (editedMeeting.recurring_end_date || null) : null,
-      });
+      };
+
+      if (meeting.recurring && occurrenceDate) {
+        // For recurring meetings, store agenda per-occurrence in agenda_overrides
+        const overrides = { ...(meeting.agenda_overrides || {}) };
+        overrides[occurrenceDate] = editedMeeting.agenda_items;
+        updateData.agenda_overrides = overrides;
+        // Don't overwrite the base agenda_items for recurring meetings
+        delete updateData.agenda_items;
+      } else {
+        // For non-recurring meetings, save directly to agenda_items
+        updateData.agenda_items = editedMeeting.agenda_items;
+      }
+
+      await onUpdate(updateData);
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update meeting:', error);
@@ -709,28 +736,30 @@ export default function MeetingDetailModal({
                   </div>
                 )}
 
-                {/* Meeting Agenda Section */}
-                {meeting.agenda_items && meeting.agenda_items.length > 0 && (
+                {/* Meeting Agenda Section - show per-occurrence for recurring */}
+                {(() => {
+                  const displayAgenda = getEffectiveAgenda();
+                  return displayAgenda.length > 0 ? (
                   <div className="info-row" style={{ alignItems: 'flex-start' }}>
                     <ClipboardDocumentListIcon className="info-icon" style={{ width: '20px', height: '20px', marginTop: '2px' }} />
                     <div className="info-content">
                       <div className="info-label">Meeting Agenda</div>
-                      <div style={{ 
+                      <div style={{
                         marginTop: '8px',
                         background: '#141414',
                         borderRadius: '8px',
                         overflow: 'hidden',
                         border: '1px solid #2D2D2D'
                       }}>
-                        {meeting.agenda_items.map((item, index) => (
-                          <div 
+                        {displayAgenda.map((item, index) => (
+                          <div
                             key={index}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: '12px',
                               padding: '10px 12px',
-                              borderBottom: index < meeting.agenda_items!.length - 1 ? '1px solid #2D2D2D' : 'none',
+                              borderBottom: index < displayAgenda.length - 1 ? '1px solid #2D2D2D' : 'none',
                               background: '#1A1A1A'
                             }}
                           >
@@ -755,7 +784,8 @@ export default function MeetingDetailModal({
                       </div>
                     </div>
                   </div>
-                )}
+                  ) : null;
+                })()}
               </div>
             ) : (
               <div className="edit-form">
@@ -971,6 +1001,122 @@ export default function MeetingDetailModal({
                       borderRadius: '6px'
                     }}>
                       {editedMeeting.project_id ? 'Loading project members...' : 'Select a project to see available members'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Agenda Items Editor */}
+                <div className="form-group">
+                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ClipboardDocumentListIcon style={{ width: '16px', height: '16px' }} />
+                    Agenda Items
+                    {meeting.recurring && occurrenceDate && (
+                      <span style={{ fontSize: '11px', color: '#C77DFF', fontWeight: 400 }}>
+                        (for {new Date(occurrenceDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})
+                      </span>
+                    )}
+                  </label>
+
+                  {/* Add agenda item input */}
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Add an agenda item..."
+                      value={newAgendaItem}
+                      onChange={(e) => setNewAgendaItem(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newAgendaItem.trim()) {
+                          e.preventDefault();
+                          setEditedMeeting(prev => ({
+                            ...prev,
+                            agenda_items: [...prev.agenda_items, newAgendaItem.trim()]
+                          }));
+                          setNewAgendaItem('');
+                        }
+                      }}
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newAgendaItem.trim()) {
+                          setEditedMeeting(prev => ({
+                            ...prev,
+                            agenda_items: [...prev.agenda_items, newAgendaItem.trim()]
+                          }));
+                          setNewAgendaItem('');
+                        }
+                      }}
+                      style={{
+                        padding: '8px 14px',
+                        background: '#5884FD',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <PlusIcon style={{ width: '16px', height: '16px' }} />
+                    </button>
+                  </div>
+
+                  {/* Agenda items list */}
+                  {editedMeeting.agenda_items.length > 0 && (
+                    <div style={{
+                      background: '#141414',
+                      borderRadius: '6px',
+                      border: '1px solid #2D2D2D',
+                      overflow: 'hidden',
+                    }}>
+                      {editedMeeting.agenda_items.map((item, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '8px 12px',
+                            borderBottom: index < editedMeeting.agenda_items.length - 1 ? '1px solid #2D2D2D' : 'none',
+                          }}
+                        >
+                          <span style={{
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            background: '#5884FD',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '10px',
+                            fontWeight: '700',
+                            flexShrink: 0
+                          }}>
+                            {index + 1}
+                          </span>
+                          <span style={{ flex: 1, fontSize: '13px', color: '#E4E4E7' }}>{item}</span>
+                          <button
+                            type="button"
+                            onClick={() => setEditedMeeting(prev => ({
+                              ...prev,
+                              agenda_items: prev.agenda_items.filter((_, i) => i !== index)
+                            }))}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#71717A',
+                              cursor: 'pointer',
+                              padding: '2px',
+                            }}
+                          >
+                            <TrashIcon style={{ width: '14px', height: '14px' }} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
