@@ -1123,6 +1123,7 @@ export default function MeetingDetailModal({
               duration: meeting.duration,
               attendees_list: getAttendeesList()
             }}
+            occurrenceDate={occurrenceDate}
             onClose={() => setShowNotesModal(false)}
             projectMembers={projectMembers}
           />

@@ -29,19 +29,23 @@ interface Meeting {
 
 interface MeetingNotesModalProps {
   meeting: Meeting;
+  occurrenceDate?: string | null;
   onClose: () => void;
   projectMembers?: any[];
 }
 
 export default function MeetingNotesModal({
   meeting,
+  occurrenceDate,
   onClose,
   projectMembers = []
 }: MeetingNotesModalProps) {
+  // For recurring meetings, use the occurrence date; otherwise use the meeting's own date
+  const effectiveDate = occurrenceDate || meeting.date;
   const [meetingNotes, setMeetingNotes] = useState<MeetingNoteType>({
     meeting_id: meeting.id,
     title: meeting.title,
-    date: meeting.date,
+    date: effectiveDate,
     time: meeting.time,
     attendees: meeting.attendees_list || [],
     discussion_points: [''],
@@ -67,17 +71,19 @@ export default function MeetingNotesModal({
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
   const [showAddSection, setShowAddSection] = useState<{ [key: string]: boolean }>({});
 
-  // Load existing notes
+  // Load existing notes - for recurring meetings, scope by occurrence date
   useEffect(() => {
     let isMounted = true;
     const loadNotes = async () => {
       try {
-        const notes = await meetingNotesService.getMeetingNotes(meeting.id);
+        // Pass effectiveDate so recurring meetings get per-day notes
+        const notes = await meetingNotesService.getMeetingNotes(meeting.id, effectiveDate);
         if (!isMounted) return;
         if (notes) {
           setExistingNotes(notes);
           setMeetingNotes({
             ...notes,
+            date: effectiveDate, // Always use the occurrence date
             discussion_points: (notes.discussion_points && notes.discussion_points.length > 0) ? notes.discussion_points : [''],
             decisions_made: (notes.decisions_made && notes.decisions_made.length > 0) ? notes.decisions_made : [''],
             action_items: (notes.action_items && notes.action_items.length > 0) ? notes.action_items : [''],
@@ -118,7 +124,7 @@ export default function MeetingNotesModal({
       isMounted = false;
       clearTimeout(timeout);
     };
-  }, [meeting.id]);
+  }, [meeting.id, effectiveDate]);
 
   const addArrayField = (field: keyof MeetingNoteType, index?: number) => {
     setMeetingNotes(prev => {
@@ -272,6 +278,7 @@ export default function MeetingNotesModal({
 
       const cleanedNotes = {
         ...meetingNotes,
+        date: effectiveDate, // Always save with the specific occurrence date
         discussion_points: meetingNotes.discussion_points.filter(p => p.trim()),
         decisions_made: meetingNotes.decisions_made.filter(d => d.trim()),
         action_items: meetingNotes.action_items.filter(a => a.trim()),
