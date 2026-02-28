@@ -556,6 +556,25 @@ export default function CompanyCalendarPage() {
     }
   }
 
+  // Handle published status toggle
+  const handlePublishedToggle = async (weekIdx: number, dayIdx: number, cellData: SheetCellData) => {
+    if (!cellData.post_id) return
+
+    const newStatus = cellData.isPublished ? 'draft' : 'published'
+
+    try {
+      const { supabase } = await import('@/lib/supabase')
+
+      await supabase.from('content_posts').update({ status: newStatus }).eq('id', cellData.post_id)
+
+      await supabase.from('content_post_targets').update({ platform_status: newStatus === 'published' ? 'published' : 'planned' }).eq('post_id', cellData.post_id)
+
+      fetchPosts()
+    } catch (err) {
+      console.error('Error toggling published status:', err)
+    }
+  }
+
   // Handle select change - save immediately since onBlur fires before onChange on selects
   const handleSelectChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newVal = e.target.value
@@ -878,8 +897,8 @@ export default function CompanyCalendarPage() {
                               return (
                                 <div 
                                   key={dayIdx} 
-                                  className={`ms-cell ms-data-cell ${isWeekend ? 'ms-weekend' : ''} ${!isCurrentMonth ? 'ms-other-month' : ''} ${field.editable ? 'ms-editable' : ''} ${'multiline' in field && field.multiline ? 'ms-multiline' : ''}`}
-                                  onClick={() => field.editable && handleCellClick(weekIdx, dayIdx, field.key, value, cellData)}
+                                  className={`ms-cell ms-data-cell ${isWeekend ? 'ms-weekend' : ''} ${!isCurrentMonth ? 'ms-other-month' : ''} ${field.editable || field.key === 'published' ? 'ms-editable' : ''} ${'multiline' in field && field.multiline ? 'ms-multiline' : ''}`}
+                                  onClick={() => field.key === 'published' ? handlePublishedToggle(weekIdx, dayIdx, cellData) : field.editable && handleCellClick(weekIdx, dayIdx, field.key, value, cellData)}
                                 >
                                   {/* Platform Multi-Select */}
                                   {field.key === 'platform' ? (
