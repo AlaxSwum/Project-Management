@@ -10,24 +10,31 @@ export const supabaseAuth = {
   // Login using custom table
   signIn: async (email, password) => {
     try {
-      // First get user from custom auth_user table
-      const { data: users, error: userError } = await supabase
-        .from('auth_user')
-        .select('*')
-        .eq('email', email)
-        .eq('is_active', true)
+      // 1-RTT login: authenticate_and_load returns user + all sidebar projects
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('authenticate_and_load', { p_email: email });
 
-      if (userError) throw userError
-      if (!users || users.length === 0) {
-        throw new Error('Invalid email or password')
+      let user, sidebarProjects;
+
+      if (!rpcError && rpcResult?.user) {
+        user = rpcResult.user;
+        sidebarProjects = rpcResult.projects || [];
+      } else {
+        // Fallback: direct query if RPC fails
+        const { data: users, error: userError } = await supabase
+          .from('auth_user')
+          .select('*')
+          .eq('email', email)
+          .eq('is_active', true)
+
+        if (userError) throw userError
+        if (!users || users.length === 0) {
+          throw new Error('Invalid email or password')
+        }
+        user = users[0];
+        sidebarProjects = null; // will be fetched separately
       }
 
-      const user = users[0]
-
-      // IMMEDIATELY start project fetch — runs during password check (~0 wasted ms)
-      const projectsPromise = supabaseDb.getProjectsLean(user.id);
-
-      // Check password against the database (synchronous — ~0ms)
+      // Check password
       let isValidPassword = false;
 
       if (user.password === password) {
@@ -51,7 +58,6 @@ export const supabaseAuth = {
         throw new Error('Invalid email or password')
       }
 
-      // Create a session-like object
       const authUser = {
         id: user.id,
         email: user.email,
@@ -63,7 +69,6 @@ export const supabaseAuth = {
         }
       }
 
-      // Full profile from the same SELECT * — no second RTT needed
       const full_profile = {
         id: user.id,
         email: user.email,
@@ -77,11 +82,16 @@ export const supabaseAuth = {
         date_joined: user.date_joined || new Date().toISOString()
       }
 
-      // Store user data in localStorage to simulate session
       if (typeof window !== 'undefined') {
         localStorage.setItem('supabase_user', JSON.stringify(authUser))
         localStorage.setItem('supabase_token', `sb-token-${user.id}`)
       }
+
+      // If RPC returned sidebar projects, wrap them as a resolved promise
+      // Otherwise, start fetching in background
+      const projectsPromise = sidebarProjects
+        ? Promise.resolve({ data: sidebarProjects.map(p => ({ ...p, project_members: p.members || [] })), error: null })
+        : supabaseDb.getSidebarProjectsRpc(user.id);
 
       return { user: authUser, full_profile, projectsPromise, error: null }
     } catch (error) {
@@ -167,8 +177,8 @@ export const supabaseAuth = {
 
 // RPC availability — default OFF until deployed, avoids wasted 500 RTT on every fresh load.
 // Flip to true after running the SQL migration in Supabase.
-let _sidebarRpcAvailable = false;
-let _kanbanRpcAvailable = false;
+let _sidebarRpcAvailable = true;
+let _kanbanRpcAvailable = true;
 
 // Database helpers
 export const supabaseDb = {

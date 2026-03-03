@@ -287,7 +287,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                     // Prefetch on hover — data is cached before click arrives
                     const ck = `project_${project.id}`;
                     if (!appCache.get(ck, 30 * 60 * 1000)) {
-                      supabaseDb.getProjectWithTasks(project.id).then(r => {
+                      supabaseDb.getProjectWithTasksRpc(project.id).then(r => {
                         if (r.project) appCache.set(ck, { project: r.project, tasks: r.tasks });
                       }).catch(() => {});
                     }

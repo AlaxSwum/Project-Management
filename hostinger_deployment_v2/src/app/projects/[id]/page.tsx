@@ -234,7 +234,7 @@ export default function ProjectDetailPage() {
       }
 
       // Fetch fresh data (background if cache hit, blocking if first load)
-      const result = await supabaseDb.getProjectWithTasks(projectId);
+      const result = await supabaseDb.getProjectWithTasksRpc(projectId);
 
       if (result.error || !result.project) {
         if (!cached) router.push('/dashboard');

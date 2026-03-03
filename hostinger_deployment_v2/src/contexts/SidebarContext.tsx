@@ -169,7 +169,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
     // Fetch fresh data in background (1 RTT)
     try {
-      const { data, error } = await supabaseDb.getProjectsLean(uid);
+      const { data, error } = await supabaseDb.getSidebarProjectsRpc(uid);
       const fetchedProjects = (data || []) as unknown as Project[];
       if (error) console.error('Error fetching projects:', error);
       appCache.set(cacheKey, fetchedProjects);
