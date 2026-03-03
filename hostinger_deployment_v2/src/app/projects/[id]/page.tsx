@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectService, taskService } from '@/lib/api-compatibility';
 import { appCache } from '@/lib/appCache';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseDb } from '@/lib/supabase';
 import { 
   PlusIcon, 
   MagnifyingGlassIcon,
@@ -220,15 +220,20 @@ export default function ProjectDetailPage() {
       const cacheKey = `project_${projectId}`;
 
       // Show cached data immediately — instant render, no spinner
-      const cached = appCache.get<{ project: any; tasks: any[] }>(cacheKey);
+      const cached = appCache.get<{ project: any; tasks: any[] }>(cacheKey, 30 * 60 * 1000);
       if (cached) {
         setProject(cached.project);
         setTasks(cached.tasks);
         setIsLoading(false);
+
+        // If cache is fresh (< 30s from prefetch), skip network entirely
+        if (appCache.get(cacheKey, 30_000)) {
+          setAllProjects([]);
+          return;
+        }
       }
 
       // Fetch fresh data (background if cache hit, blocking if first load)
-      const { supabaseDb } = await import('@/lib/supabase');
       const result = await supabaseDb.getProjectWithTasks(projectId);
 
       if (result.error || !result.project) {

@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebarData } from '@/contexts/SidebarContext';
-import { supabase } from '@/lib/supabase';
+import { useTheme } from '@/contexts/ThemeContext';
+import { supabase, supabaseDb } from '@/lib/supabase';
+import { appCache } from '@/lib/appCache';
 import {
   HomeIcon,
   CalendarIcon,
@@ -26,7 +28,7 @@ import {
   FolderIcon,
   PlusIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -64,7 +66,24 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { isDark } = useTheme();
   const { projects: myProjects, teamMembers, loadingProjects, unreadNotifications, unreadMessages, totalUnreadMessages, clearUnreadForUser, refreshProjects } = useSidebarData();
+
+  // Theme-aware colors
+  const colors = {
+    text: isDark ? '#FFFFFF' : '#1A1A2E',
+    textSecondary: isDark ? '#A1A1AA' : '#6B7280',
+    textMuted: isDark ? '#71717A' : '#9CA3AF',
+    textLabel: isDark ? '#52525B' : '#9CA3AF',
+    hoverBg: isDark ? '#1A1A1A' : '#F0F0EC',
+    activeBg: isDark ? '#1A1A1A' : '#F0F0EC',
+    surface: isDark ? '#141414' : '#FFFFFF',
+    border: isDark ? '#3D3D3D' : '#E5E5E0',
+    borderLight: isDark ? '#2D2D2D' : '#E5E5E0',
+    borderDark: isDark ? '#1F1F1F' : '#E5E5E0',
+    modalBg: isDark ? '#1A1A1A' : '#FFFFFF',
+    bgPage: isDark ? '#0D0D0D' : '#FAFAF8',
+  };
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectColor, setNewProjectColor] = useState('#3B82F6');
@@ -180,8 +199,8 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#FFFFFF', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Focus</span>
-              <ChevronDownIcon style={{ width: '16px', height: '16px', color: '#71717A' }} />
+              <span style={{ color: colors.text, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Focus</span>
+              <ChevronDownIcon style={{ width: '16px', height: '16px', color: colors.textMuted }} />
             </div>
           </div>
           {/* Close button - only visible on mobile */}
@@ -208,21 +227,21 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
             padding: '0.625rem 0.75rem',
             borderRadius: '0.5rem',
             background: pathname === '/dashboard' ? '#10B981' : 'transparent',
-            color: pathname === '/dashboard' ? '#FFFFFF' : '#A1A1AA',
+            color: pathname === '/dashboard' ? '#FFFFFF' : colors.textSecondary,
             textDecoration: 'none',
             transition: 'all 0.2s',
             marginBottom: '0.5rem'
           }}
           onMouseEnter={(e) => {
             if (pathname !== '/dashboard') {
-              e.currentTarget.style.background = '#1A1A1A';
-              e.currentTarget.style.color = '#FFFFFF';
+              e.currentTarget.style.background = colors.hoverBg;
+              e.currentTarget.style.color = colors.text;
             }
           }}
           onMouseLeave={(e) => {
             if (pathname !== '/dashboard') {
               e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = '#A1A1AA';
+              e.currentTarget.style.color = colors.textSecondary;
             }
           }}
         >
@@ -233,13 +252,13 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         {/* Projects Section */}
         <div style={{ marginBottom: '0.5rem' }}>
           <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem', marginTop: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'Mabry Pro, sans-serif' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textLabel, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'Mabry Pro, sans-serif' }}>
               Projects ({myProjects.length})
             </span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {loadingProjects ? (
-              <div style={{ padding: '0.5rem 0.75rem', fontSize: '0.8125rem', color: '#52525B', fontFamily: 'Mabry Pro, sans-serif' }}>
+              <div style={{ padding: '0.5rem 0.75rem', fontSize: '0.8125rem', color: colors.textLabel, fontFamily: 'Mabry Pro, sans-serif' }}>
                 Loading projects...
               </div>
             ) : myProjects.length > 0 ? myProjects.map((project) => {
@@ -255,21 +274,28 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                     gap: '0.5rem',
                     padding: '0.5rem 0.75rem',
                     borderRadius: '0.5rem',
-                    background: isActive ? '#1A1A1A' : 'transparent',
-                    color: isActive ? '#FFFFFF' : '#A1A1AA',
+                    background: isActive ? colors.activeBg : 'transparent',
+                    color: isActive ? colors.text : colors.textSecondary,
                     textDecoration: 'none',
                     transition: 'all 0.2s'
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.background = '#1A1A1A';
-                      e.currentTarget.style.color = '#FFFFFF';
+                      e.currentTarget.style.background = colors.hoverBg;
+                      e.currentTarget.style.color = colors.text;
+                    }
+                    // Prefetch on hover — data is cached before click arrives
+                    const ck = `project_${project.id}`;
+                    if (!appCache.get(ck, 30 * 60 * 1000)) {
+                      supabaseDb.getProjectWithTasks(project.id).then(r => {
+                        if (r.project) appCache.set(ck, { project: r.project, tasks: r.tasks });
+                      }).catch(() => {});
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
                       e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = '#A1A1AA';
+                      e.currentTarget.style.color = colors.textSecondary;
                     }
                   }}
                 >
@@ -280,7 +306,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                 </Link>
               );
             }) : (
-              <div style={{ padding: '0.5rem 0.75rem', fontSize: '0.8125rem', color: '#52525B', fontFamily: 'Mabry Pro, sans-serif' }}>
+              <div style={{ padding: '0.5rem 0.75rem', fontSize: '0.8125rem', color: colors.textLabel, fontFamily: 'Mabry Pro, sans-serif' }}>
                 No projects yet
               </div>
             )}
@@ -295,8 +321,8 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                 padding: '0.5rem 0.75rem',
                 borderRadius: '0.5rem',
                 background: 'transparent',
-                color: '#71717A',
-                border: '1px dashed #3D3D3D',
+                color: colors.textMuted,
+                border: `1px dashed ${colors.border}`,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 width: '100%',
@@ -305,14 +331,14 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                 fontFamily: 'Mabry Pro, sans-serif',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#1A1A1A';
+                e.currentTarget.style.background = colors.hoverBg;
                 e.currentTarget.style.borderColor = '#10B981';
                 e.currentTarget.style.color = '#10B981';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = '#3D3D3D';
-                e.currentTarget.style.color = '#71717A';
+                e.currentTarget.style.borderColor = colors.border;
+                e.currentTarget.style.color = colors.textMuted;
               }}
             >
               <PlusIcon style={{ width: '16px', height: '16px' }} />
@@ -337,21 +363,21 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                   padding: '0.625rem 0.75rem',
                   borderRadius: '0.5rem',
                   background: isActive ? '#10B981' : 'transparent',
-                  color: isActive ? '#FFFFFF' : '#A1A1AA',
+                  color: isActive ? '#FFFFFF' : colors.textSecondary,
                   textDecoration: 'none',
                   transition: 'all 0.2s',
                   position: 'relative'
-                }} 
+                }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.background = '#1A1A1A';
-                    e.currentTarget.style.color = '#FFFFFF';
+                    e.currentTarget.style.background = colors.hoverBg;
+                    e.currentTarget.style.color = colors.text;
                   }
-                }} 
+                }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#A1A1AA';
+                    e.currentTarget.style.color = colors.textSecondary;
                   }
                 }}
               >
@@ -375,20 +401,20 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                 padding: '0.625rem 0.75rem',
                 borderRadius: '0.5rem',
                 background: pathname?.startsWith('/company') ? '#10B981' : 'transparent',
-                color: pathname?.startsWith('/company') ? '#FFFFFF' : '#A1A1AA',
+                color: pathname?.startsWith('/company') ? '#FFFFFF' : colors.textSecondary,
                 textDecoration: 'none',
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {
                 if (!pathname?.startsWith('/company')) {
-                  e.currentTarget.style.background = '#1A1A1A';
-                  e.currentTarget.style.color = '#FFFFFF';
+                  e.currentTarget.style.background = colors.hoverBg;
+                  e.currentTarget.style.color = colors.text;
                 }
               }}
               onMouseLeave={(e) => {
                 if (!pathname?.startsWith('/company')) {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#A1A1AA';
+                  e.currentTarget.style.color = colors.textSecondary;
                 }
               }}
             >
@@ -411,20 +437,20 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                 padding: '0.625rem 0.75rem',
                 borderRadius: '0.5rem',
                 background: pathname?.startsWith('/reports') ? '#10B981' : 'transparent',
-                color: pathname?.startsWith('/reports') ? '#FFFFFF' : '#A1A1AA',
+                color: pathname?.startsWith('/reports') ? '#FFFFFF' : colors.textSecondary,
                 textDecoration: 'none',
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {
                 if (!pathname?.startsWith('/reports')) {
-                  e.currentTarget.style.background = '#1A1A1A';
-                  e.currentTarget.style.color = '#FFFFFF';
+                  e.currentTarget.style.background = colors.hoverBg;
+                  e.currentTarget.style.color = colors.text;
                 }
               }}
               onMouseLeave={(e) => {
                 if (!pathname?.startsWith('/reports')) {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#A1A1AA';
+                  e.currentTarget.style.color = colors.textSecondary;
                 }
               }}
             >
@@ -437,7 +463,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         {/* Personal Section */}
         <div style={{ marginTop: '1.5rem' }}>
           <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Personal</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textLabel, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Personal</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {PERSONAL_ITEMS.map((item) => {
@@ -455,21 +481,21 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                     padding: '0.625rem 0.75rem',
                     borderRadius: '0.5rem',
                     background: isActive ? '#10B981' : 'transparent',
-                    color: isActive ? '#FFFFFF' : '#A1A1AA',
+                    color: isActive ? '#FFFFFF' : colors.textSecondary,
                     textDecoration: 'none',
                     transition: 'all 0.2s',
                     position: 'relative'
-                  }} 
+                  }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.background = '#1A1A1A';
-                      e.currentTarget.style.color = '#FFFFFF';
+                      e.currentTarget.style.background = colors.hoverBg;
+                      e.currentTarget.style.color = colors.text;
                     }
-                  }} 
+                  }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
                       e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = '#A1A1AA';
+                      e.currentTarget.style.color = colors.textSecondary;
                     }
                   }}
                 >
@@ -501,7 +527,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
         {/* Messages Section */}
         <div style={{ marginTop: '1.5rem' }}>
           <div style={{ padding: '0 0.75rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52525B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: colors.textLabel, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Messages</span>
             {totalUnreadMessages > 0 && (
               <span style={{ fontSize: '0.625rem', fontWeight: 700, color: '#FFFFFF', background: '#3B82F6', minWidth: '18px', height: '18px', borderRadius: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0.25rem' }}>
                 {totalUnreadMessages > 99 ? '99+' : totalUnreadMessages}
@@ -518,9 +544,9 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                   href={`/messages?user=${member.id}`}
                   onClick={() => clearUnreadForUser(member.id)}
                   className="sidebar-link"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', color: isActiveChat ? '#FFFFFF' : '#A1A1AA', borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s', textDecoration: 'none', background: isActiveChat ? '#1A1A1A' : 'transparent' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#1A1A1A'; e.currentTarget.style.color = '#FFFFFF'; }}
-                  onMouseLeave={(e) => { if (!isActiveChat) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#A1A1AA'; } }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', color: isActiveChat ? colors.text : colors.textSecondary, borderRadius: '0.5rem', cursor: 'pointer', transition: 'all 0.2s', textDecoration: 'none', background: isActiveChat ? colors.activeBg : 'transparent' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = colors.hoverBg; e.currentTarget.style.color = colors.text; }}
+                  onMouseLeave={(e) => { if (!isActiveChat) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.textSecondary; } }}
                 >
                   <div style={{ position: 'relative', flexShrink: 0 }}>
                     {member.avatar_url ? (
@@ -530,11 +556,11 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                         {member.name?.charAt(0).toUpperCase() || '?'}
                       </div>
                     )}
-                    <div style={{ position: 'absolute', bottom: 0, right: 0, width: '8px', height: '8px', background: '#10B981', border: '2px solid #0D0D0D', borderRadius: '50%' }} />
+                    <div style={{ position: 'absolute', bottom: 0, right: 0, width: '8px', height: '8px', background: '#10B981', border: `2px solid ${colors.bgPage}`, borderRadius: '50%' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#52525B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>member</div>
+                    <div style={{ fontSize: '0.75rem', color: colors.textLabel, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>member</div>
                   </div>
                   {memberUnread > 0 && (
                     <span style={{ minWidth: '20px', height: '20px', background: '#3B82F6', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 700, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0.375rem', flexShrink: 0 }}>
@@ -544,7 +570,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                 </Link>
               );
             }) : (
-              <div style={{ padding: '1rem 0.75rem', textAlign: 'center', color: '#52525B', fontSize: '0.8125rem' }}>
+              <div style={{ padding: '1rem 0.75rem', textAlign: 'center', color: colors.textLabel, fontSize: '0.8125rem' }}>
                 No team members yet
               </div>
             )}
@@ -564,21 +590,21 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
             padding: '0.625rem 0.75rem',
             borderRadius: '0.5rem',
             background: pathname === '/settings' ? '#10B981' : 'transparent',
-            color: pathname === '/settings' ? '#FFFFFF' : '#A1A1AA',
+            color: pathname === '/settings' ? '#FFFFFF' : colors.textSecondary,
             textDecoration: 'none',
             transition: 'all 0.2s',
             marginBottom: '0.75rem'
           }}
           onMouseEnter={(e) => {
             if (pathname !== '/settings') {
-              e.currentTarget.style.background = '#1A1A1A';
-              e.currentTarget.style.color = '#FFFFFF';
+              e.currentTarget.style.background = colors.hoverBg;
+              e.currentTarget.style.color = colors.text;
             }
           }}
           onMouseLeave={(e) => {
             if (pathname !== '/settings') {
               e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = '#A1A1AA';
+              e.currentTarget.style.color = colors.textSecondary;
             }
           }}
         >
@@ -586,9 +612,9 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Settings</span>
         </Link>
 
-        <div 
+        <div
           style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s' }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#1A1A1A'}
+          onMouseEnter={(e) => e.currentTarget.style.background = colors.hoverBg}
           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
           <div style={{ 
@@ -610,16 +636,16 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
             )}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'User'}</div>
-            <div style={{ color: '#52525B', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email || ''}</div>
+            <div style={{ color: colors.text, fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'User'}</div>
+            <div style={{ color: colors.textLabel, fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email || ''}</div>
           </div>
           <button
             onClick={handleLogout}
             className="sidebar-logout-btn"
-            style={{ padding: '0.375rem', color: '#71717A', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
+            style={{ padding: '0.375rem', color: colors.textMuted, background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
             title="Logout"
             onMouseEnter={(e) => e.currentTarget.style.color = '#EF4444'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#71717A'}
+            onMouseLeave={(e) => e.currentTarget.style.color = colors.textMuted}
           >
             <ArrowRightOnRectangleIcon style={{ width: '20px', height: '20px' }} />
           </button>
@@ -646,12 +672,12 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           <div style={{ width: '28px', height: '28px', borderRadius: '0.5rem', background: 'linear-gradient(135deg, #10B981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.875rem' }}>F</span>
           </div>
-          <span style={{ color: '#FFFFFF', fontWeight: 600, fontSize: '1rem', fontFamily: 'Mabry Pro, sans-serif' }}>Focus</span>
+          <span style={{ color: colors.text, fontWeight: 600, fontSize: '1rem', fontFamily: 'Mabry Pro, sans-serif' }}>Focus</span>
         </div>
-        <Link href="/notifications" style={{ position: 'relative', color: '#A1A1AA', padding: '0.375rem' }}>
+        <Link href="/notifications" style={{ position: 'relative', color: colors.textSecondary, padding: '0.375rem' }}>
           <BellIcon style={{ width: '24px', height: '24px' }} />
           {unreadNotifications > 0 && (
-            <span style={{ position: 'absolute', top: 0, right: 0, width: '8px', height: '8px', background: '#EF4444', borderRadius: '50%', border: '2px solid #0D0D0D' }} />
+            <span style={{ position: 'absolute', top: 0, right: 0, width: '8px', height: '8px', background: '#EF4444', borderRadius: '50%', border: `2px solid ${colors.bgPage}` }} />
           )}
         </Link>
       </div>
@@ -690,21 +716,21 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           <div
             className="create-project-modal"
             style={{
-              background: '#1A1A1A',
+              background: colors.modalBg,
               borderRadius: '16px',
               padding: '24px',
               width: '400px',
               maxWidth: '90vw',
-              border: '1px solid #2D2D2D',
+              border: `1px solid ${colors.borderLight}`,
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ color: '#FFFFFF', fontSize: '1.25rem', fontWeight: 600, marginBottom: '20px', fontFamily: 'Mabry Pro, sans-serif' }}>
+            <h3 style={{ color: colors.text, fontSize: '1.25rem', fontWeight: 600, marginBottom: '20px', fontFamily: 'Mabry Pro, sans-serif' }}>
               Create New Project
             </h3>
-            
+
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', color: '#A1A1AA', fontSize: '0.875rem', marginBottom: '8px', fontFamily: 'Mabry Pro, sans-serif' }}>
+              <label style={{ display: 'block', color: colors.textSecondary, fontSize: '0.875rem', marginBottom: '8px', fontFamily: 'Mabry Pro, sans-serif' }}>
                 Project Name
               </label>
               <input
@@ -716,10 +742,10 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                 style={{
                   width: '100%',
                   padding: '12px 14px',
-                  background: '#141414',
-                  border: '1px solid #3D3D3D',
+                  background: colors.surface,
+                  border: `1px solid ${colors.border}`,
                   borderRadius: '8px',
-                  color: '#FFFFFF',
+                  color: colors.text,
                   fontSize: '0.9375rem',
                   outline: 'none',
                   fontFamily: 'Mabry Pro, sans-serif',
@@ -730,7 +756,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
             </div>
             
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', color: '#A1A1AA', fontSize: '0.875rem', marginBottom: '8px', fontFamily: 'Mabry Pro, sans-serif' }}>
+              <label style={{ display: 'block', color: colors.textSecondary, fontSize: '0.875rem', marginBottom: '8px', fontFamily: 'Mabry Pro, sans-serif' }}>
                 Project Color
               </label>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -765,9 +791,9 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                 style={{
                   padding: '10px 20px',
                   background: 'transparent',
-                  border: '1px solid #3D3D3D',
+                  border: `1px solid ${colors.border}`,
                   borderRadius: '8px',
-                  color: '#A1A1AA',
+                  color: colors.textSecondary,
                   fontSize: '0.875rem',
                   fontWeight: 500,
                   cursor: 'pointer',
@@ -777,12 +803,12 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
                   minWidth: 'auto',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#2D2D2D';
-                  e.currentTarget.style.color = '#FFFFFF';
+                  e.currentTarget.style.background = colors.hoverBg;
+                  e.currentTarget.style.color = colors.text;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = '#A1A1AA';
+                  e.currentTarget.style.color = colors.textSecondary;
                 }}
               >
                 Cancel

@@ -1,8 +1,12 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase, supabaseAuth } from '@/lib/supabase';
+import { supabase, supabaseAuth, supabaseDb } from '@/lib/supabase';
 import { appCache } from '@/lib/appCache';
+
+// In-flight promise dedup — prevents SidebarContext from re-fetching what login already started
+const _inflight = new Map<string, Promise<any>>();
+export function getInflightFetch(key: string) { return _inflight.get(key); }
 
 interface User {
   id: number;
@@ -123,51 +127,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const { user: authUser, error } = await supabaseAuth.signIn(email, password);
+      const { user: authUser, full_profile, projectsPromise, error } = await supabaseAuth.signIn(email, password) as {
+        user: { id: number; email: string; user_metadata: Record<string, string> } | null;
+        full_profile?: User;
+        projectsPromise?: Promise<{ data: any; error: any }>;
+        error: Error | null;
+      };
 
       if (error) {
         throw new Error(error instanceof Error ? error.message : 'Login failed');
       }
 
       if (authUser) {
-        // Fetch full profile from database including avatar_url, location, bio
-        try {
-          const { data: profileData } = await supabase
-            .from('auth_user')
-            .select('name, email, phone, role, position, avatar_url, location, bio')
-            .eq('id', authUser.id)
-            .single();
+        // Use full_profile from signIn — no second RTT needed
+        const userData: User = full_profile ?? {
+          id: authUser.id,
+          email: authUser.email,
+          name: authUser.user_metadata?.name || authUser.email,
+          phone: authUser.user_metadata?.phone || '',
+          role: authUser.user_metadata?.role || 'member',
+          position: authUser.user_metadata?.position || '',
+          avatar_url: '',
+          location: '',
+          bio: '',
+          date_joined: new Date().toISOString()
+        };
+        appCache.set(`user_profile_${authUser.id}`, userData);
+        setUser(userData);
 
-          const userData: User = {
-            id: authUser.id,
-            email: profileData?.email || authUser.email,
-            name: profileData?.name || authUser.user_metadata?.name || authUser.email,
-            phone: profileData?.phone || authUser.user_metadata?.phone || '',
-            role: profileData?.role || authUser.user_metadata?.role || 'member',
-            position: profileData?.position || authUser.user_metadata?.position || '',
-            avatar_url: profileData?.avatar_url || '',
-            location: profileData?.location || '',
-            bio: profileData?.bio || '',
-            date_joined: new Date().toISOString()
-          };
-          appCache.set(`user_profile_${authUser.id}`, userData);
-          setUser(userData);
-        } catch (profileError) {
-          // Fallback to basic user data if profile fetch fails
-          const userData: User = {
-            id: authUser.id,
-            email: authUser.email,
-            name: authUser.user_metadata?.name || authUser.email,
-            phone: authUser.user_metadata?.phone || '',
-            role: authUser.user_metadata?.role || 'member',
-            position: authUser.user_metadata?.position || '',
-            avatar_url: '',
-            location: '',
-            bio: '',
-            date_joined: new Date().toISOString()
-          };
-          setUser(userData);
-        }
+        // Projects fetch was started inside signIn — it's already in-flight
+        // Wire it into the inflight map so SidebarContext awaits the same promise
+        const cacheKey = `sidebar_projects_${authUser.id}`;
+        const fetchPromise = (projectsPromise || supabaseDb.getProjectsLean(authUser.id)).then(({ data }: any) => {
+          if (data) appCache.set(cacheKey, data);
+          _inflight.delete(cacheKey);
+          return data;
+        }).catch(() => { _inflight.delete(cacheKey); });
+        _inflight.set(cacheKey, fetchPromise);
       }
     } catch (error: any) {
       throw new Error(error.message || 'Login failed');

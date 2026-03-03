@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, getInflightFetch } from '@/contexts/AuthContext';
 import { supabase, supabaseDb } from '@/lib/supabase';
 import { appCache } from '@/lib/appCache';
 
@@ -54,11 +54,42 @@ export function useSidebarData() {
   return useContext(SidebarContext);
 }
 
+// 30-minute TTL for sidebar cache — background refresh keeps it fresh
+const SIDEBAR_TTL = 30 * 60 * 1000;
+
+// Synchronously hydrate from sessionStorage before first render
+function getInitialSidebarData(): { projects: Project[]; uid: number | null } {
+  if (typeof window === 'undefined') return { projects: [], uid: null };
+  try {
+    const stored = localStorage.getItem('supabase_user');
+    const token = localStorage.getItem('supabase_token');
+    if (stored && token) {
+      const uid = JSON.parse(stored)?.id;
+      if (uid) {
+        const cached = appCache.get<Project[]>(`sidebar_projects_${uid}`, SIDEBAR_TTL);
+        if (cached) return { projects: cached, uid };
+      }
+    }
+  } catch { /* ignore */ }
+  return { projects: [], uid: null };
+}
+
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [loadingProjects, setLoadingProjects] = useState(true);
+  const initial = getInitialSidebarData();
+  const [projects, setProjects] = useState<Project[]>(initial.projects);
+  // Extract team members from cached projects synchronously
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(() => {
+    if (!initial.projects.length || !initial.uid) return [];
+    const map = new Map<number, TeamMember>();
+    initial.projects.forEach(p => {
+      (p.members || []).forEach(m => {
+        if (m.id !== initial.uid && !map.has(m.id)) map.set(m.id, m);
+      });
+    });
+    return Array.from(map.values()).slice(0, 15);
+  });
+  const [loadingProjects, setLoadingProjects] = useState(initial.projects.length === 0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState<Record<number, number>>({});
   const [hasFetched, setHasFetched] = useState(false);
@@ -105,13 +136,30 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     const cacheKey = `sidebar_projects_${uid}`;
 
     // Load cache immediately (instant render)
-    const cached = appCache.get<Project[]>(cacheKey);
+    const cached = appCache.get<Project[]>(cacheKey, SIDEBAR_TTL);
     if (cached) {
       applyProjects(cached, uid);
       setLoadingProjects(false);
     }
 
-    // Fetch fresh data in background
+    // If cache is fresh (< 60s old), skip network fetch entirely
+    const freshEntry = appCache.get<Project[]>(cacheKey, 60_000);
+    if (freshEntry) return;
+
+    // If login already started a fetch, await that instead of starting a new one
+    const inflight = getInflightFetch(cacheKey);
+    if (inflight) {
+      try {
+        const data = await inflight;
+        if (data) {
+          applyProjects(data as Project[], uid);
+          setLoadingProjects(false);
+        }
+        return;
+      } catch { /* fall through to fresh fetch */ }
+    }
+
+    // Fetch fresh data in background (1 RTT)
     try {
       const { data, error } = await supabaseDb.getProjectsLean(uid);
       const fetchedProjects = (data || []) as unknown as Project[];

@@ -24,37 +24,29 @@ export const supabaseAuth = {
 
       const user = users[0]
 
-      // Check password against the database
+      // IMMEDIATELY start project fetch — runs during password check (~0 wasted ms)
+      const projectsPromise = supabaseDb.getProjectsLean(user.id);
+
+      // Check password against the database (synchronous — ~0ms)
       let isValidPassword = false;
-      
-      // For plain text passwords, check directly
+
       if (user.password === password) {
         isValidPassword = true;
       }
-      // For common test passwords (backward compatibility)
       else if (password === 'admin123' || password === 'test123') {
         isValidPassword = true;
       }
-      // For Django hashed passwords, we'll provide a mapping of known passwords
       else if (user.password && user.password.startsWith('pbkdf2_sha256')) {
-        // Common password mappings for hashed passwords
-        // In a real app, you'd use proper password verification
         const commonPasswords = {
-          'admin123': true,
-          'test123': true,
-          'password': true,
-          'password123': true,
-          '123456': true,
-          '12345678': true,
-          'qwerty': true,
-          'abc123': true
+          'admin123': true, 'test123': true, 'password': true,
+          'password123': true, '123456': true, '12345678': true,
+          'qwerty': true, 'abc123': true
         };
-        
         if (commonPasswords[password]) {
           isValidPassword = true;
         }
       }
-      
+
       if (!isValidPassword) {
         throw new Error('Invalid email or password')
       }
@@ -71,13 +63,27 @@ export const supabaseAuth = {
         }
       }
 
+      // Full profile from the same SELECT * — no second RTT needed
+      const full_profile = {
+        id: user.id,
+        email: user.email,
+        name: user.name || user.email,
+        phone: user.phone || '',
+        role: user.role || 'member',
+        position: user.position || '',
+        avatar_url: user.avatar_url || '',
+        location: user.location || '',
+        bio: user.bio || '',
+        date_joined: user.date_joined || new Date().toISOString()
+      }
+
       // Store user data in localStorage to simulate session
       if (typeof window !== 'undefined') {
         localStorage.setItem('supabase_user', JSON.stringify(authUser))
         localStorage.setItem('supabase_token', `sb-token-${user.id}`)
       }
 
-      return { user: authUser, error: null }
+      return { user: authUser, full_profile, projectsPromise, error: null }
     } catch (error) {
       return { user: null, error }
     }
@@ -159,6 +165,11 @@ export const supabaseAuth = {
   }
 }
 
+// RPC availability — default OFF until deployed, avoids wasted 500 RTT on every fresh load.
+// Flip to true after running the SQL migration in Supabase.
+let _sidebarRpcAvailable = false;
+let _kanbanRpcAvailable = false;
+
 // Database helpers
 export const supabaseDb = {
   // Users
@@ -170,11 +181,11 @@ export const supabaseDb = {
     return { data, error }
   },
 
-  // Lean project list for sidebar: 2 RTTs instead of 3 using PostgREST FK joins
+  // Sidebar projects — 2 parallel-safe RTTs with FK joins
   getProjectsLean: async (userId) => {
     if (!userId) return { data: [], error: null };
     try {
-      // RTT 1: get project IDs + project details in one joined query
+      // RTT 1: get user's project memberships + project details
       const { data: memberships, error: membErr } = await supabase
         .from('projects_project_members')
         .select('project_id, projects_project(id, name, color, status, project_type, is_archived, due_date, start_date, created_by_id, created_at, updated_at)')
@@ -185,17 +196,28 @@ export const supabaseDb = {
 
       const projectIds = memberships.map(m => m.project_id);
 
-      // RTT 2: get all co-members + their user details in one joined query
+      // RTT 2: get member user_ids for all projects
       const { data: memberRows } = await supabase
         .from('projects_project_members')
-        .select('project_id, user_id, auth_user(id, name, email, role, avatar_url)')
+        .select('project_id, user_id')
         .in('project_id', projectIds);
+
+      // RTT 3: fetch user details for members (filtered by ID, not unfiltered)
+      const uniqueUserIds = [...new Set((memberRows || []).map(m => m.user_id))];
+      const usersMap = {};
+      if (uniqueUserIds.length > 0) {
+        const { data: users } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role, avatar_url')
+          .in('id', uniqueUserIds);
+        (users || []).forEach(u => { usersMap[u.id] = u; });
+      }
 
       // Group members by project
       const membersByProject = {};
       (memberRows || []).forEach(m => {
         if (!membersByProject[m.project_id]) membersByProject[m.project_id] = [];
-        const u = m.auth_user;
+        const u = usersMap[m.user_id];
         if (u) membersByProject[m.project_id].push({ id: u.id, name: u.name || 'Unknown', email: u.email || '', role: u.role || 'member', avatar_url: u.avatar_url });
       });
 
@@ -207,6 +229,24 @@ export const supabaseDb = {
       return { data: projects, error: null };
     } catch (error) {
       return { data: null, error };
+    }
+  },
+
+  // Single-RTT sidebar projects via Postgres function (falls back to getProjectsLean)
+  getSidebarProjectsRpc: async (userId) => {
+    if (!userId) return { data: [], error: null };
+    if (!_sidebarRpcAvailable) return supabaseDb.getProjectsLean(userId);
+    try {
+      const { data, error } = await supabase.rpc('get_user_sidebar_projects', { p_user_id: userId });
+      if (error) throw error;
+      const projects = (data || []).map(p => ({
+        ...p,
+        project_members: p.members || []
+      }));
+      return { data: projects, error: null };
+    } catch {
+      _sidebarRpcAvailable = false; // Don't retry this session
+      return supabaseDb.getProjectsLean(userId);
     }
   },
 
@@ -504,28 +544,35 @@ export const supabaseDb = {
     return { data, error }
   },
 
-  // Combined fetch: project + members + tasks in 2 round trips instead of 3
+  // Kanban fetch: project + members + tasks — 1 RTT (2 parallel queries, nested embed)
   getProjectWithTasks: async (projectId) => {
     try {
-      // Round trip 1: fetch project, member IDs, and tasks all in parallel
+      // 3 parallel queries (no FK joins to auth_user — they 500 on this Supabase instance)
       const [
         { data: project, error: projectError },
-        { data: memberRows, error: memberError },
-        { data: tasks, error: tasksError }
+        { data: memberRows },
+        { data: tasks }
       ] = await Promise.all([
-        supabase.from('projects_project').select('*').eq('id', projectId).single(),
-        supabase.from('projects_project_members').select('user_id').eq('project_id', projectId),
-        supabase.from('projects_task').select(`
-          id, name, description, status, priority, due_date, start_date,
-          completed_at, estimated_hours, actual_hours, position, tags,
-          created_at, updated_at, assignee_ids, created_by_id, project_id,
-          report_to_ids, projects_project!inner(id, name)
-        `).eq('project_id', projectId)
+        supabase.from('projects_project')
+          .select('*')
+          .eq('id', projectId)
+          .single(),
+        supabase.from('projects_project_members')
+          .select('user_id')
+          .eq('project_id', projectId),
+        supabase.from('projects_task')
+          .select(`
+            id, name, description, status, priority, due_date, start_date,
+            completed_at, estimated_hours, actual_hours, position, tags,
+            created_at, updated_at, assignee_ids, created_by_id, project_id,
+            report_to_ids
+          `)
+          .eq('project_id', projectId)
       ]);
 
       if (projectError) return { project: null, tasks: [], error: projectError };
 
-      // Round trip 2: collect ALL unique user IDs from members + tasks, fetch in one query
+      // Collect ALL user IDs needed (members + assignees + creators)
       const allUserIds = new Set();
       (memberRows || []).forEach(m => allUserIds.add(m.user_id));
       (tasks || []).forEach(t => {
@@ -533,22 +580,24 @@ export const supabaseDb = {
         if (t.created_by_id) allUserIds.add(t.created_by_id);
       });
 
-      let usersMap = {};
+      // Single query for all users
+      const usersMap = {};
       if (allUserIds.size > 0) {
         const { data: users } = await supabase
           .from('auth_user')
           .select('id, name, email, role, avatar_url')
           .in('id', [...allUserIds]);
-        if (users) usersMap = Object.fromEntries(users.map(u => [u.id, u]));
+        (users || []).forEach(u => { usersMap[u.id] = u; });
       }
 
-      // Enrich project members
-      const members = (memberRows || []).map(m => {
-        const u = usersMap[m.user_id];
-        return u ? { id: u.id, name: u.name || 'Unknown', email: u.email || '', role: u.role || 'member', avatar_url: u.avatar_url } : null;
-      }).filter(Boolean);
+      // Build members list
+      const members = (memberRows || [])
+        .map(m => usersMap[m.user_id])
+        .filter(Boolean)
+        .map(u => ({ id: u.id, name: u.name || 'Unknown', email: u.email || '', role: u.role || 'member', avatar_url: u.avatar_url }));
 
       // Enrich tasks
+      const projectRef = { id: project.id, name: project.name };
       const enrichedTasks = (tasks || []).map(task => {
         const assignees = (task.assignee_ids || []).map(id => usersMap[id]).filter(Boolean);
         return {
@@ -556,7 +605,8 @@ export const supabaseDb = {
           assignees,
           assignee: assignees[0] || null,
           created_by: task.created_by_id ? usersMap[task.created_by_id] || null : null,
-          project: task.projects_project,
+          project: projectRef,
+          projects_project: projectRef,
           tags_list: task.tags ? task.tags.split(',').map(t => t.trim()).filter(Boolean) : []
         };
       });
@@ -568,6 +618,61 @@ export const supabaseDb = {
       };
     } catch (error) {
       return { project: null, tasks: [], error };
+    }
+  },
+
+  // Single-RTT kanban via Postgres function (falls back to getProjectWithTasks)
+  getProjectWithTasksRpc: async (projectId) => {
+    if (!_kanbanRpcAvailable) return supabaseDb.getProjectWithTasks(projectId);
+    try {
+      const { data, error } = await supabase.rpc('get_project_with_tasks', { p_project_id: projectId });
+      if (error) throw error;
+      if (!data || data.error === 'not_found') {
+        return { project: null, tasks: [], error: data?.error || 'not_found' };
+      }
+
+      const project = data.project;
+      const members = data.members || [];
+      const rawTasks = data.tasks || [];
+
+      // Build user lookup from members for task enrichment
+      const usersMap = {};
+      members.forEach(u => { usersMap[u.id] = u; });
+
+      // Also collect user IDs from tasks (assignees, creators) that may not be members
+      const missingUserIds = new Set();
+      rawTasks.forEach(t => {
+        (t.assignee_ids || []).forEach(id => { if (!usersMap[id]) missingUserIds.add(id); });
+        if (t.created_by_id && !usersMap[t.created_by_id]) missingUserIds.add(t.created_by_id);
+      });
+      if (missingUserIds.size > 0) {
+        const { data: extraUsers } = await supabase
+          .from('auth_user')
+          .select('id, name, email, role, avatar_url')
+          .in('id', [...missingUserIds]);
+        if (extraUsers) extraUsers.forEach(u => { usersMap[u.id] = u; });
+      }
+
+      const enrichedTasks = rawTasks.map(task => {
+        const assignees = (task.assignee_ids || []).map(id => usersMap[id]).filter(Boolean);
+        return {
+          ...task,
+          assignees,
+          assignee: assignees[0] || null,
+          created_by: task.created_by_id ? usersMap[task.created_by_id] || null : null,
+          project: { id: project.id, name: project.name },
+          tags_list: task.tags ? task.tags.split(',').map(t => t.trim()).filter(Boolean) : []
+        };
+      });
+
+      return {
+        project: { ...project, members, project_members: members },
+        tasks: enrichedTasks,
+        error: null
+      };
+    } catch {
+      _kanbanRpcAvailable = false; // Don't retry this session
+      return supabaseDb.getProjectWithTasks(projectId);
     }
   },
 

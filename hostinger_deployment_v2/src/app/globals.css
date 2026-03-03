@@ -1663,19 +1663,30 @@ input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hove
     padding: 0.75rem 1rem !important;
   }
 
-  /* Ensure sidebar stays dark on mobile */
-  .sidebar-nav,
-  .sidebar-panel,
-  .sidebar-panel *,
-  .sidebar-header,
-  .sidebar-bottom {
+  /* Sidebar theme on mobile - follows current theme */
+  html.dark .sidebar-nav,
+  html.dark .sidebar-panel,
+  html.dark .sidebar-panel *,
+  html.dark .sidebar-header,
+  html.dark .sidebar-bottom {
     background-color: #0D0D0D !important;
+  }
+
+  html.light .sidebar-nav,
+  html.light .sidebar-panel,
+  html.light .sidebar-header,
+  html.light .sidebar-bottom {
+    background-color: #FAFAF8 !important;
   }
 
   .sidebar-panel .sidebar-link,
   .sidebar-panel button,
   .sidebar-panel a {
     background-color: transparent !important;
+  }
+
+  html.light nav:not(.sidebar-nav) {
+    background: rgba(250, 250, 248, 0.95) !important;
   }
   
   /* Sections */
@@ -3034,4 +3045,355 @@ tbody td {
 option {
   background-color: #1A1A1A !important;
   color: #FFFFFF !important;
+}
+
+/* ============================================================
+   LIGHT THEME - Deel-inspired warm white design
+   Activated by adding class="light" to <html>
+   ============================================================ */
+
+html.light {
+  /* Light theme neutral colors */
+  --background: #FAFAF8 !important;
+  --background-secondary: #F5F5F0 !important;
+  --surface: #FFFFFF !important;
+  --surface-light: #F9F9F6 !important;
+  --surface-dark: #F0F0EC !important;
+  --surface-elevated: #FFFFFF !important;
+  --surface-subtle: #F5F5F0 !important;
+  --surface-hover: #F0F0EC !important;
+
+  /* Light theme text colors */
+  --text-primary: #1A1A2E !important;
+  --text-secondary: #6B7280 !important;
+  --text-muted: #9CA3AF !important;
+  --text-light: #D1D5DB !important;
+  --text-inverse: #FFFFFF !important;
+
+  /* Light theme border colors */
+  --border: #E5E5E0 !important;
+  --border-light: #EBEBEA !important;
+  --border-dark: #D4D4CF !important;
+  --border-accent: #D4D4CF !important;
+
+  /* Light shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04) !important;
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04) !important;
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03) !important;
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.12) !important;
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.1) !important;
+
+  /* Light gradients */
+  --gradient-surface: linear-gradient(135deg, #FFFFFF, #F9F9F6) !important;
+  --gradient-background: linear-gradient(180deg, #FAFAF8, #F5F5F0) !important;
+  --gradient-sidebar: linear-gradient(180deg, #FAFAF8, #F5F5F0) !important;
+}
+
+/* --- Light theme base overrides --- */
+html.light,
+html.light body {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+html.light #__next {
+  background: #FAFAF8 !important;
+}
+
+html.light body .min-h-full,
+html.light body > div {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+/* Light scrollbar */
+html.light ::-webkit-scrollbar-track {
+  background: #F5F5F0 !important;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #D4D4CF !important;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF !important;
+}
+
+/* Light headings */
+html.light h1, html.light h2, html.light h3,
+html.light h4, html.light h5, html.light h6 {
+  color: #1A1A2E !important;
+}
+
+/* Light inputs */
+html.light input[type="email"],
+html.light input[type="password"],
+html.light input[type="text"],
+html.light input[type="tel"],
+html.light input[type="number"],
+html.light input[type="url"],
+html.light input[type="search"],
+html.light input[type="date"],
+html.light input[type="time"],
+html.light select,
+html.light textarea {
+  background: #FFFFFF !important;
+  color: #1A1A2E !important;
+  border-color: #E5E5E0 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #9CA3AF !important;
+}
+
+html.light input:focus,
+html.light textarea:focus,
+html.light select:focus {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Light tables */
+html.light table {
+  color: #1A1A2E !important;
+}
+html.light thead {
+  background-color: #F5F5F0 !important;
+}
+html.light thead th {
+  color: #6B7280 !important;
+  border-bottom: 1px solid #E5E5E0 !important;
+}
+html.light tbody tr {
+  border-bottom: 1px solid #F0F0EC !important;
+}
+html.light tbody tr:hover {
+  background-color: #F9F9F6 !important;
+}
+html.light tbody td {
+  color: #1A1A2E !important;
+}
+html.light option {
+  background-color: #FFFFFF !important;
+  color: #1A1A2E !important;
+}
+
+/* Light selection */
+html.light ::selection {
+  background: #10B981 !important;
+  color: #FFFFFF !important;
+}
+
+/* ---- SIDEBAR LIGHT THEME ---- */
+html.light .sidebar-panel {
+  background: #FAFAF8 !important;
+  border-right: 1px solid #E5E5E0 !important;
+}
+
+html.light .sidebar-header {
+  border-bottom: 1px solid #E5E5E0 !important;
+}
+
+html.light .sidebar-bottom {
+  border-top: 1px solid #E5E5E0 !important;
+}
+
+html.light .mobile-topbar {
+  background: #FAFAF8 !important;
+  border-bottom: 1px solid #E5E5E0 !important;
+}
+
+html.light .mobile-hamburger-badge {
+  border-color: #FAFAF8 !important;
+}
+
+html.light .sidebar-overlay {
+  background: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Sidebar link colors in light mode */
+html.light .sidebar-panel .sidebar-link {
+  color: #6B7280 !important;
+}
+
+html.light .sidebar-panel .sidebar-link:hover {
+  background: #F0F0EC !important;
+  color: #1A1A2E !important;
+}
+
+/* ---- GLOBAL OVERRIDES FOR LIGHT THEME ---- */
+/* Override inline styles on page containers and common elements */
+
+/* Main page wrapper - all pages use this */
+html.light .page-main {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+/* Personal page variants */
+html.light .personal-main,
+html.light .personal-page {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+/* Calendar container */
+html.light .calendar-container {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+/* The outer flex wrapper that contains Sidebar + content */
+html.light body > div > div > div {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+/* Broad light theme background/text override for page structure.
+   These rules use high specificity + !important to override inline styles.
+   The key dark hex values used across all pages get remapped. */
+
+/* Target the layout wrapper div */
+html.light .min-h-full {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+/* Target all major structural divs that render as page containers */
+html.light .min-h-full > div {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+/* All page-main content areas and their direct children */
+html.light .page-main > div,
+html.light .page-main > header,
+html.light .page-main > section {
+  color: #1A1A2E !important;
+}
+
+/* Override hardcoded dark backgrounds on page-level containers.
+   These have inline style={{ background: '#0D0D0D' }} which CSS !important CAN override. */
+html.light .min-h-full > div > div:not(.sidebar-panel):not(.sidebar-overlay):not(.create-project-overlay) {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+/* Page main and all flex containers inside pages */
+html.light .page-main,
+html.light .page-main > div {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+/* Headers inside pages (typically have bg #141414) */
+html.light .page-main > div:first-child {
+  border-bottom-color: #E5E5E0 !important;
+}
+
+/* Common card/section pattern with dark surface colors */
+html.light div[class*="rounded"] {
+  border-color: #E5E5E0 !important;
+}
+
+/* Fix white text on light backgrounds - target common page text patterns */
+html.light .page-main span,
+html.light .page-main p,
+html.light .page-main label,
+html.light .page-main div {
+  /* Only override when not inside colored elements */
+}
+
+/* Calendar-specific overrides */
+html.light .calendar-container,
+html.light .calendar-container > div {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+/* Card-like containers */
+html.light .card,
+html.light .card-hover,
+html.light .card-interactive {
+  background: #FFFFFF !important;
+  border-color: #E5E5E0 !important;
+}
+
+/* Modals light theme */
+html.light [style*="background: rgba(0,0,0,0.7)"],
+html.light [style*="background: rgba(0, 0, 0, 0.7)"] {
+  background: rgba(0, 0, 0, 0.3) !important;
+}
+
+html.light .modal-backdrop {
+  background: rgba(0, 0, 0, 0.3) !important;
+}
+
+html.light .modal-content {
+  background: #FFFFFF !important;
+  border-color: #E5E5E0 !important;
+  color: #1A1A2E !important;
+}
+
+/* Keep active nav items with green background readable */
+html.light .sidebar-panel [style*="background: '#10B981'"],
+html.light .sidebar-panel [style*="background: #10B981"] {
+  color: #FFFFFF !important;
+}
+
+/* Status indicator border on light bg */
+html.light [style*="border: 2px solid #0D0D0D"] {
+  border-color: #FAFAF8 !important;
+}
+
+/* Theme toggle button in sidebar */
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #A1A1AA;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: 'Mabry Pro', sans-serif;
+}
+
+.theme-toggle-btn:hover {
+  background: #1A1A1A;
+  color: #FFFFFF;
+}
+
+html.light .theme-toggle-btn {
+  color: #6B7280;
+}
+
+html.light .theme-toggle-btn:hover {
+  background: #F0F0EC;
+  color: #1A1A2E;
+}
+
+/* Light theme: fix common page containers that use dark inline styles */
+html.light div[style*="minHeight: '100vh'"],
+html.light div[style*="min-height: 100vh"] {
+  background: #FAFAF8 !important;
+  color: #1A1A2E !important;
+}
+
+/* Fix the online status dot border in light mode */
+html.light div[style*="border: '2px solid #0D0D0D'"],
+html.light div[style*="border: 2px solid #0D0D0D"] {
+  border-color: #FAFAF8 !important;
+}
+
+/* Light mode nav item hover fix for sidebar */
+html.light .sidebar-nav .sidebar-link:hover {
+  background: #F0F0EC !important;
+  color: #1A1A2E !important;
 }

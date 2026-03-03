@@ -5638,6 +5638,21 @@ export default function PersonalPage() {
                   Add to Calendar
                   </button>
                   <button
+                  onClick={async () => {
+                    if (!confirm(`Delete "${selectedExternalTimeline.title}"?`)) return;
+                    try {
+                      await supabase.from('timeline_items').delete().eq('id', selectedExternalTimeline.id);
+                      setTimelineItems(prev => prev.filter(t => t.id !== selectedExternalTimeline.id));
+                      setSelectedExternalTimeline(null);
+                    } catch (err) {
+                      console.error('Error deleting timeline item:', err);
+                    }
+                  }}
+                  style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', border: '1px solid #7F1D1D', borderRadius: '10px', background: '#1A1A1A', color: '#EF4444', cursor: 'pointer' }}
+                >
+                  Delete
+                  </button>
+                  <button
                   onClick={() => setSelectedExternalTimeline(null)}
                   style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', border: '1px solid #2D2D2D', borderRadius: '10px', background: '#1A1A1A', color: '#E4E4E7', cursor: 'pointer' }}
                 >
