@@ -185,37 +185,39 @@ export const supabaseDb = {
   getProjectsLean: async (userId) => {
     if (!userId) return { data: [], error: null };
     try {
-      // RTT 1: get user's project memberships + project details
-      const { data: memberships, error: membErr } = await supabase
+      // RTT 1: get user's project IDs (tiny query, fast)
+      const { data: myRows, error: membErr } = await supabase
         .from('projects_project_members')
-        .select('project_id, projects_project(id, name, color, status, project_type, is_archived, due_date, start_date, created_by_id, created_at, updated_at)')
+        .select('project_id')
         .eq('user_id', userId);
 
       if (membErr) return { data: null, error: membErr };
-      if (!memberships?.length) return { data: [], error: null };
+      if (!myRows?.length) return { data: [], error: null };
 
-      const projectIds = memberships.map(m => m.project_id);
+      const projectIds = myRows.map(m => m.project_id);
 
-      // RTT 2: get member user_ids for all projects
-      const { data: memberRows } = await supabase
-        .from('projects_project_members')
-        .select('project_id, user_id')
-        .in('project_id', projectIds);
+      // RTT 2 (PARALLEL): project details + all member rows at the same time
+      const [{ data: projects }, { data: memberRows }] = await Promise.all([
+        supabase.from('projects_project')
+          .select('id, name, color, status, project_type, is_archived, due_date, start_date, created_by_id, created_at, updated_at')
+          .in('id', projectIds),
+        supabase.from('projects_project_members')
+          .select('project_id, user_id')
+          .in('project_id', projectIds)
+      ]);
 
-      // Use global users cache when available — skip RTT 3 entirely on refresh
+      // Use global users cache — skip user fetch entirely on refresh
       const { appCache } = await import('./appCache');
       const cachedUsers = appCache.get('global_users', 30 * 60 * 1000) || {};
       const uniqueUserIds = [...new Set((memberRows || []).map(m => m.user_id))];
       const usersMap = {};
-
-      // Check which users we already know
       const missingIds = [];
       uniqueUserIds.forEach(id => {
         if (cachedUsers[id]) { usersMap[id] = cachedUsers[id]; }
         else { missingIds.push(id); }
       });
 
-      // Only fetch users not in cache
+      // RTT 3 (conditional — skipped when global_users cached): fetch unknown users
       if (missingIds.length > 0) {
         const { data: users } = await supabase
           .from('auth_user')
@@ -232,12 +234,9 @@ export const supabaseDb = {
         if (u) membersByProject[m.project_id].push({ id: u.id, name: u.name || 'Unknown', email: u.email || '', role: u.role || 'member', avatar_url: u.avatar_url });
       });
 
-      const projects = memberships
-        .map(m => m.projects_project)
-        .filter(Boolean)
-        .map(p => ({ ...p, members: membersByProject[p.id] || [], project_members: membersByProject[p.id] || [] }));
+      const result = (projects || []).map(p => ({ ...p, members: membersByProject[p.id] || [], project_members: membersByProject[p.id] || [] }));
 
-      return { data: projects, error: null };
+      return { data: result, error: null };
     } catch (error) {
       return { data: null, error };
     }

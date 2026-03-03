@@ -159,7 +159,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Wire it into the inflight map so SidebarContext awaits the same promise
         const cacheKey = `sidebar_projects_${authUser.id}`;
         const fetchPromise = (projectsPromise || supabaseDb.getProjectsLean(authUser.id)).then(({ data }: any) => {
-          if (data) appCache.set(cacheKey, data);
+          if (data) {
+            appCache.set(cacheKey, data);
+            // Populate global_users cache immediately so kanban skips user RTT
+            const usersObj: Record<number, any> = {};
+            data.forEach((p: any) => {
+              (p.members || []).forEach((m: any) => { if (m.id) usersObj[m.id] = m; });
+            });
+            if (Object.keys(usersObj).length > 0) appCache.set('global_users', usersObj);
+          }
           _inflight.delete(cacheKey);
           return data;
         }).catch(() => { _inflight.delete(cacheKey); });
