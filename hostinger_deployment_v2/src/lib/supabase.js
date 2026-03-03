@@ -202,14 +202,25 @@ export const supabaseDb = {
         .select('project_id, user_id')
         .in('project_id', projectIds);
 
-      // RTT 3: fetch user details for members (filtered by ID, not unfiltered)
+      // Use global users cache when available — skip RTT 3 entirely on refresh
+      const { appCache } = await import('./appCache');
+      const cachedUsers = appCache.get('global_users', 30 * 60 * 1000) || {};
       const uniqueUserIds = [...new Set((memberRows || []).map(m => m.user_id))];
       const usersMap = {};
-      if (uniqueUserIds.length > 0) {
+
+      // Check which users we already know
+      const missingIds = [];
+      uniqueUserIds.forEach(id => {
+        if (cachedUsers[id]) { usersMap[id] = cachedUsers[id]; }
+        else { missingIds.push(id); }
+      });
+
+      // Only fetch users not in cache
+      if (missingIds.length > 0) {
         const { data: users } = await supabase
           .from('auth_user')
           .select('id, name, email, role, avatar_url')
-          .in('id', uniqueUserIds);
+          .in('id', missingIds);
         (users || []).forEach(u => { usersMap[u.id] = u; });
       }
 
@@ -580,13 +591,18 @@ export const supabaseDb = {
         if (t.created_by_id) allUserIds.add(t.created_by_id);
       });
 
-      // Single query for all users
-      const usersMap = {};
-      if (allUserIds.size > 0) {
+      // Use global users cache from sidebar — avoids 2nd RTT in most cases
+      const { appCache } = await import('./appCache');
+      const cachedUsers = appCache.get('global_users', 30 * 60 * 1000) || {};
+      const usersMap = { ...cachedUsers };
+
+      // Only fetch users not already in cache
+      const missingIds = [...allUserIds].filter(id => !usersMap[id]);
+      if (missingIds.length > 0) {
         const { data: users } = await supabase
           .from('auth_user')
           .select('id, name, email, role, avatar_url')
-          .in('id', [...allUserIds]);
+          .in('id', missingIds);
         (users || []).forEach(u => { usersMap[u.id] = u; });
       }
 

@@ -111,12 +111,20 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     fetchedProjects.forEach((project: Project) => {
       if (project.members && Array.isArray(project.members)) {
         project.members.forEach((member) => {
-          if (member.id !== currentUserId && !allMembersMap.has(member.id)) {
+          if (!allMembersMap.has(member.id)) {
             allMembersMap.set(member.id, member);
           }
         });
       }
     });
+
+    // Cache all known users globally — getProjectWithTasks uses this to skip user RTT
+    const usersObj: Record<number, TeamMember> = {};
+    allMembersMap.forEach((m, id) => { usersObj[id] = m; });
+    appCache.set('global_users', usersObj);
+
+    // Exclude current user from sidebar team list
+    allMembersMap.delete(currentUserId);
     setTeamMembers(Array.from(allMembersMap.values()).slice(0, 15));
   }, []);
 
