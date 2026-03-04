@@ -4442,11 +4442,12 @@ export default function PersonalPage() {
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '15px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '10px',
                       outline: 'none',
-                      background: '#1A1A1A',
-                            cursor: 'pointer',
+                      background: '#141414',
+                      color: '#FFFFFF',
+                      cursor: 'pointer',
                     }}
                   >
                     <option value={0}>No reminder</option>
@@ -4473,7 +4474,7 @@ export default function PersonalPage() {
                         height: '26px',
                         borderRadius: '13px',
                         border: 'none',
-                        background: blockForm.isRecurring ? '#34c759' : 'rgba(0, 0, 0, 0.1)',
+                        background: blockForm.isRecurring ? '#34c759' : '#3D3D3D',
                         cursor: 'pointer',
                         position: 'relative',
                         transition: 'background 0.2s ease',
@@ -4495,7 +4496,7 @@ export default function PersonalPage() {
                     </motion.button>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <ArrowPathIcon style={{ width: '16px', height: '16px', color: '#86868b' }} />
-                      <span style={{ fontSize: '14px', color: '#1d1d1f' }}>Repeat on specific days</span>
+                      <span style={{ fontSize: '14px', color: '#E4E4E7' }}>Repeat on specific days</span>
                     </div>
                   </div>
                   
@@ -4535,7 +4536,7 @@ export default function PersonalPage() {
                                     justifyContent: 'center',
                                     borderRadius: '20px',
                         border: 'none',
-                                    background: isSelected ? '#0071e3' : 'rgba(0, 0, 0, 0.05)',
+                                    background: isSelected ? '#0071e3' : '#252525',
                                     color: isSelected ? '#fff' : '#86868b',
                                     fontSize: '12px',
                   fontWeight: '600',
@@ -4560,13 +4561,16 @@ export default function PersonalPage() {
                               type="date"
                               value={blockForm.recurringStartDate || ''}
                               onChange={(e) => setBlockForm({ ...blockForm, recurringStartDate: e.target.value })}
-        style={{ 
+        style={{
                                 width: '100%',
                                 padding: '10px 12px',
                                 fontSize: '14px',
-                                border: '1px solid rgba(0, 0, 0, 0.1)',
+                                border: '1px solid #3D3D3D',
                                 borderRadius: '10px',
                                 outline: 'none',
+                                background: '#141414',
+                                color: '#FFFFFF',
+                                colorScheme: 'dark',
                               }}
                             />
                           </div>
@@ -4583,9 +4587,12 @@ export default function PersonalPage() {
                                 width: '100%',
                                 padding: '10px 12px',
                                 fontSize: '14px',
-                                border: '1px solid rgba(0, 0, 0, 0.1)',
+                                border: '1px solid #3D3D3D',
                                 borderRadius: '10px',
                                 outline: 'none',
+                                background: '#141414',
+                                color: '#FFFFFF',
+                                colorScheme: 'dark',
                               }}
                             />
                 </div>
@@ -4634,9 +4641,11 @@ export default function PersonalPage() {
                         flex: 1,
                         padding: '10px 14px',
                         fontSize: '14px',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '10px',
                         outline: 'none',
+                        background: '#141414',
+                        color: '#FFFFFF',
                       }}
                     />
                     <motion.button
@@ -4781,7 +4790,7 @@ export default function PersonalPage() {
                     padding: '14px',
                     fontSize: '15px',
                     fontWeight: '500',
-                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    border: '1px solid #3D3D3D',
                   borderRadius: '12px',
                     background: '#1A1A1A',
                         cursor: 'pointer',
