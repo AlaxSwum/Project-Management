@@ -244,7 +244,7 @@ button[type="submit"]:active, .btn-primary:active {
 }
 
 /* Professional input styling */
-input[type="email"], input[type="password"], input[type="text"], input[type="tel"], select, textarea {
+input[type="email"], input[type="password"], input[type="text"], input[type="tel"], input[type="date"], input[type="number"], input[type="time"], select, textarea {
   width: 100% !important;
   padding: 0.875rem 1rem !important;
   border: 2px solid var(--border) !important;
@@ -256,16 +256,17 @@ input[type="email"], input[type="password"], input[type="text"], input[type="tel
   color: var(--text-primary) !important;
   box-shadow: var(--shadow-sm) !important;
   resize: vertical;
+  color-scheme: dark;
 }
 
-input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="tel"]:focus, select:focus, textarea:focus {
+input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="tel"]:focus, input[type="date"]:focus, input[type="number"]:focus, input[type="time"]:focus, select:focus, textarea:focus {
   outline: none !important;
   border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px rgba(255, 179, 51, 0.1), var(--shadow-md) !important;
   transform: translateY(-1px) !important;
 }
 
-input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hover, input[type="tel"]:hover, select:hover, textarea:hover {
+input[type="email"]:hover, input[type="password"]:hover, input[type="text"]:hover, input[type="tel"]:hover, input[type="date"]:hover, input[type="number"]:hover, input[type="time"]:hover, select:hover, textarea:hover {
   border-color: var(--border-dark) !important;
   box-shadow: var(--shadow-md) !important;
 }
