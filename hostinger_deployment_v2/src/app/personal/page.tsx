@@ -6463,9 +6463,11 @@ export default function PersonalPage() {
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '15px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '10px',
                       outline: 'none',
+                      background: '#0D0D0D',
+                      color: '#FFFFFF',
                     }}
                   />
                 </div>
@@ -6484,9 +6486,12 @@ export default function PersonalPage() {
                         width: '100%',
                         padding: '12px 16px',
                         fontSize: '14px',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '10px',
                         outline: 'none',
+                        background: '#0D0D0D',
+                        color: '#FFFFFF',
+                        colorScheme: 'dark',
                       }}
                     />
                   </div>
@@ -6502,9 +6507,12 @@ export default function PersonalPage() {
                         width: '100%',
                         padding: '12px 16px',
                         fontSize: '14px',
-                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #3D3D3D',
                         borderRadius: '10px',
                         outline: 'none',
+                        background: '#0D0D0D',
+                        color: '#FFFFFF',
+                        colorScheme: 'dark',
                       }}
                     />
                   </div>
@@ -6525,9 +6533,11 @@ export default function PersonalPage() {
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '14px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '10px',
                       outline: 'none',
+                      background: '#0D0D0D',
+                      color: '#FFFFFF',
                     }}
                   />
                 </div>
@@ -6553,10 +6563,10 @@ export default function PersonalPage() {
                           padding: '12px 16px',
                           fontSize: '14px',
                           fontWeight: '600',
-                          border: todoForm.priority === p.value ? `2px solid ${p.color}` : '1px solid rgba(0, 0, 0, 0.1)',
+                          border: todoForm.priority === p.value ? `2px solid ${p.color}` : '1px solid #3D3D3D',
                           borderRadius: '10px',
-                          background: todoForm.priority === p.value ? p.bg : '#fff',
-                          color: todoForm.priority === p.value ? p.color : '#6b7280',
+                          background: todoForm.priority === p.value ? p.bg : '#0D0D0D',
+                          color: todoForm.priority === p.value ? p.color : '#A1A1AA',
                           cursor: 'pointer',
                         }}
                       >
@@ -6580,11 +6590,13 @@ export default function PersonalPage() {
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '14px',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
+                      border: '1px solid #3D3D3D',
                       borderRadius: '10px',
                       outline: 'none',
                       resize: 'vertical',
                       fontFamily: 'inherit',
+                      background: '#0D0D0D',
+                      color: '#FFFFFF',
                     }}
                   />
                 </div>
