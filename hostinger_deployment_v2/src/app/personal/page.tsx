@@ -580,7 +580,7 @@ export default function PersonalPage() {
   // Convert Y position to time
   const getTimeFromY = (y: number, containerTop: number): { hour: number; minute: number } => {
     const relativeY = y - containerTop;
-    const hourHeight = 52; // 52px per hour - compact for desktop
+    const hourHeight = 80;
     const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
     const hour = Math.floor(totalMinutes / 60);
     const minute = Math.round((totalMinutes % 60) / 15) * 15; // Snap to 15-min intervals
@@ -626,7 +626,7 @@ export default function PersonalPage() {
         if (e.clientX >= rect.left && e.clientX <= rect.right && 
             e.clientY >= rect.top && e.clientY <= rect.bottom) {
           const relativeY = e.clientY - rect.top;
-          const hourHeight = 52; // 52px per hour in week view
+          const hourHeight = 80;
           const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
           const hour = Math.floor(totalMinutes / 60);
           const minute = Math.round((totalMinutes % 60) / 15) * 15;
@@ -706,8 +706,8 @@ export default function PersonalPage() {
     const height = Math.max(bottom - top, 15);
     
     return {
-      top: (top / 60) * 60,
-      height: (height / 60) * 60,
+      top: (top / 60) * 80,
+      height: (height / 60) * 80,
     };
   };
 
@@ -1214,7 +1214,7 @@ export default function PersonalPage() {
 
       const { data, error } = await supabase
         .from('time_blocks')
-        .select('id, user_id, title, date, start_time, end_time, type, color, description, is_recurring, recurring_days, recurring_start_date, recurring_end_date, notification_time, meeting_link, checklist, category, created_at, updated_at')
+        .select('id, user_id, title, date, start_time, end_time, type, color, description, is_recurring, recurring_days, recurring_start_date, recurring_end_date, excluded_dates, notification_time, meeting_link, checklist, category, completed, created_at, updated_at')
         .eq('user_id', user?.id)
         .order('date', { ascending: true });
 
@@ -1530,13 +1530,23 @@ export default function PersonalPage() {
   const getMoveOffset = () => {
     if (!movingBlock) return 0;
     const deltaY = moveCurrentY - moveStartY;
-    return Math.round((deltaY / 60) * 60 / 15) * 15 / 60 * 60; // Convert to pixels (snapped)
+    return Math.round((deltaY / 80) * 60 / 15) * 15 / 60 * 80;
   };
 
   const deleteBlock = async (blockId: string) => {
     console.log('deleteBlock called with id:', blockId);
     try {
-      // supabase is already imported at the top of the file
+      // Handle meeting blocks separately (they have 'meeting-{id}' format)
+      if (blockId.startsWith('meeting-')) {
+        const meetingId = Number(blockId.replace('meeting-', ''));
+        console.log('Deleting meeting with id:', meetingId);
+        await meetingService.deleteMeeting(meetingId);
+        setMeetings(prev => prev.filter(m => m.id !== meetingId));
+        setShowPanel(false);
+        setSelectedBlock(null);
+        return;
+      }
+
       const { error } = await supabase
         .from('time_blocks')
         .delete()
@@ -1557,9 +1567,14 @@ export default function PersonalPage() {
     } catch (err) {
       console.error('Error deleting block:', err);
       // Still update local state even if database fails
-      const newBlocks = blocks.filter(b => b.id !== blockId);
-      setBlocks(newBlocks);
-      localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
+      if (blockId.startsWith('meeting-')) {
+        const meetingId = Number(blockId.replace('meeting-', ''));
+        setMeetings(prev => prev.filter(m => m.id !== meetingId));
+      } else {
+        const newBlocks = blocks.filter(b => b.id !== blockId);
+        setBlocks(newBlocks);
+        localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
+      }
       setShowPanel(false);
       setSelectedBlock(null);
     }
@@ -1677,6 +1692,9 @@ export default function PersonalPage() {
       setDeleteTargetDate(formatDate(currentDate));
       setShowDeleteConfirm(true);
     } else {
+      // Close panel immediately, then delete in background
+      setShowPanel(false);
+      setSelectedBlock(null);
       deleteBlock(block.id);
     }
   };
@@ -1684,19 +1702,18 @@ export default function PersonalPage() {
   // Handler for delete confirmation choice
   const handleDeleteConfirm = async (deleteAll: boolean) => {
     console.log('handleDeleteConfirm called:', { deleteAll, deleteTargetBlock });
+    // Close panels immediately
+    setShowPanel(false);
+    setSelectedBlock(null);
+    setShowDeleteConfirm(false);
     if (deleteTargetBlock) {
       if (deleteTargetBlock.type === 'goal') {
-        // For goals, deleteAll means delete the goal entirely
-        // Otherwise, we don't support single occurrence deletion for goals yet
         if (deleteAll) {
           console.log('Deleting goal:', deleteTargetBlock.id);
           await deleteGoal(deleteTargetBlock.id);
         } else {
-          // For goals, skip today by marking completion as skipped (or just close for now)
-          // Goals don't have excludedDates, so we'll just close the modal
-          console.log('Single occurrence skip for goals not yet implemented');
-          setShowPanel(false);
-          setSelectedBlock(null);
+          console.log('Deleting single occurrence of goal:', deleteTargetBlock.id, deleteTargetDate);
+          await deleteSingleOccurrence(deleteTargetBlock, deleteTargetDate);
         }
       } else {
         if (deleteAll) {
@@ -2057,8 +2074,8 @@ export default function PersonalPage() {
     const duration = endMinutes - startMinutes;
     
     return {
-      top: (startMinutes / 60) * 52 + 40, // 52px per hour + header offset
-      height: Math.max((duration / 60) * 80, 40), // minimum 40px
+      top: (startMinutes / 60) * 80,
+      height: Math.max((duration / 60) * 80, 40),
     };
   };
 
@@ -2454,7 +2471,7 @@ export default function PersonalPage() {
                         style={{
                           display: 'flex',
                           borderBottom: '1px solid #2D2D2D',
-                          minHeight: '42px',
+                          minHeight: '80px',
                         }}
                       >
                         <div
@@ -2548,7 +2565,7 @@ export default function PersonalPage() {
                       const displayHeight = isResizing ? (() => {
                         const [sh, sm] = displayBlock.startTime.split(':').map(Number);
                         const [eh, em] = displayBlock.endTime.split(':').map(Number);
-                        return Math.max(((eh * 60 + em) - (sh * 60 + sm)) / 60 * 60, 30);
+                        return Math.max(((eh * 60 + em) - (sh * 60 + sm)) / 60 * 80, 30);
                       })() : height;
                       
                       const canDrag = !block.id.startsWith('goal-') && !block.id.startsWith('meeting-');
@@ -2563,7 +2580,7 @@ export default function PersonalPage() {
                             scale: 1,
                             y: moveOffset,
                           }}
-                          whileHover={{ scale: canDrag ? 1.01 : 1, zIndex: 10 }}
+                          
                           onClick={() => !isMoving && !isResizing && handleBlockClick(block)}
                           onDoubleClick={(e) => {
                             e.stopPropagation();
@@ -2624,7 +2641,7 @@ export default function PersonalPage() {
                             {block.type === 'project' && <FolderIcon style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.9)' }} />}
                             <span
                               style={{
-                                fontSize: '12px',
+                                fontSize: '11px',
                                 fontWeight: '600',
                                 color: block.completed ? 'rgba(255,255,255,0.5)' : '#FFFFFF',
                                 textDecoration: block.completed ? 'line-through' : 'none',
@@ -2661,7 +2678,7 @@ export default function PersonalPage() {
             </div>
                           <div
                             style={{
-                              fontSize: '12px',
+                              fontSize: '10px',
                               color: 'rgba(255,255,255,0.75)',
                               marginTop: '6px',
                               fontWeight: 500,
@@ -2840,7 +2857,7 @@ export default function PersonalPage() {
                     style={{ 
                       display: 'grid',
                       gridTemplateColumns: '64px repeat(7, 1fr)',
-                      minHeight: '966px',
+                      minHeight: '1840px',
                     }}
                   >
                     {/* Time labels column */}
@@ -2849,7 +2866,7 @@ export default function PersonalPage() {
                         <div
                           key={hour}
                           style={{
-                            height: '42px',
+                            height: '80px',
                             padding: '4px 8px',
                             fontSize: '10px',
                             fontWeight: 500,
@@ -2880,7 +2897,7 @@ export default function PersonalPage() {
                             const rect = weekViewRefs.current[dayIndex]?.getBoundingClientRect();
                             if (!rect) return;
                             const relativeY = e.clientY - rect.top;
-                            const hourHeight = 52;
+                            const hourHeight = 80;
                             const totalMinutes = Math.max(0, Math.min(24 * 60 - 1, (relativeY / hourHeight) * 60));
                             const hour = Math.floor(totalMinutes / 60) + 1;
                             const minute = Math.round((totalMinutes % 60) / 15) * 15;
@@ -2897,7 +2914,7 @@ export default function PersonalPage() {
                             <div
                               key={hour}
                               style={{
-                                height: '52px',
+                                height: '80px',
                                 borderBottom: '1px solid #1F1F1F',
                               }}
                             />
@@ -2907,7 +2924,7 @@ export default function PersonalPage() {
                           {isDragging && dragDate && formatDate(dragDate) === formatDate(day) && dragStart && dragEnd && (() => {
                             const startMinutes = (dragStart.hour - 1) * 60 + dragStart.minute;
                             const endMinutes = (dragEnd.hour - 1) * 60 + dragEnd.minute;
-                            const pxPerMinute = 52 / 60;
+                            const pxPerMinute = 80 / 60;
                             const top = Math.min(startMinutes, endMinutes) * pxPerMinute;
                             const height = Math.max(Math.abs(endMinutes - startMinutes) * pxPerMinute, 30);
                             return (
@@ -2946,7 +2963,7 @@ export default function PersonalPage() {
                             return dayBlocks.map((block, blockIdx) => {
                               const [startHour, startMin] = block.startTime.split(':').map(Number);
                               const [endHour, endMin] = block.endTime.split(':').map(Number);
-                              const pxPerMinute = 52 / 60;
+                              const pxPerMinute = 80 / 60;
                               const top = ((startHour - 1) * 60 + startMin) * pxPerMinute;
                               const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) * pxPerMinute, 35);
                               
@@ -2965,7 +2982,7 @@ export default function PersonalPage() {
                               return (
                                 <motion.div
                                   key={block.id}
-                                  whileHover={{ scale: 1.02, zIndex: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}
+                                  
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleBlockClick(block);
@@ -3024,7 +3041,7 @@ export default function PersonalPage() {
                                       {block.completed && <CheckIcon style={{ width: '12px', height: '12px', color: '#10B981', strokeWidth: 3 }} />}
                                     </motion.div>
                                     <span style={{ 
-                                      fontSize: '13px', 
+                                      fontSize: '11px', 
                                       fontWeight: 700, 
                                       color: colors.text,
                                       textDecoration: block.completed ? 'line-through' : 'none',
@@ -3036,7 +3053,7 @@ export default function PersonalPage() {
                                       WebkitBoxOrient: 'vertical',
                                     }}>{block.title}</span>
                                   </div>
-                                  <span style={{ fontSize: '11px', color: colors.text, opacity: 0.75, fontWeight: 600 }}>
+                                  <span style={{ fontSize: '10px', color: colors.text, opacity: 0.75, fontWeight: 600 }}>
                                     {(() => {
                                       const formatTime12 = (time: string) => {
                                         const [h, m] = time.split(':').map(Number);
@@ -5036,8 +5053,8 @@ export default function PersonalPage() {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    background: '#f3f4f6',
-                    border: 'none',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
                     borderRadius: '10px',
                     fontSize: '14px',
                     fontWeight: '500',
@@ -5050,7 +5067,7 @@ export default function PersonalPage() {
                   }}
                 >
                   <CalendarDaysIcon style={{ width: '18px', height: '18px' }} />
-                  Delete This Occurrence Only
+                  Delete this Event Only
                 </motion.button>
                 
                 <motion.button
@@ -5060,8 +5077,8 @@ export default function PersonalPage() {
                   style={{
                     width: '100%',
                     padding: '12px 16px',
-                    background: '#fef2f2',
-                    border: '1px solid #fecaca',
+                    background: 'rgba(220, 38, 38, 0.12)',
+                    border: '1px solid rgba(220, 38, 38, 0.3)',
                     borderRadius: '10px',
                     fontSize: '14px',
                     fontWeight: '500',
