@@ -430,6 +430,15 @@ export default function PersonalPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTargetBlock, setDeleteTargetBlock] = useState<TimeBlock | null>(null);
   const [deleteTargetDate, setDeleteTargetDate] = useState<string>('');
+  // Per-date completion tracking for recurring blocks (stored in localStorage)
+  const [recurringCompletions, setRecurringCompletions] = useState<Record<string, string[]>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return JSON.parse(localStorage.getItem('recurringCompletions') || '{}');
+      } catch { return {}; }
+    }
+    return {};
+  });
   
   
   // Form state for new/edit block
@@ -1681,20 +1690,21 @@ export default function PersonalPage() {
 
   // Handler for delete button click - shows confirmation for recurring blocks
   const handleDeleteClick = (block: TimeBlock) => {
+    // Always close the detail panel first
+    setShowPanel(false);
+    setSelectedBlock(null);
+
     // Check if this is a goal block (type === 'goal')
     if (block.type === 'goal') {
       // Goals are always recurring, so show delete confirmation
       setDeleteTargetBlock(block);
-      setDeleteTargetDate(formatDate(currentDate));
+      setDeleteTargetDate(block.date || formatDate(currentDate));
       setShowDeleteConfirm(true);
     } else if (block.isRecurring) {
       setDeleteTargetBlock(block);
-      setDeleteTargetDate(formatDate(currentDate));
+      setDeleteTargetDate(block.date || formatDate(currentDate));
       setShowDeleteConfirm(true);
     } else {
-      // Close panel immediately, then delete in background
-      setShowPanel(false);
-      setSelectedBlock(null);
       deleteBlock(block.id);
     }
   };
@@ -1780,6 +1790,25 @@ export default function PersonalPage() {
     });
   };
 
+  const toggleBlockComplete = (block: TimeBlock) => {
+    if (block.isRecurring) {
+      // For recurring blocks, toggle per-date completion via localStorage
+      const dateStr = block.date;
+      const blockId = block.id;
+      const currentDates = recurringCompletions[blockId] || [];
+      const isCurrentlyCompleted = currentDates.includes(dateStr);
+      const newDates = isCurrentlyCompleted
+        ? currentDates.filter(d => d !== dateStr)
+        : [...currentDates, dateStr];
+      const updated = { ...recurringCompletions, [blockId]: newDates };
+      setRecurringCompletions(updated);
+      localStorage.setItem('recurringCompletions', JSON.stringify(updated));
+    } else {
+      const updatedBlock = { ...block, completed: !block.completed };
+      saveBlock(updatedBlock);
+    }
+  };
+
   const handleBlockClick = (block: TimeBlock) => {
     setSelectedBlock(block);
     setBlockForm(block);
@@ -1816,10 +1845,24 @@ export default function PersonalPage() {
   // Toggle main task completion
   const toggleMainTaskCompletion = () => {
     if (!selectedBlock) return;
-    
-    const updatedBlock = { ...selectedBlock, completed: !selectedBlock.completed };
-    setSelectedBlock(updatedBlock);
-    saveBlock(updatedBlock);
+
+    if (selectedBlock.isRecurring) {
+      const dateStr = selectedBlock.date;
+      const blockId = selectedBlock.id;
+      const currentDates = recurringCompletions[blockId] || [];
+      const isCurrentlyCompleted = currentDates.includes(dateStr);
+      const newDates = isCurrentlyCompleted
+        ? currentDates.filter(d => d !== dateStr)
+        : [...currentDates, dateStr];
+      const updated = { ...recurringCompletions, [blockId]: newDates };
+      setRecurringCompletions(updated);
+      localStorage.setItem('recurringCompletions', JSON.stringify(updated));
+      setSelectedBlock({ ...selectedBlock, completed: !isCurrentlyCompleted });
+    } else {
+      const updatedBlock = { ...selectedBlock, completed: !selectedBlock.completed };
+      setSelectedBlock(updatedBlock);
+      saveBlock(updatedBlock);
+    }
   };
 
   const addChecklistItem = () => {
@@ -1979,29 +2022,37 @@ export default function PersonalPage() {
     const regularBlocks = blocks.filter(block => {
       // Exact date match (non-recurring blocks)
       if (!block.isRecurring && block.date === dateStr) return true;
-      
+
       // For recurring blocks, check if this date should show the block
       if (block.isRecurring && block.recurringDays && block.recurringDays.length > 0) {
         // Check if this day of week is selected
         if (!block.recurringDays.includes(dayOfWeek)) return false;
-        
+
         // Check if this date is excluded (deleted single occurrence)
         if (block.excludedDates && block.excludedDates.includes(dateStr)) return false;
-        
+
         // Get the start and end dates for the recurring range
         const startDateStr = block.recurringStartDate || block.date;
         const endDateStr = block.recurringEndDate || '';
-        
+
         // Date must be >= start date
         if (compareDates(dateStr, startDateStr) < 0) return false;
-        
+
         // Date must be <= end date (if end date is specified)
         if (endDateStr && compareDates(dateStr, endDateStr) > 0) return false;
-        
+
         return true;
       }
-      
+
       return false;
+    }).map(block => {
+      // For recurring blocks, set completed based on per-date tracking (localStorage)
+      if (block.isRecurring) {
+        const completedDates = recurringCompletions[block.id] || [];
+        const isCompletedOnDate = completedDates.includes(dateStr);
+        return { ...block, date: dateStr, completed: isCompletedOnDate };
+      }
+      return block;
     });
 
     // Convert goals to blocks for display
@@ -2581,7 +2632,10 @@ export default function PersonalPage() {
                             y: moveOffset,
                           }}
                           
-                          onClick={() => !isMoving && !isResizing && handleBlockClick(block)}
+                          onClick={(e) => {
+                            if ((e.target as HTMLElement).closest('[data-checkbox]')) return;
+                            if (!isMoving && !isResizing) handleBlockClick(block);
+                          }}
                           onDoubleClick={(e) => {
                             e.stopPropagation();
                             if (!isMoving && !isResizing && canDrag) {
@@ -2611,12 +2665,12 @@ export default function PersonalPage() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {/* Quick Complete Checkbox */}
                             <motion.div
+                              data-checkbox
                               whileHover={{ scale: 1.15 }}
                               whileTap={{ scale: 0.9 }}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const updatedBlock = { ...block, completed: !block.completed };
-                                saveBlock(updatedBlock);
+                                toggleBlockComplete(block);
                               }}
                               style={{
                                 width: '20px',
@@ -2982,9 +3036,10 @@ export default function PersonalPage() {
                               return (
                                 <motion.div
                                   key={block.id}
-                                  
+
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    if ((e.target as HTMLElement).closest('[data-checkbox]')) return;
                                     handleBlockClick(block);
                                   }}
                                   onDoubleClick={(e) => {
@@ -3016,10 +3071,10 @@ export default function PersonalPage() {
                                 >
                                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                                     <motion.div
+                                      data-checkbox
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        const updatedBlock = { ...block, completed: !block.completed };
-                                        saveBlock(updatedBlock);
+                                        toggleBlockComplete(block);
                                       }}
                                       whileHover={{ scale: 1.1 }}
                                       whileTap={{ scale: 0.9 }}
@@ -4920,8 +4975,7 @@ export default function PersonalPage() {
             
             <button
               onClick={() => {
-                const updatedBlock = { ...contextMenu.block, completed: !contextMenu.block.completed };
-                saveBlock(updatedBlock);
+                toggleBlockComplete(contextMenu.block);
                 closeContextMenu();
               }}
               style={{
@@ -5224,7 +5278,9 @@ export default function PersonalPage() {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => handleDeleteClick(selectedBlock)}
+                      onClick={() => {
+                        if (selectedBlock) handleDeleteClick(selectedBlock);
+                      }}
                       style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.08)', cursor: 'pointer', color: '#ef4444' }}
                     >
                       <TrashIcon style={{ width: '15px', height: '15px' }} />
