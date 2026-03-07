@@ -1544,6 +1544,9 @@ export default function PersonalPage() {
 
   const deleteBlock = async (blockId: string) => {
     console.log('deleteBlock called with id:', blockId);
+    // Close panel immediately
+    setShowPanel(false);
+    setSelectedBlock(null);
     try {
       // Handle meeting blocks separately (they have 'meeting-{id}' format)
       if (blockId.startsWith('meeting-')) {
@@ -1551,10 +1554,13 @@ export default function PersonalPage() {
         console.log('Deleting meeting with id:', meetingId);
         await meetingService.deleteMeeting(meetingId);
         setMeetings(prev => prev.filter(m => m.id !== meetingId));
-        setShowPanel(false);
-        setSelectedBlock(null);
         return;
       }
+
+      // Update local state first for instant UI feedback
+      const newBlocks = blocks.filter(b => b.id !== blockId);
+      setBlocks(newBlocks);
+      localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
 
       const { error } = await supabase
         .from('time_blocks')
@@ -1566,13 +1572,6 @@ export default function PersonalPage() {
       } else {
         console.log('Block deleted from database successfully');
       }
-
-      const newBlocks = blocks.filter(b => b.id !== blockId);
-      console.log('Updating local state, blocks count:', blocks.length, '->', newBlocks.length);
-      setBlocks(newBlocks);
-      localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
-      setShowPanel(false);
-      setSelectedBlock(null);
     } catch (err) {
       console.error('Error deleting block:', err);
       // Still update local state even if database fails
@@ -1584,8 +1583,6 @@ export default function PersonalPage() {
         setBlocks(newBlocks);
         localStorage.setItem('timeBlocks', JSON.stringify(newBlocks));
       }
-      setShowPanel(false);
-      setSelectedBlock(null);
     }
   };
 
@@ -1658,20 +1655,24 @@ export default function PersonalPage() {
 
   // Delete a single occurrence of a recurring block (add date to excluded list)
   const deleteSingleOccurrence = async (block: TimeBlock, dateToExclude: string) => {
+    // Close everything immediately
+    setShowPanel(false);
+    setSelectedBlock(null);
+    setShowDeleteConfirm(false);
+    setDeleteTargetBlock(null);
+    setDeleteTargetDate('');
     const updatedBlock = {
       ...block,
       excludedDates: [...(block.excludedDates || []), dateToExclude],
     };
     await saveBlock(updatedBlock);
-    setShowDeleteConfirm(false);
-    setDeleteTargetBlock(null);
-    setDeleteTargetDate('');
-    setShowPanel(false);
-    setSelectedBlock(null);
   };
 
   // Delete a goal
   const deleteGoal = async (goalId: string) => {
+    // Close everything immediately
+    setShowPanel(false);
+    setSelectedBlock(null);
     try {
       await goalsService.deleteGoal(goalId);
       // Refresh goals list
@@ -1681,8 +1682,6 @@ export default function PersonalPage() {
           setPersonalGoals(result.data);
         }
       }
-      setShowPanel(false);
-      setSelectedBlock(null);
     } catch (err) {
       console.error('Error deleting goal:', err);
     }
@@ -2510,8 +2509,8 @@ export default function PersonalPage() {
                     ref={dayViewRef}
                     style={{ position: 'relative', cursor: isDragging ? 'ns-resize' : 'crosshair' }}
                     onMouseDown={(e) => {
-                      // Only start drag if clicking on empty space (not on a block)
-                      if ((e.target as HTMLElement).closest('[data-block]')) return;
+                      // Only start drag if clicking on empty space (not on a block or checkbox)
+                      if ((e.target as HTMLElement).closest('[data-block]') || (e.target as HTMLElement).closest('[data-checkbox]')) return;
                       handleDragStart(e, currentDate);
                     }}
                   >
@@ -2948,6 +2947,8 @@ export default function PersonalPage() {
                             background: isToday ? 'rgba(59, 130, 246, 0.03)' : 'transparent',
                           }}
                           onMouseDown={(e) => {
+                            // Don't start drag if clicking on a block or checkbox
+                            if ((e.target as HTMLElement).closest('[data-block]') || (e.target as HTMLElement).closest('[data-checkbox]')) return;
                             const rect = weekViewRefs.current[dayIndex]?.getBoundingClientRect();
                             if (!rect) return;
                             const relativeY = e.clientY - rect.top;
@@ -3036,7 +3037,7 @@ export default function PersonalPage() {
                               return (
                                 <motion.div
                                   key={block.id}
-
+                                  data-block="true"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     if ((e.target as HTMLElement).closest('[data-checkbox]')) return;
