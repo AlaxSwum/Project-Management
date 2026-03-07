@@ -10,29 +10,27 @@ export const supabaseAuth = {
   // Login using custom table
   signIn: async (email, password) => {
     try {
-      // 1-RTT login: authenticate_and_load returns user + all sidebar projects
-      const { data: rpcResult, error: rpcError } = await supabase.rpc('authenticate_and_load', { p_email: email });
+      // Fast login: 2 parallel queries — user lookup + all active users (for member cache)
+      const [{ data: users, error: userError }, { data: allUsers }] = await Promise.all([
+        supabase.from('auth_user').select('*').eq('email', email).eq('is_active', true),
+        supabase.from('auth_user').select('id, name, email, role, avatar_url').eq('is_active', true)
+      ]);
 
-      let user, sidebarProjects;
-
-      if (!rpcError && rpcResult?.user) {
-        user = rpcResult.user;
-        sidebarProjects = rpcResult.projects || [];
-      } else {
-        // Fallback: direct query if RPC fails
-        const { data: users, error: userError } = await supabase
-          .from('auth_user')
-          .select('*')
-          .eq('email', email)
-          .eq('is_active', true)
-
-        if (userError) throw userError
-        if (!users || users.length === 0) {
-          throw new Error('Invalid email or password')
-        }
-        user = users[0];
-        sidebarProjects = null; // will be fetched separately
+      if (userError) throw userError;
+      if (!users || users.length === 0) {
+        throw new Error('Invalid email or password');
       }
+      const user = users[0];
+
+      // Cache all users globally so sidebar/kanban never need to fetch them
+      if (allUsers) {
+        const { appCache } = await import('./appCache');
+        const usersObj = {};
+        allUsers.forEach(u => { usersObj[u.id] = u; });
+        appCache.set('global_users', usersObj);
+      }
+
+      let sidebarProjects = null; // will be fetched in background
 
       // Check password
       let isValidPassword = false;
@@ -87,11 +85,8 @@ export const supabaseAuth = {
         localStorage.setItem('supabase_token', `sb-token-${user.id}`)
       }
 
-      // If RPC returned sidebar projects, wrap them as a resolved promise
-      // Otherwise, start fetching in background
-      const projectsPromise = sidebarProjects
-        ? Promise.resolve({ data: sidebarProjects.map(p => ({ ...p, project_members: p.members || [] })), error: null })
-        : supabaseDb.getSidebarProjectsRpc(user.id);
+      // Start fetching sidebar projects in background (uses cached global_users)
+      const projectsPromise = supabaseDb.getProjectsLean(user.id);
 
       return { user: authUser, full_profile, projectsPromise, error: null }
     } catch (error) {
@@ -175,9 +170,9 @@ export const supabaseAuth = {
   }
 }
 
-// RPC availability — default OFF until deployed, avoids wasted 500 RTT on every fresh load.
-// Flip to true after running the SQL migration in Supabase.
-let _sidebarRpcAvailable = true;
+// RPC availability — sidebar RPC disabled (auth_user JOINs timeout on this Supabase instance).
+// getProjectsLean with cached global_users is faster.
+let _sidebarRpcAvailable = false;
 let _kanbanRpcAvailable = true;
 
 // Database helpers

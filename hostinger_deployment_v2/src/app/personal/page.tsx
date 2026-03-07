@@ -2637,9 +2637,6 @@ export default function PersonalPage() {
                           }}
                           onDoubleClick={(e) => {
                             e.stopPropagation();
-                            if (!isMoving && !isResizing && canDrag) {
-                              duplicateBlock(block);
-                            }
                           }}
                           onContextMenu={(e) => handleContextMenu(e, block)}
                           onMouseDown={(e) => canDrag && handleBlockMoveStart(e, block)}
@@ -3045,9 +3042,6 @@ export default function PersonalPage() {
                                   }}
                                   onDoubleClick={(e) => {
                                     e.stopPropagation();
-                                    if (!block.id.startsWith('goal-') && !block.id.startsWith('meeting-')) {
-                                      duplicateBlock(block);
-                                    }
                                   }}
                                   onContextMenu={(e) => handleContextMenu(e, block)}
                                   style={{
