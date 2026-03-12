@@ -905,12 +905,12 @@ export default function CalendarPage() {
         }
         
         .calendar-header-cell {
-          padding: 0.5rem;
+          padding: 0.75rem 0.5rem;
           text-align: center;
-          font-weight: 600;
-          color: #71717A;
+          font-weight: 700;
+          color: #A1A1AA;
           font-family: 'Mabry Pro', 'Inter', sans-serif;
-          font-size: 0.75rem;
+          font-size: 0.8rem;
           letter-spacing: 0.05em;
           text-transform: uppercase;
         }
@@ -1010,12 +1010,18 @@ export default function CalendarPage() {
             margin-bottom: 0.25rem;
           }
         .task-name {
-          font-weight: 500;
+          font-weight: 600;
           color: #FFFFFF;
           line-height: 1.3;
           flex: 1;
           margin-right: 0.25rem;
           font-family: 'Mabry Pro', 'Inter', sans-serif;
+          font-size: 0.75rem;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          word-break: break-word;
         }
           .task-icons {
             display: flex;
@@ -1027,11 +1033,11 @@ export default function CalendarPage() {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.65rem;
+            font-size: 0.6875rem;
           }
           .project-name {
             font-weight: 500;
-            max-width: 60%;
+            max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -2745,7 +2751,7 @@ export default function CalendarPage() {
                               </div>
                             </div>
                             <div className="task-meta">
-                              <span className="project-name" style={{ color: '#FFFFFF' }}>
+                              <span className="project-name" style={{ color: 'rgba(255,255,255,0.85)' }}>
                                 {task.project_name}
                               </span>
                               {task.assignee && (
