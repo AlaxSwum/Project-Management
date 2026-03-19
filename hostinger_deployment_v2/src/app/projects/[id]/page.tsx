@@ -92,8 +92,8 @@ interface Project {
 
 const TASK_STATUSES = [
   { value: 'todo', label: 'To Do', color: '#EF4444' },
-  { value: 'in_progress', label: 'In Progress', color: '#3B82F6' },
-  { value: 'review', label: 'Review', color: '#F59E0B' },
+  { value: 'in_progress', label: 'In Progress', color: '#F97316' },
+  { value: 'review', label: 'Review', color: '#EAB308' },
   { value: 'done', label: 'Complete', color: '#10B981' },
 ];
 
@@ -2069,22 +2069,18 @@ n              {/* Team Members Button - Avatar Style */}
                       const subtasksCompleted = Math.floor(Math.random() * 5);
                       const progress = (subtasksCompleted / subtasksTotal) * 100;
                       
-                      // Get vibrant color for this task based on status/priority
+                      // Get color based on status column
                       const getTaskColor = () => {
                         const colorMap: Record<string, { bg: string; text: string }> = {
-                          'backlog': { bg: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', text: '#FFFFFF' },
-                          'in_progress': { bg: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)', text: '#FFFFFF' },
+                          'todo': { bg: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)', text: '#FFFFFF' },
+                          'in_progress': { bg: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', text: '#FFFFFF' },
+                          'review': { bg: 'linear-gradient(135deg, #EAB308 0%, #CA8A04 100%)', text: '#FFFFFF' },
                           'done': { bg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', text: '#FFFFFF' },
+                          'backlog': { bg: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', text: '#FFFFFF' },
                           'archived': { bg: 'linear-gradient(135deg, #52525B 0%, #3F3F46 100%)', text: '#FFFFFF' },
                         };
-                        
-                        // Use status for color, fallback to priority
-                        if (colorMap[task.status]) return colorMap[task.status];
-                        
-                        // Fallback colors by priority
-                        if (task.priority === 'high') return { bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', text: '#FFFFFF' };
-                        if (task.priority === 'medium') return { bg: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)', text: '#FFFFFF' };
-                        return { bg: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)', text: '#FFFFFF' };
+
+                        return colorMap[task.status] || { bg: 'linear-gradient(135deg, #52525B 0%, #3F3F46 100%)', text: '#FFFFFF' };
                       };
                       
                       const taskColor = getTaskColor();
@@ -2327,10 +2323,10 @@ n              {/* Team Members Button - Avatar Style */}
                       <div style={{ background: '#141414', borderRadius: '0.75rem', padding: '0.875rem', border: '1px solid #2D2D2D' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: monthInProgress.length > 0 ? '0.625rem' : 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F97316' }} />
                             <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 500 }}>In Progress</span>
                           </div>
-                          <span style={{ color: '#3B82F6', fontSize: '0.75rem', fontWeight: 600 }}>{monthInProgress.length}</span>
+                          <span style={{ color: '#F97316', fontSize: '0.75rem', fontWeight: 600 }}>{monthInProgress.length}</span>
                         </div>
                         {monthInProgress.length > 0 && (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
@@ -3955,7 +3951,7 @@ n              {/* Team Members Button - Avatar Style */}
                             <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                               <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(239, 68, 68, 0.2)', color: '#EF4444', fontSize: '0.75rem', borderRadius: '0.25rem', fontWeight: 500 }}>To Do</span>
                               <span style={{ fontSize: '0.75rem', color: '#71717A' }}>→</span>
-                              <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(245, 158, 11, 0.2)', color: '#F59E0B', fontSize: '0.75rem', borderRadius: '0.25rem', fontWeight: 500 }}>In Progress</span>
+                              <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(249, 115, 22, 0.2)', color: '#F97316', fontSize: '0.75rem', borderRadius: '0.25rem', fontWeight: 500 }}>In Progress</span>
               </div>
             )}
           </div>
