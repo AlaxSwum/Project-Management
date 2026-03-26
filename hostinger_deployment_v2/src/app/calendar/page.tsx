@@ -696,15 +696,17 @@ export default function CalendarPage() {
           position: relative;
           z-index: 1;
           padding-top: ${isMobile ? '70px' : '0'};
-          width: ${isMobile ? '100vw' : 'auto'};
           min-height: 100vh;
-          ${isMobile ? 'margin-left: 0 !important; max-width: 100vw; overflow-x: hidden;' : ''}
+          width: ${isMobile ? '100vw' : 'calc(100vw - 280px)'};
+          max-width: ${isMobile ? '100vw' : 'calc(100vw - 280px)'};
+          overflow-x: hidden;
+          box-sizing: border-box;
         }
         
         .header {
           background: #141414;
           border-bottom: 1px solid #2D2D2D;
-          padding: 2.5rem 2rem 1.5rem 2rem;
+          padding: 1rem 0.75rem 0.75rem 0.75rem;
           position: sticky;
           top: 0;
           z-index: 20;
@@ -715,11 +717,10 @@ export default function CalendarPage() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 1.5rem;
-          max-width: ${isMobile ? 'none' : '1200px'};
-          margin-left: auto;
-          margin-right: auto;
-          width: ${isMobile ? '100%' : 'auto'};
+          margin-bottom: 0.75rem;
+          max-width: 100%;
+          width: 100%;
+          box-sizing: border-box;
         }
         
         .header-controls {
@@ -785,9 +786,10 @@ export default function CalendarPage() {
           grid-template-columns: repeat(4, 1fr);
           gap: 0.75rem;
           padding-top: 1rem;
-          max-width: ${isMobile ? 'none' : '1000px'};
+          max-width: 100%;
           margin: 0 auto;
-          width: ${isMobile ? '100%' : 'auto'};
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .calendar-stats .stat-item {
@@ -796,8 +798,8 @@ export default function CalendarPage() {
           align-items: center;
           gap: 0.25rem;
           background: #1A1A1A;
-          padding: 0.75rem 0.875rem;
-          border-radius: 12px;
+          padding: 0.5rem 0.75rem;
+          border-radius: 8px;
           border: 1px solid #2D2D2D;
           transition: all 0.2s ease;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -819,7 +821,7 @@ export default function CalendarPage() {
         }
 
         .stat-value {
-          font-size: 1.5rem;
+          font-size: 1.25rem;
           font-weight: 700;
           color: #FFFFFF;
           font-family: 'Mabry Pro', 'Inter', sans-serif;
@@ -831,7 +833,7 @@ export default function CalendarPage() {
           font-weight: 700;
         }
         .header-title {
-          font-size: 2.5rem;
+          font-size: 1.75rem;
           font-weight: 800;
           color: #FFFFFF;
           margin: 0;
@@ -884,28 +886,31 @@ export default function CalendarPage() {
           letter-spacing: -0.01em;
         }
         .calendar-content {
-          padding: 2rem;
-          max-width: ${isMobile ? 'none' : '1200px'};
-          margin: 0 auto;
+          padding: 0.75rem;
+          max-width: 100%;
+          margin: 0;
           display: block;
           visibility: visible;
-          width: ${isMobile ? '100%' : 'auto'};
+          box-sizing: border-box;
+          overflow: hidden;
         }
         
         .calendar-grid {
-          background: transparent;
-          padding: 0.5rem 0;
-        }
-        
-        .calendar-header {
           display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          gap: 0.75rem;
-          padding: 0 1rem 0.5rem 1rem;
+          grid-template-columns: repeat(7, minmax(0, 1fr));
+          gap: 0.375rem;
+          padding: 0.25rem;
+          background: transparent;
+          width: 100%;
+          box-sizing: border-box;
         }
-        
+
+        .calendar-header {
+          display: contents;
+        }
+
         .calendar-header-cell {
-          padding: 0.75rem 0.5rem;
+          padding: 0.5rem;
           text-align: center;
           font-weight: 700;
           color: #A1A1AA;
@@ -915,17 +920,14 @@ export default function CalendarPage() {
           text-transform: uppercase;
         }
           .calendar-body {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 0.75rem;
-            padding: 1rem;
+            display: contents;
           }
         .calendar-cell {
-          min-height: 140px;
-          padding: 1rem;
+          min-height: 100px;
+          padding: 0.5rem;
           background: #141414;
           border: 1px solid #2D2D2D;
-          border-radius: 20px;
+          border-radius: 12px;
           transition: all 0.3s ease;
           cursor: pointer;
         }
@@ -953,9 +955,9 @@ export default function CalendarPage() {
         .day-number {
           font-weight: 700;
           color: #FFFFFF;
-          margin-bottom: 0.75rem;
+          margin-bottom: 0.25rem;
           font-family: 'Mabry Pro', 'Inter', sans-serif;
-          font-size: 1.5rem;
+          font-size: 1rem;
         }
         
         .calendar-cell.other-month .day-number {
@@ -974,8 +976,8 @@ export default function CalendarPage() {
         .task-item {
           background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
           border: none;
-          border-radius: 12px;
-          padding: 0.625rem 0.75rem;
+          border-radius: 8px;
+          padding: 0.375rem 0.5rem;
           font-size: 0.75rem;
           margin-bottom: 0.5rem;
           cursor: pointer;
@@ -1819,8 +1821,10 @@ export default function CalendarPage() {
               display: block !important;
               visibility: visible !important;
               margin: 0 !important;
+              padding: 0 !important;
+              gap: 0 !important;
             }
-            
+
             /* Mobile Calendar Header */
             .calendar-header {
               background: #1A1A1A;
@@ -2450,6 +2454,9 @@ export default function CalendarPage() {
             .calendar-grid {
               width: calc(100vw - 1rem) !important;
               margin: 0 !important;
+              display: block !important;
+              padding: 0 !important;
+              gap: 0 !important;
             }
             .calendar-cell {
               padding: 0.875rem;

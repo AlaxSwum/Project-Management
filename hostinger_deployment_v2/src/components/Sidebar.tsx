@@ -29,6 +29,7 @@ import {
   PlusIcon,
   Bars3Icon,
   XMarkIcon,
+  HeartIcon,
 } from '@heroicons/react/24/outline';
 
 interface Project {
@@ -424,6 +425,42 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
           </div>
         )}
 
+        {/* My Checklists Link - visible to anyone with company membership */}
+        {hasCompanyAccess && (
+          <div style={{ marginTop: '0.25rem' }}>
+            <Link
+              href="/my-checklists"
+              className="sidebar-link"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.625rem 0.75rem',
+                borderRadius: '0.5rem',
+                background: pathname?.startsWith('/my-checklists') ? '#10B981' : 'transparent',
+                color: pathname?.startsWith('/my-checklists') ? '#FFFFFF' : colors.textSecondary,
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                if (!pathname?.startsWith('/my-checklists')) {
+                  e.currentTarget.style.background = colors.hoverBg;
+                  e.currentTarget.style.color = colors.text;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!pathname?.startsWith('/my-checklists')) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = colors.textSecondary;
+                }
+              }}
+            >
+              <ClipboardDocumentListIcon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+              <span style={{ fontSize: '0.875rem', fontWeight: 500, fontFamily: 'Mabry Pro, sans-serif' }}>My Checklists</span>
+            </Link>
+          </div>
+        )}
+
         {/* Reports Link - visible to anyone with company membership */}
         {hasCompanyAccess && (
           <div style={{ marginTop: '0.25rem' }}>
@@ -459,6 +496,7 @@ export default function Sidebar({ projects: propsProjects, onCreateProject }: Si
             </Link>
           </div>
         )}
+
 
         {/* Personal Section */}
         <div style={{ marginTop: '1.5rem' }}>

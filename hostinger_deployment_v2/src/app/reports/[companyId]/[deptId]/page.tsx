@@ -15,7 +15,15 @@ import {
   DocumentTextIcon,
   CheckCircleIcon,
   CalendarDaysIcon,
+  ClipboardDocumentListIcon,
+  FolderIcon,
+  ArrowPathIcon,
+  PaperClipIcon,
+  EyeIcon,
+  ArrowDownTrayIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
+import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 
 interface DeptMember {
   id: number;
@@ -75,7 +83,31 @@ export default function ReportsCalendarPage() {
   const [modalMember, setModalMember] = useState<DeptMember | null>(null);
   const [modalReport, setModalReport] = useState<Report | null>(null);
 
+  // Page-level view toggle: 'reports' or 'checklists'
+  const [pageView, setPageView] = useState<'reports' | 'checklists'>('reports');
+
+  // Checklist progress data
+  const [checklistItems, setChecklistItems] = useState<any[]>([]);
+  const [checklistCategories, setChecklistCategories] = useState<any[]>([]);
+  const [checklistAttachments, setChecklistAttachments] = useState<any[]>([]);
+  const [expandedCheckMember, setExpandedCheckMember] = useState<number | null>(null);
+  const [previewFile, setPreviewFile] = useState<{ url: string; name: string; type: string } | null>(null);
+  const [checkCalDate, setCheckCalDate] = useState(new Date());
+  const [checkSelectedDay, setCheckSelectedDay] = useState<string | null>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+
   const isAdmin = user?.role === 'admin';
+
+  const isImageType = (type: string) => type?.startsWith('image/');
+  const isPdfType = (type: string) => type === 'application/pdf' || type?.endsWith('.pdf');
+  const formatFileSize = (bytes: number) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  };
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -203,6 +235,35 @@ export default function ReportsCalendarPage() {
   useEffect(() => {
     if (!loading && !accessDenied && viewableUserIds.length > 0) fetchReports();
   }, [loading, accessDenied, fetchReports, viewableUserIds]);
+
+  // Fetch checklist data when switching to checklist view
+  const fetchChecklists = useCallback(async () => {
+    if (!user || viewableUserIds.length === 0) return;
+    try {
+      const [itemsRes, catsRes] = await Promise.all([
+        supabase.from('org_checklists').select('*').eq('department_id', deptId).in('user_id', viewableUserIds).order('created_at', { ascending: true }),
+        supabase.from('org_checklist_categories').select('*').eq('company_id', companyId).order('created_at', { ascending: true }),
+      ]);
+      const items = (itemsRes.data || []).map((c: any) => ({
+        ...c, reset_time: c.reset_time || '00:00',
+        reset_day_of_week: c.reset_day_of_week ?? null, reset_day_of_month: c.reset_day_of_month ?? null,
+        category_id: c.category_id ?? null,
+      }));
+      setChecklistItems(items);
+      setChecklistCategories(catsRes.data || []);
+
+      // Fetch attachments
+      const checkIds = items.map((i: any) => i.id);
+      if (checkIds.length > 0) {
+        const { data: atts } = await supabase.from('org_checklist_attachments').select('*').in('checklist_id', checkIds);
+        setChecklistAttachments(atts || []);
+      }
+    } catch (err) { console.error('Error fetching checklists:', err); }
+  }, [user, deptId, companyId, viewableUserIds]);
+
+  useEffect(() => {
+    if (pageView === 'checklists' && !loading && !accessDenied && viewableUserIds.length > 0) fetchChecklists();
+  }, [pageView, loading, accessDenied, fetchChecklists, viewableUserIds]);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login');
@@ -332,13 +393,25 @@ export default function ReportsCalendarPage() {
 
         {/* Header */}
         <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ color: '#FFFFFF', fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>{deptName} Reports</h1>
-          <p style={{ color: '#71717A', fontSize: '0.875rem', marginTop: '0.25rem' }}>Click a day to view team member reports</p>
+          <h1 style={{ color: '#FFFFFF', fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>{deptName}</h1>
+          <p style={{ color: '#71717A', fontSize: '0.875rem', marginTop: '0.25rem' }}>View daily reports and checklist progress</p>
+        </div>
+
+        {/* Page View Toggle */}
+        <div style={{ display: 'flex', gap: '0.25rem', background: '#1A1A1A', borderRadius: '0.625rem', padding: '0.25rem', border: '1px solid #2D2D2D', marginBottom: '1.5rem', width: 'fit-content' }}>
+          <button onClick={() => setPageView('reports')}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none', background: pageView === 'reports' ? '#10B981' : 'transparent', color: pageView === 'reports' ? '#FFFFFF' : '#71717A', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+            <DocumentTextIcon style={{ width: '16px', height: '16px' }} /> Daily Reports
+          </button>
+          <button onClick={() => setPageView('checklists')}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none', background: pageView === 'checklists' ? '#8B5CF6' : 'transparent', color: pageView === 'checklists' ? '#FFFFFF' : '#71717A', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+            <ClipboardDocumentListIcon style={{ width: '16px', height: '16px' }} /> Checklist Progress
+          </button>
         </div>
 
         {loading ? (
           <div style={{ color: '#71717A', textAlign: 'center', padding: '3rem' }}>Loading...</div>
-        ) : (
+        ) : pageView === 'reports' ? (
           <>
             {/* Controls Row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
@@ -647,6 +720,410 @@ export default function ReportsCalendarPage() {
               </div>
             </div>
           </>
+        ) : (
+          /* ═══ CHECKLIST PROGRESS VIEW ═══ */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {checklistItems.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem', color: '#71717A', background: '#1A1A1A', borderRadius: '0.75rem', border: '1px solid #2D2D2D' }}>
+                <ClipboardDocumentListIcon style={{ width: '48px', height: '48px', margin: '0 auto 1rem', opacity: 0.5 }} />
+                <p style={{ fontSize: '0.875rem' }}>No checklists assigned in this department</p>
+              </div>
+            ) : (
+              <>
+                {(() => {
+                  const total = checklistItems.length;
+                  const done = checklistItems.filter((c: any) => c.is_completed).length;
+                  const pctTotal = total > 0 ? Math.round((done / total) * 100) : 0;
+                  const uniqueStaff = new Set(checklistItems.map((c: any) => c.user_id)).size;
+
+                  // Calendar helpers
+                  const calYear = checkCalDate.getFullYear();
+                  const calMonth = checkCalDate.getMonth();
+                  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+                  const firstDow = new Date(calYear, calMonth, 1).getDay();
+                  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                  const today = new Date();
+                  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+                  // Check which days have completed items or uploads
+                  const dayHasActivity = (day: number) => {
+                    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                    const hasCompletion = checklistItems.some((c: any) => c.completed_at && c.completed_at.startsWith(ds));
+                    const hasUpload = checklistAttachments.some((a: any) => a.created_at && a.created_at.startsWith(ds));
+                    return { hasCompletion, hasUpload, any: hasCompletion || hasUpload };
+                  };
+
+                  // Get items for selected day
+                  const selectedDayItems = checkSelectedDay ? checklistItems.filter((c: any) =>
+                    c.completed_at && c.completed_at.startsWith(checkSelectedDay)
+                  ) : [];
+                  const selectedDayUploads = checkSelectedDay ? checklistAttachments.filter((a: any) =>
+                    a.created_at && a.created_at.startsWith(checkSelectedDay)
+                  ) : [];
+
+                  return null;
+                  return (<div id="checklist-calendar" style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', padding: '0.75rem', width: '260px', flexShrink: 0 }}>
+                        {/* Month nav */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                          <button onClick={() => setCheckCalDate(new Date(calYear, calMonth - 1, 1))}
+                            style={{ padding: '0.5rem', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', lineHeight: 0 }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#8B5CF6'; e.currentTarget.style.color = '#FFF'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}>
+                            <ChevronLeftIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
+                          <span style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 700 }}>{monthNames[calMonth]} {calYear}</span>
+                          <button onClick={() => setCheckCalDate(new Date(calYear, calMonth + 1, 1))}
+                            style={{ padding: '0.5rem', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', lineHeight: 0 }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#8B5CF6'; e.currentTarget.style.color = '#FFF'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#A1A1AA'; }}>
+                            <ChevronRightIcon style={{ width: '16px', height: '16px' }} />
+                          </button>
+                        </div>
+                        {/* Day names */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem', marginBottom: '0.5rem' }}>
+                          {dayNames.map(d => (
+                            <div key={d} style={{ textAlign: 'center', color: '#52525B', fontSize: '0.6875rem', fontWeight: 600, padding: '0.25rem' }}>{d}</div>
+                          ))}
+                        </div>
+                        {/* Grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.25rem' }}>
+                          {Array.from({ length: firstDow }).map((_, i) => <div key={`e${i}`} />)}
+                          {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+                            const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                            const isToday = ds === todayStr;
+                            const isSelected = ds === checkSelectedDay;
+                            const activity = dayHasActivity(day);
+                            return (
+                              <button key={day} onClick={() => setCheckSelectedDay(isSelected ? null : ds)}
+                                style={{
+                                  aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.125rem',
+                                  borderRadius: '0.5rem', border: isSelected ? '2px solid #8B5CF6' : isToday ? '1px solid #3B82F6' : '1px solid transparent',
+                                  background: isSelected ? '#8B5CF620' : isToday ? '#141414' : 'transparent',
+                                  color: isSelected ? '#FFFFFF' : isToday ? '#3B82F6' : '#A1A1AA',
+                                  fontSize: '0.8125rem', fontWeight: isToday || isSelected ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s',
+                                }}
+                                onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#141414'; }}
+                                onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = isToday ? '#141414' : 'transparent'; }}>
+                                {day}
+                                {activity.any && (
+                                  <div style={{ display: 'flex', gap: '0.125rem' }}>
+                                    {activity.hasCompletion && <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10B981' }} />}
+                                    {activity.hasUpload && <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#3B82F6' }} />}
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {/* Legend */}
+                        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', justifyContent: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} />
+                            <span style={{ color: '#52525B', fontSize: '0.6875rem' }}>Tasks completed</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3B82F6' }} />
+                            <span style={{ color: '#52525B', fontSize: '0.6875rem' }}>Files uploaded</span>
+                          </div>
+                        </div>
+                      </div>);
+                })()}
+
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                {/* Employee cards */}
+                {(() => {
+                  const TC: Record<string, string> = { daily: '#3B82F6', weekly: '#8B5CF6', monthly: '#F59E0B' };
+                  const viewableMembers2 = members.filter(m => viewableUserIds.includes(m.user_id));
+                  const empData = viewableMembers2.map(m => {
+                    const allItems = checklistItems.filter((c: any) => c.user_id === m.user_id);
+                    if (allItems.length === 0) return null;
+                    // If a day is selected, only show items with activity on that day
+                    const dayItems = checkSelectedDay
+                      ? allItems.filter((c: any) => c.completed_at?.startsWith(checkSelectedDay))
+                      : allItems;
+                    const dayAtts = checkSelectedDay
+                      ? checklistAttachments.filter((a: any) => a.created_at?.startsWith(checkSelectedDay) && allItems.some((i: any) => i.id === a.checklist_id))
+                      : checklistAttachments.filter((a: any) => allItems.some((i: any) => i.id === a.checklist_id));
+                    if (checkSelectedDay && dayItems.length === 0 && dayAtts.length === 0) return null;
+                    const done = checkSelectedDay ? dayItems.length : allItems.filter((c: any) => c.is_completed).length;
+                    const total = checkSelectedDay ? dayItems.length + (allItems.length - allItems.filter((c: any) => c.is_completed).length) : allItems.length;
+                    const pct = allItems.length > 0 ? Math.round((allItems.filter((c: any) => c.is_completed).length / allItems.length) * 100) : 0;
+                    return { member: m, items: checkSelectedDay ? dayItems : allItems, done, total: allItems.length, pct, allAtts: dayAtts, dayFiltered: !!checkSelectedDay };
+                  }).filter(Boolean).sort((a: any, b: any) => b.pct - a.pct) as any[];
+
+                  const selectedDayLabel = checkSelectedDay ? new Date(checkSelectedDay + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+
+                  return (<>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+                      {/* Day filter label */}
+                      {checkSelectedDay && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: '#8B5CF610', border: '1px solid #8B5CF620', borderRadius: '0.5rem' }}>
+                          <span style={{ color: '#8B5CF6', fontSize: '0.8125rem', fontWeight: 600 }}>Showing activity for {selectedDayLabel}</span>
+                          <button onClick={() => setCheckSelectedDay(null)} style={{ padding: '0.125rem 0.5rem', background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.25rem', color: '#A1A1AA', fontSize: '0.6875rem', cursor: 'pointer' }}>Clear</button>
+                        </div>
+                      )}
+                      {empData.length === 0 && checkSelectedDay && (
+                        <div style={{ textAlign: 'center', padding: '2rem', color: '#52525B', fontSize: '0.8125rem' }}>No activity on {selectedDayLabel}</div>
+                      )}
+                      {empData.map(({ member: m, done, total, pct, allAtts }: any) => {
+                        const sc = pct === 100 ? '#10B981' : pct > 0 ? '#F59E0B' : '#EF4444';
+                        const sl = pct === 100 ? 'Complete' : pct > 0 ? 'In Progress' : 'Not Started';
+                        return (
+                          <div key={m.user_id} onClick={() => setExpandedCheckMember(m.user_id)}
+                            style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', padding: '0.875rem 1.25rem', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: '0.875rem' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = sc; e.currentTarget.style.background = '#1F1F1F'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.background = '#1A1A1A'; }}>
+                            <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: `linear-gradient(135deg, ${sc}, ${sc}90)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontSize: '0.9375rem', fontWeight: 700, flexShrink: 0 }}>
+                              {m.user_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <span style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 600 }}>{m.user_name}</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.375rem' }}>
+                                <div style={{ width: '120px', height: '6px', background: '#2D2D2D', borderRadius: '3px', overflow: 'hidden' }}>
+                                  <div style={{ width: `${pct}%`, height: '100%', background: sc, borderRadius: '3px' }} />
+                                </div>
+                                <span style={{ color: sc, fontSize: '0.75rem', fontWeight: 700 }}>{pct}%</span>
+                                <span style={{ color: '#52525B', fontSize: '0.6875rem' }}>{done}/{total}</span>
+                                {allAtts.length > 0 && <span style={{ color: '#3B82F6', fontSize: '0.6875rem' }}>{allAtts.length} files</span>}
+                              </div>
+                            </div>
+                            <div style={{ padding: '0.1875rem 0.625rem', borderRadius: '2rem', background: `${sc}15`, flexShrink: 0 }}>
+                              <span style={{ color: sc, fontSize: '0.625rem', fontWeight: 700 }}>{sl}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Employee Detail Modal */}
+                    {expandedCheckMember && (() => {
+                      const ed = empData.find((e: any) => e.member.user_id === expandedCheckMember);
+                      if (!ed) return null;
+                      const { member: m, items, done, total, pct, allAtts } = ed;
+                      const sc = pct === 100 ? '#10B981' : pct > 0 ? '#F59E0B' : '#EF4444';
+                      const catGroups = checklistCategories.map((cat: any) => {
+                        const ci = items.filter((c: any) => c.category_id === cat.id);
+                        if (ci.length === 0) return null;
+                        return { cat, items: ci, done: ci.filter((c: any) => c.is_completed).length, total: ci.length };
+                      }).filter(Boolean);
+                      return (
+                        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 250 }}
+                          onClick={() => setExpandedCheckMember(null)}>
+                          <div style={{ background: '#1A1A1A', borderRadius: '1rem', width: '600px', maxWidth: '95vw', maxHeight: '85vh', overflowY: 'auto', border: '1px solid #2D2D2D' }}
+                            onClick={(e) => e.stopPropagation()}>
+                            {/* Modal header */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '1.25rem 1.5rem', borderBottom: '1px solid #2D2D2D', position: 'sticky', top: 0, background: '#1A1A1A', zIndex: 1 }}>
+                              <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: `linear-gradient(135deg, ${sc}, ${sc}90)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontSize: '1.125rem', fontWeight: 700, flexShrink: 0 }}>
+                                {m.user_name.charAt(0).toUpperCase()}
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ color: '#FFFFFF', fontSize: '1.125rem', fontWeight: 700 }}>{m.user_name}</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+                                  <div style={{ width: '100px', height: '6px', background: '#2D2D2D', borderRadius: '3px', overflow: 'hidden' }}>
+                                    <div style={{ width: `${pct}%`, height: '100%', background: sc, borderRadius: '3px' }} />
+                                  </div>
+                                  <span style={{ color: sc, fontSize: '0.8125rem', fontWeight: 700 }}>{done}/{total} done</span>
+                                </div>
+                              </div>
+                              <button onClick={() => setExpandedCheckMember(null)}
+                                style={{ padding: '0.5rem', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', lineHeight: 0 }}>
+                                <XMarkIcon style={{ width: '18px', height: '18px' }} />
+                              </button>
+                            </div>
+
+                            {/* Modal body */}
+                            <div style={{ padding: '1rem 1.5rem 1.5rem' }}>
+                              {catGroups.map((cg: any) => (
+                                <div key={cg.cat.id} style={{ marginBottom: '1rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                    <div style={{ width: '3px', height: '16px', borderRadius: '2px', background: cg.cat.color }} />
+                                    <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 700 }}>{cg.cat.name}</span>
+                                    <span style={{ color: cg.done === cg.total ? '#10B981' : '#52525B', fontSize: '0.75rem', fontWeight: 600, marginLeft: 'auto' }}>{cg.done}/{cg.total}</span>
+                                  </div>
+                                  {cg.items.map((item: any) => {
+                                    const itemAtts = checklistAttachments.filter((a: any) => a.checklist_id === item.id);
+                                    return (
+                                      <div key={item.id} style={{ background: item.is_completed ? '#0F1F15' : '#141414', border: item.is_completed ? '1px solid #10B98120' : '1px solid #2D2D2D', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', marginBottom: '0.375rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                          {item.is_completed ? <CheckCircleSolidIcon style={{ width: '18px', height: '18px', color: '#10B981', flexShrink: 0 }} /> : <CheckCircleIcon style={{ width: '18px', height: '18px', color: '#3D3D3D', flexShrink: 0 }} />}
+                                          <span style={{ flex: 1, color: item.is_completed ? '#52525B' : '#FFFFFF', fontSize: '0.8125rem', textDecoration: item.is_completed ? 'line-through' : 'none' }}>{item.title}</span>
+                                          <span style={{ color: TC[item.type], fontSize: '0.5625rem', fontWeight: 600 }}>{item.type}</span>
+                                        </div>
+                                        {itemAtts.length > 0 && (
+                                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                                            {itemAtts.map((a: any) => (
+                                              <button key={a.id}
+                                                onClick={() => setPreviewFile({ url: a.file_url, name: a.file_name, type: a.file_type || '' })}
+                                                style={{ padding: 0, border: '1px solid #2D2D2D', borderRadius: '0.5rem', background: '#0D0D0D', cursor: 'pointer', overflow: 'hidden', transition: 'border-color 0.15s' }}
+                                                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#3B82F6')}
+                                                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#2D2D2D')}>
+                                                {isImageType(a.file_type)
+                                                  ? <img src={a.file_url} alt="" style={{ width: '100px', height: '75px', objectFit: 'cover', display: 'block' }} />
+                                                  : <div style={{ padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                                      {isPdfType(a.file_type) ? <DocumentTextIcon style={{ width: '14px', height: '14px', color: '#EF4444' }} /> : <PaperClipIcon style={{ width: '14px', height: '14px', color: '#71717A' }} />}
+                                                      <span style={{ color: '#A1A1AA', fontSize: '0.75rem' }}>{a.file_name}</span>
+                                                    </div>
+                                                }
+                                              </button>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Calendar - right side */}
+                    {(() => {
+                      const calYear = checkCalDate.getFullYear();
+                      const calMonth = checkCalDate.getMonth();
+                      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+                      const firstDow = new Date(calYear, calMonth, 1).getDay();
+                      const mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                      const dNames = ['S','M','T','W','T','F','S'];
+                      const now = new Date();
+                      const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                      const dayActivity = (day: number) => {
+                        const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                        return {
+                          done: checklistItems.some((c: any) => c.completed_at?.startsWith(ds)),
+                          upload: checklistAttachments.some((a: any) => a.created_at?.startsWith(ds)),
+                        };
+                      };
+                      return (
+                        <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '0.75rem', padding: '0.75rem', width: '220px', flexShrink: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                            <button onClick={() => setCheckCalDate(new Date(calYear, calMonth - 1, 1))} style={{ padding: '0.25rem', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', lineHeight: 0 }}><ChevronLeftIcon style={{ width: '14px', height: '14px' }} /></button>
+                            <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 700 }}>{mNames[calMonth]} {calYear}</span>
+                            <button onClick={() => setCheckCalDate(new Date(calYear, calMonth + 1, 1))} style={{ padding: '0.25rem', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer', lineHeight: 0 }}><ChevronRightIcon style={{ width: '14px', height: '14px' }} /></button>
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.125rem', marginBottom: '0.25rem' }}>
+                            {dNames.map((d, i) => <div key={i} style={{ textAlign: 'center', color: '#52525B', fontSize: '0.5625rem', fontWeight: 600 }}>{d}</div>)}
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.125rem' }}>
+                            {Array.from({ length: firstDow }).map((_, i) => <div key={`e${i}`} />)}
+                            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+                              const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                              const isToday = ds === todayStr;
+                              const a = dayActivity(day);
+                              return (
+                                <div key={day} onClick={() => setCheckSelectedDay(checkSelectedDay === ds ? null : ds)}
+                                  style={{ aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '0.25rem', cursor: 'pointer', transition: 'all 0.15s',
+                                    border: checkSelectedDay === ds ? '1px solid #8B5CF6' : isToday ? '1px solid #3B82F6' : '1px solid transparent',
+                                    background: checkSelectedDay === ds ? '#8B5CF620' : isToday ? '#141414' : 'transparent',
+                                    color: checkSelectedDay === ds ? '#FFFFFF' : isToday ? '#3B82F6' : '#A1A1AA',
+                                    fontSize: '0.6875rem', fontWeight: checkSelectedDay === ds || isToday ? 700 : 400 }}>
+                                  {day}
+                                  {(a.done || a.upload) && (
+                                    <div style={{ display: 'flex', gap: '1px', marginTop: '1px' }}>
+                                      {a.done && <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#10B981' }} />}
+                                      {a.upload && <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#3B82F6' }} />}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', justifyContent: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#10B981' }} /><span style={{ color: '#52525B', fontSize: '0.5rem' }}>Done</span></div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#3B82F6' }} /><span style={{ color: '#52525B', fontSize: '0.5rem' }}>Upload</span></div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </>);
+                })()}
+                </div>{/* end flex wrapper */}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* File Preview Modal */}
+        {previewFile && (
+          <div
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300 }}
+            onClick={() => setPreviewFile(null)}
+          >
+            <div
+              style={{ background: '#1A1A1A', borderRadius: '1rem', width: '90vw', maxWidth: '900px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', border: '1px solid #2D2D2D', overflow: 'hidden' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Preview Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.25rem', borderBottom: '1px solid #2D2D2D', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flex: 1 }}>
+                  {isImageType(previewFile.type)
+                    ? <PhotoIcon style={{ width: '18px', height: '18px', color: '#3B82F6', flexShrink: 0 }} />
+                    : isPdfType(previewFile.type)
+                      ? <DocumentTextIcon style={{ width: '18px', height: '18px', color: '#EF4444', flexShrink: 0 }} />
+                      : <PaperClipIcon style={{ width: '18px', height: '18px', color: '#71717A', flexShrink: 0 }} />
+                  }
+                  <span style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {previewFile.name}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                  <a
+                    href={previewFile.url}
+                    download={previewFile.name}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.75rem', background: '#3B82F6', border: 'none', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 600, textDecoration: 'none', cursor: 'pointer' }}
+                  >
+                    <ArrowDownTrayIcon style={{ width: '14px', height: '14px' }} /> Download
+                  </a>
+                  <button
+                    onClick={() => setPreviewFile(null)}
+                    style={{ padding: '0.5rem', background: '#141414', border: '1px solid #2D2D2D', borderRadius: '0.5rem', color: '#A1A1AA', cursor: 'pointer', lineHeight: 0 }}
+                  >
+                    <XMarkIcon style={{ width: '18px', height: '18px' }} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Preview Content */}
+              <div style={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: '#0D0D0D', minHeight: '400px' }}>
+                {isImageType(previewFile.type) ? (
+                  <img
+                    src={previewFile.url}
+                    alt={previewFile.name}
+                    style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '0.5rem' }}
+                  />
+                ) : isPdfType(previewFile.type) ? (
+                  <iframe
+                    src={previewFile.url}
+                    style={{ width: '100%', height: '70vh', border: 'none', borderRadius: '0.5rem' }}
+                    title={previewFile.name}
+                  />
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '3rem' }}>
+                    <PaperClipIcon style={{ width: '48px', height: '48px', color: '#52525B', margin: '0 auto 1rem' }} />
+                    <p style={{ color: '#FFFFFF', fontSize: '1rem', fontWeight: 500, margin: '0 0 0.5rem' }}>
+                      {previewFile.name}
+                    </p>
+                    <p style={{ color: '#71717A', fontSize: '0.875rem', margin: '0 0 1.5rem' }}>
+                      Preview not available for this file type
+                    </p>
+                    <a
+                      href={previewFile.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.625rem 1.25rem', background: '#3B82F6', borderRadius: '0.5rem', color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}
+                    >
+                      <ArrowDownTrayIcon style={{ width: '16px', height: '16px' }} /> Open File
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Member Report Popup Modal */}

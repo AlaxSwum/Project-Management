@@ -82,9 +82,11 @@ export default function TimetablePage() {
   const [showDayMeetings, setShowDayMeetings] = useState(false);
   const [selectedDayMeetings, setSelectedDayMeetings] = useState<Meeting[]>([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Mobile detection
   useEffect(() => {
+    setMounted(true);
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
@@ -93,6 +95,9 @@ export default function TimetablePage() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Prevent hydration mismatch by not rendering window-dependent logic until mounted
+  const effectiveIsMobile = mounted ? isMobile : false;
   const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
   const [newMeeting, setNewMeeting] = useState({
     title: '',
@@ -835,6 +840,7 @@ export default function TimetablePage() {
     const dayMeetings = meetingsByDate[dateStr] || [];
     // Sort by time (earliest first)
     return dayMeetings.sort((a, b) => {
+      if (!a.time || !b.time) return 0;
       const [hoursA, minutesA] = a.time.split(':').map(Number);
       const [hoursB, minutesB] = b.time.split(':').map(Number);
       return (hoursA * 60 + minutesA) - (hoursB * 60 + minutesB);
@@ -937,7 +943,7 @@ export default function TimetablePage() {
       <div style={{ minHeight: '100vh', background: '#F5F5ED' }}>
         <div style={{ display: 'flex' }}>
           <Sidebar projects={[]} onCreateProject={() => {}} />
-          <div className="page-main" style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', padding: '2rem' }}>
+          <div className="page-main" style={{ flex: 1, marginLeft: effectiveIsMobile ? 0 : '280px', padding: '2rem' }}>
             {/* Skeleton Header */}
             <div style={{ marginBottom: '2rem' }}>
               <div style={{ height: '32px', width: '250px', background: '#E5E7EB', borderRadius: '8px', marginBottom: '12px', animation: 'pulse 1.5s infinite' }}></div>
@@ -985,16 +991,16 @@ export default function TimetablePage() {
           }
           .main-content {
             flex: 1;
-            margin-left: ${isMobile ? '0' : '280px'};
+            margin-left: ${effectiveIsMobile ? '0' : '280px'};
             background: transparent;
-            max-width: ${isMobile ? '100vw' : 'calc(100vw - 280px)'};
+            max-width: ${effectiveIsMobile ? '100vw' : 'calc(100vw - 280px)'};
             overflow-x: hidden;
             box-sizing: border-box;
             position: relative;
             z-index: 1;
-            padding-top: ${isMobile ? '70px' : '0'};
-            padding-left: ${isMobile ? '12px' : '0'};
-            padding-right: ${isMobile ? '12px' : '0'};
+            padding-top: ${effectiveIsMobile ? '70px' : '0'};
+            padding-left: ${effectiveIsMobile ? '12px' : '0'};
+            padding-right: ${effectiveIsMobile ? '12px' : '0'};
           }
           .header {
             background: rgba(255, 255, 255, 0.98);
@@ -1621,78 +1627,58 @@ export default function TimetablePage() {
               min-width: 80px !important;
             }
             
-            /* ULTRA-AGGRESSIVE CALENDAR GRID FIXES */
+            /* CALENDAR GRID STYLES - MONTH VIEW ONLY */
             .calendar-header-grid,
-            .calendar-body-grid,
-            .calendar-view div[style*="grid-template-columns"],
-            .calendar-view > div:first-child,
-            .calendar-view > div:last-child,
-            .calendar-view > div > div {
+            .calendar-body-grid {
               display: grid !important;
               grid-template-columns: repeat(7, 1fr) !important;
-              width: calc(100vw - 2rem) !important;
-              min-width: calc(100vw - 2rem) !important;
+              width: 1200px !important; /* FIXED WIDTH FOR ALIGNMENT */
+              min-width: 1200px !important;
               gap: 1px !important;
-              max-width: calc(100vw - 2rem) !important;
-              overflow-x: hidden !important;
               box-sizing: border-box !important;
               margin: 0 !important;
               padding: 0 !important;
+              background: #E5E7EB !important;
             }
             
-            /* FORCE ALL CALENDAR ELEMENTS */
-            .calendar-view,
-            .calendar-view * {
-              box-sizing: border-box !important;
-              max-width: calc(100vw - 2rem) !important;
-            }
-            
-            .calendar-view > div {
-              width: calc(100vw - 2rem) !important;
-              max-width: calc(100vw - 2rem) !important;
-              margin: 0 !important;
-            }
-            
-            /* OVERRIDE ANY CONFLICTING GRID STYLES */
-            .calendar-view div {
-              grid-column: unset !important;
-              grid-row: unset !important;
-            }
-            
-            /* Calendar Day Cells Mobile */
-            .calendar-day,
-            [class*="calendar-day"],
-            .calendar-view div[style*="border-right"] {
-              min-height: 100px !important;
-              padding: 8px !important;
-              font-size: 12px !important;
-              overflow: hidden !important;
-              border: 1px solid #E5E7EB !important;
-              background: white !important;
-              box-sizing: border-box !important;
-            }
-
-            /* Week and Day View Mobile Adjustments */
-            .calendar-view div[style*="gridTemplateColumns"] {
-              grid-template-columns: repeat(7, 1fr) !important;
-              gap: 1px !important;
-            }
-
-            .calendar-view div[style*="minHeight: 500px"] {
-              min-height: 300px !important;
-            }
-
-            .calendar-view div[style*="minHeight: 700px"] {
-              min-height: 400px !important;
-            }
-            
-            /* FORCE CALENDAR STRUCTURE */
             .calendar-view {
-              width: calc(100vw - 2rem) !important;
-              max-width: calc(100vw - 2rem) !important;
-              overflow-x: hidden !important;
-              margin: 0 !important;
-              padding: 0 !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              overflow-x: auto !important; /* ALLOW SCROLLING IF SCREEN IS SMALL */
+              padding-bottom: 1rem !important;
+              -webkit-overflow-scrolling: touch;
+            }
+            
+            .calendar-container-fixed {
+              min-width: 1200px;
+              background: #FFFFFF;
+              border: 1px solid #E5E7EB;
+              border-radius: 16px;
+              overflow: hidden;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            }
+
+            @media (max-width: 768px) {
+              .calendar-cell {
+                min-height: 100px !important;
+                padding: 0.5rem !important;
+              }
+              
+              .calendar-cell div[style*="font-size: 1rem"] {
+                font-size: 0.875rem !important;
+              }
+            }
+            
+            /* Week and Day View Mobile Adjustments */
+            @media (max-width: 768px) {
+              .calendar-view div[style*="minHeight: 500px"],
+              .calendar-view div[style*="minHeight: 600px"] {
+                min-height: 400px !important;
+              }
+
+              .calendar-view div[style*="minHeight: 700px"] {
+                min-height: 500px !important;
+              }
             }
             
             /* Calendar Headers Mobile */
@@ -2886,7 +2872,7 @@ export default function TimetablePage() {
                       <div className="meeting-header">
                         <div>
                           <h3 className="meeting-title">{meeting.title}</h3>
-                          <p className="meeting-project">{meeting.project_name}</p>
+                          <p className="meeting-project">{meeting.project_name || 'No Project'}</p>
                         </div>
                         <div className="meeting-actions">
                           <button
@@ -2941,7 +2927,7 @@ export default function TimetablePage() {
                         </div>
                         <div className="detail-item">
                           <UserGroupIcon style={{ width: '16px', height: '16px' }} />
-                          <span>Organized by {meeting.created_by.name}</span>
+                          <span>Organized by {meeting.created_by?.name || 'Unknown'}</span>
                         </div>
                       </div>
 
@@ -3014,7 +3000,7 @@ export default function TimetablePage() {
                       <div className="meeting-header">
                         <div>
                           <h3 className="meeting-title">{meeting.title}</h3>
-                          <p className="meeting-project">{meeting.project_name}</p>
+                          <p className="meeting-project">{meeting.project_name || 'No Project'}</p>
                         </div>
                         <div className="meeting-actions">
                           <button
@@ -3059,7 +3045,7 @@ export default function TimetablePage() {
                         </div>
                         <div className="detail-item">
                           <UserGroupIcon style={{ width: '16px', height: '16px' }} />
-                          <span>Organized by {meeting.created_by.name}</span>
+                          <span>Organized by {meeting.created_by?.name || 'Unknown'}</span>
                         </div>
                       </div>
 
@@ -3120,31 +3106,14 @@ export default function TimetablePage() {
                 <>
                   {/* Month View */}
                   {calendarView === 'month' && (
-                <div className="calendar-view" style={{ 
-                  width: isMobile ? 'calc(100vw - 2rem)' : '100%', 
-                  maxWidth: isMobile ? 'calc(100vw - 2rem)' : '100%', 
-                  overflow: 'hidden',
-                  padding: '0',
-                  margin: '0 auto',
-                  boxSizing: 'border-box'
-                }}>
-                  <div style={{
-                    background: '#FFFFFF',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-                  }}>
+                <div className="calendar-view">
+                  <div className="calendar-container-fixed">
                     {/* Calendar Header */}
                   <div 
                     className="calendar-header-grid"
                     style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(7, 1fr)', 
-                      background: '#F9FAFB',
+                      background: '#E5E7EB', // Grid line color
                       borderBottom: '1px solid #E5E7EB',
-                      width: '100%',
-                      minWidth: '100%'
                     }}>
                       {daysOfWeek.map((day) => (
                         <div key={day} style={{
@@ -3152,7 +3121,7 @@ export default function TimetablePage() {
                         textAlign: 'center',
                           fontWeight: '600',
                           color: '#374151',
-                          borderRight: '1px solid #E5E7EB',
+                          background: '#F9FAFB', // Cell background
                           fontFamily: "'Mabry Pro', 'Inter', sans-serif",
                           fontSize: '0.75rem',
                           letterSpacing: '0.05em',
@@ -3167,11 +3136,7 @@ export default function TimetablePage() {
                     <div 
                       className="calendar-body-grid"
                       style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(7, 1fr)',
-                        width: '100%',
-                        minWidth: '100%',
-                        gap: '0'
+                        background: '#E5E7EB', // Grid line color
                       }}>
                     
                     {/* Empty cells for days before the first day of the month */}
@@ -3184,8 +3149,6 @@ export default function TimetablePage() {
                         <div key={`prev-${index}`} className="calendar-cell other-month" style={{
                           minHeight: '150px',
                           padding: '0.75rem',
-                          borderRight: '1px solid #E5E7EB',
-                          borderBottom: '1px solid #E5E7EB',
                           background: '#F9FAFB',
                           color: '#9CA3AF'
                         }}>
@@ -3217,15 +3180,13 @@ export default function TimetablePage() {
                           style={{
                             minHeight: '150px',
                             padding: '0.75rem',
-                            borderRight: '1px solid #E5E7EB',
-                            borderBottom: '1px solid #E5E7EB',
                             background: isToday ? 'rgba(88, 132, 253, 0.05)' : '#FFFFFF',
                           transition: 'all 0.2s ease',
                             cursor: 'pointer',
                             ...(isToday && {
-                              borderRight: '1px solid #5884FD',
-                              borderBottom: '1px solid #5884FD',
-                              position: 'relative'
+                              boxShadow: 'inset 0 0 0 1px #5884FD',
+                              position: 'relative',
+                              zIndex: 1
                             })
                         }}
                           onMouseEnter={(e) => {
@@ -3344,8 +3305,7 @@ export default function TimetablePage() {
                                     color: '#6B7280'
                                   }}>
                                       <UserGroupIcon style={{ width: '9px', height: '9px' }} />
-                                      <span style={{ fontSize: '9px' }}>{meeting.created_by.name.split(' ')[0]}</span>
-                                    </div>
+                                      <span style={{ fontSize: '9px' }}>{(meeting.created_by?.name || 'Unknown').split(' ')[0]}</span>                                    </div>
                                   </div>
                                   {getMeetingDisplayTimes(meeting).slice(1).map(dt => (
                                   <div key={dt.timezone} style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
@@ -3354,6 +3314,8 @@ export default function TimetablePage() {
                                     {dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '8px' }}>{dt.dateLabel}</span>}
                                   </div>
                                   ))}
+                                  <span style={{ color: '#D1D5DB' }}>•</span>
+                                  <span style={{ color: '#6B7280' }}>{meeting.project_name || 'No Project'}</span>
                                 </div>
                               </div>
                             ))}
@@ -3401,8 +3363,6 @@ export default function TimetablePage() {
                         <div key={`next-${index}`} className="calendar-cell other-month" style={{
                           minHeight: '150px',
                           padding: '0.75rem',
-                          borderRight: '1px solid #E5E7EB',
-                          borderBottom: '1px solid #E5E7EB',
                           background: '#F9FAFB',
                           color: '#9CA3AF'
                   }}>
@@ -3416,18 +3376,16 @@ export default function TimetablePage() {
                       </div>
                       );
                     })}
-                      </div>
                     </div>
-                  
-
+                  </div>
                 </div>
                   )}
 
                   {/* Week View */}
                   {calendarView === 'week' && (
                     <div className="calendar-view" style={{ 
-                      width: isMobile ? 'calc(100vw - 2rem)' : '100%', 
-                      maxWidth: isMobile ? 'calc(100vw - 2rem)' : '100%', 
+                      width: effectiveIsMobile ? 'calc(100vw - 2rem)' : '100%', 
+                      maxWidth: effectiveIsMobile ? 'calc(100vw - 2rem)' : '100%', 
                       overflow: 'hidden',
                       padding: '0',
                       margin: '0 auto',
@@ -3551,8 +3509,8 @@ export default function TimetablePage() {
                   {/* Day View */}
                   {calendarView === 'day' && (
                     <div className="calendar-view" style={{ 
-                      width: isMobile ? 'calc(100vw - 2rem)' : '100%', 
-                      maxWidth: isMobile ? 'calc(100vw - 2rem)' : '100%', 
+                      width: effectiveIsMobile ? 'calc(100vw - 2rem)' : '100%', 
+                      maxWidth: effectiveIsMobile ? 'calc(100vw - 2rem)' : '100%', 
                       overflow: 'hidden',
                       padding: '0',
                       margin: '0 auto',
@@ -3671,7 +3629,7 @@ export default function TimetablePage() {
                                           </React.Fragment>
                                         ))}
                                         <span style={{ color: '#D1D5DB' }}>•</span>
-                                        <span style={{ color: '#6B7280' }}>{meeting.project_name}</span>
+                                        <span style={{ color: '#6B7280' }}>{meeting.project_name || 'No Project'}</span>
                                       </div>
                                       {meeting.description && (
                                         <div style={{
@@ -3790,7 +3748,7 @@ export default function TimetablePage() {
                             {meeting.title}
                           </h4>
                           <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#666666' }}>
-                            {meeting.project_name}
+                            {meeting.project_name || 'No Project'}
                           </p>
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -3838,7 +3796,7 @@ export default function TimetablePage() {
                       <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#666666' }}>
                         <span>🕐 {formatTime(meeting.time)}</span>
                         <span>⏱️ {formatDuration(meeting.duration)}</span>
-                        <span>👤 {meeting.created_by.name}</span>
+                        <span>👤 {meeting.created_by?.name || 'Unknown'}</span>
                       </div>
                       
                       {meeting.description && (

@@ -17,6 +17,11 @@ import {
   PencilIcon,
   CheckIcon,
   DocumentTextIcon,
+  FolderIcon,
+  ChevronDownIcon,
+  ArrowPathIcon,
+  PaperClipIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 
@@ -25,50 +30,99 @@ interface Responsibility {
   content: string;
 }
 
+interface ChecklistCategory {
+  id: number;
+  name: string;
+  color: string;
+}
+
+interface ReportAttachment {
+  id: number;
+  report_id: number;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size: number;
+}
+
+const TYPE_COLORS: Record<string, string> = { daily: '#3B82F6', weekly: '#8B5CF6', monthly: '#F59E0B' };
+const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function formatScheduleBadge(type: string, resetTime?: string, dayOfWeek?: number | null, dayOfMonth?: number | null): string {
+  const t = formatTime12h(resetTime || '00:00');
+  if (type === 'daily') return `Daily at ${t}`;
+  if (type === 'weekly') return `${SHORT_DAYS[dayOfWeek ?? 1]} at ${t}`;
+  if (type === 'monthly') { const d = dayOfMonth ?? 1; const s = ['th','st','nd','rd']; const v = d % 100; return `${d}${s[(v-20)%10]||s[v]||s[0]} of month at ${t}`; }
+  return type;
+}
+
+function formatTime12h(t: string): string {
+  const [h, m] = t.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
 interface ChecklistItem {
   id: number;
   title: string;
   type: string;
   is_completed: boolean;
   completed_at: string | null;
+  reset_time?: string;
+  reset_day_of_week?: number | null;
+  reset_day_of_month?: number | null;
+  category_id?: number | null;
 }
 
-// Check if a completed_at timestamp is still within the current period
-function isWithinCurrentPeriod(completedAt: string | null, type: string): boolean {
-  if (!completedAt) return false;
-  const completed = new Date(completedAt);
+// Get the most recent reset point based on schedule fields
+function getLastResetTime(
+  type: string,
+  resetTime: string,
+  dayOfWeek: number | null,
+  dayOfMonth: number | null,
+): Date {
   const now = new Date();
+  const [h, m] = (resetTime || '00:00').split(':').map(Number);
 
   if (type === 'daily') {
-    // Same calendar day (in local timezone)
-    return (
-      completed.getFullYear() === now.getFullYear() &&
-      completed.getMonth() === now.getMonth() &&
-      completed.getDate() === now.getDate()
-    );
+    const resetToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+    return now >= resetToday ? resetToday : new Date(resetToday.getTime() - 86400000);
   }
 
   if (type === 'weekly') {
-    // Same ISO week: get Monday of both weeks and compare
-    const getMonday = (d: Date) => {
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(d.getFullYear(), d.getMonth(), diff, 0, 0, 0, 0);
-    };
-    const completedMonday = getMonday(completed).getTime();
-    const nowMonday = getMonday(now).getTime();
-    return completedMonday === nowMonday;
+    const target = dayOfWeek ?? 1;
+    const todayReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+    const currentDay = now.getDay();
+    let daysBack = (currentDay - target + 7) % 7;
+    if (daysBack === 0 && now < todayReset) daysBack = 7;
+    return new Date(todayReset.getTime() - daysBack * 86400000);
   }
 
   if (type === 'monthly') {
-    // Same calendar month
-    return (
-      completed.getFullYear() === now.getFullYear() &&
-      completed.getMonth() === now.getMonth()
-    );
+    const target = dayOfMonth ?? 1;
+    const candidate = new Date(now.getFullYear(), now.getMonth(), target, h, m, 0, 0);
+    if (now < candidate) candidate.setMonth(candidate.getMonth() - 1);
+    return candidate;
   }
 
-  return false;
+  return new Date(0);
+}
+
+// Check if a checklist item should be reset (completed before last reset point)
+function shouldResetItem(item: ChecklistItem): boolean {
+  if (!item.is_completed || !item.completed_at) return false;
+  const lastReset = getLastResetTime(
+    item.type,
+    item.reset_time || '00:00',
+    item.reset_day_of_week ?? null,
+    item.reset_day_of_month ?? null,
+  );
+  return new Date(item.completed_at) < lastReset;
 }
 
 export default function MemberDashboardPage() {
@@ -96,7 +150,13 @@ export default function MemberDashboardPage() {
   // Data
   const [responsibilities, setResponsibilities] = useState<Responsibility[]>([]);
   const [checklists, setChecklists] = useState<ChecklistItem[]>([]);
+  const [categories, setCategories] = useState<ChecklistCategory[]>([]);
+  const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+
+  // Report attachments
+  const [attachments, setAttachments] = useState<ReportAttachment[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   // Add forms
   const [newResponsibility, setNewResponsibility] = useState('');
@@ -132,7 +192,7 @@ export default function MemberDashboardPage() {
   const autoResetChecklists = useCallback(async (items: ChecklistItem[]) => {
     const idsToReset: number[] = [];
     for (const item of items) {
-      if (item.is_completed && !isWithinCurrentPeriod(item.completed_at, item.type)) {
+      if (shouldResetItem(item)) {
         idsToReset.push(item.id);
       }
     }
@@ -233,8 +293,8 @@ export default function MemberDashboardPage() {
         return;
       }
 
-      // Fetch responsibilities and checklists
-      const [respRes, checkRes] = await Promise.all([
+      // Fetch responsibilities, checklists, and categories
+      const [respRes, checkRes, catsRes] = await Promise.all([
         supabase
           .from('org_member_responsibilities')
           .select('*')
@@ -247,10 +307,22 @@ export default function MemberDashboardPage() {
           .eq('department_id', deptId)
           .eq('user_id', memberId)
           .order('created_at', { ascending: true }),
+        supabase
+          .from('org_checklist_categories')
+          .select('id, name, color')
+          .eq('company_id', companyId)
+          .order('created_at', { ascending: true }),
       ]);
       setResponsibilities(respRes.data || []);
+      setCategories((catsRes.data || []) as ChecklistCategory[]);
 
-      const checkItems: ChecklistItem[] = checkRes.data || [];
+      const checkItems: ChecklistItem[] = (checkRes.data || []).map((c: any) => ({
+        ...c,
+        reset_time: c.reset_time || '00:00',
+        reset_day_of_week: c.reset_day_of_week ?? null,
+        reset_day_of_month: c.reset_day_of_month ?? null,
+        category_id: c.category_id ?? null,
+      }));
 
       // Auto-reset expired checklists then re-fetch if any were reset
       const didReset = await autoResetChecklists(checkItems);
@@ -261,7 +333,13 @@ export default function MemberDashboardPage() {
           .eq('department_id', deptId)
           .eq('user_id', memberId)
           .order('created_at', { ascending: true });
-        setChecklists(refreshed || []);
+        setChecklists((refreshed || []).map((c: any) => ({
+          ...c,
+          reset_time: c.reset_time || '00:00',
+          reset_day_of_week: c.reset_day_of_week ?? null,
+          reset_day_of_month: c.reset_day_of_month ?? null,
+          category_id: c.category_id ?? null,
+        })));
       } else {
         setChecklists(checkItems);
       }
@@ -418,6 +496,9 @@ export default function MemberDashboardPage() {
         setReportPlans(data.plans_for_next || '');
         setReportStatus(data.status || 'draft');
         setTodayReportExists(true);
+        // Fetch attachments
+        const { data: attData } = await supabase.from('org_report_attachments').select('*').eq('report_id', data.id).order('created_at', { ascending: true });
+        setAttachments((attData || []) as ReportAttachment[]);
       } else {
         setReportId(null);
         setReportContent('');
@@ -426,6 +507,7 @@ export default function MemberDashboardPage() {
         setReportPlans('');
         setReportStatus('draft');
         setTodayReportExists(false);
+        setAttachments([]);
       }
     } catch {
       // No report for today yet
@@ -483,6 +565,70 @@ export default function MemberDashboardPage() {
     }
     setSavingReport(false);
   };
+
+  // File upload handler
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !user) return;
+    // Ensure report exists first (save as draft)
+    let rid = reportId;
+    if (!rid) {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase.from('org_employee_reports').insert({
+        department_id: deptId, user_id: memberId, report_type: 'daily', report_date: today,
+        content: reportContent, tasks_completed: reportTasksCompleted, challenges: reportChallenges,
+        plans_for_next: reportPlans, status: 'draft', updated_at: new Date().toISOString(),
+      }).select().single();
+      if (error || !data) { alert('Failed to save report before uploading'); return; }
+      rid = data.id;
+      setReportId(data.id);
+      setTodayReportExists(true);
+    }
+
+    setUploading(true);
+    for (const file of Array.from(files)) {
+      try {
+        const ext = file.name.split('.').pop() || '';
+        const path = `${rid}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from('report-attachments').upload(path, file);
+        if (uploadErr) throw uploadErr;
+        const { data: urlData } = supabase.storage.from('report-attachments').getPublicUrl(path);
+        const { data: attData, error: attErr } = await supabase.from('org_report_attachments').insert({
+          report_id: rid, file_name: file.name, file_url: urlData.publicUrl,
+          file_type: file.type, file_size: file.size, uploaded_by: user.id,
+        }).select().single();
+        if (attErr) throw attErr;
+        if (attData) setAttachments((prev) => [...prev, attData as ReportAttachment]);
+      } catch (err) {
+        console.error('Upload error:', err);
+        alert(`Failed to upload ${file.name}`);
+      }
+    }
+    setUploading(false);
+    e.target.value = '';
+  };
+
+  const handleDeleteAttachment = async (att: ReportAttachment) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== att.id));
+    try {
+      // Extract path from URL
+      const url = new URL(att.file_url);
+      const pathParts = url.pathname.split('/report-attachments/');
+      if (pathParts[1]) await supabase.storage.from('report-attachments').remove([pathParts[1]]);
+      await supabase.from('org_report_attachments').delete().eq('id', att.id);
+    } catch (err) { console.error(err); }
+  };
+
+  // Group checklists by category then by type
+  type CatCheckGroup = { cat: ChecklistCategory | null; items: ChecklistItem[] };
+  const checklistsByCategory: CatCheckGroup[] = [];
+  const catIds = new Set(checklists.map((c) => c.category_id).filter(Boolean));
+  for (const cat of categories) {
+    if (!catIds.has(cat.id)) continue;
+    checklistsByCategory.push({ cat, items: checklists.filter((c) => c.category_id === cat.id) });
+  }
+  const uncatItems = checklists.filter((c) => !c.category_id);
+  if (uncatItems.length > 0) checklistsByCategory.push({ cat: null, items: uncatItems });
 
   const filteredChecklists = checklists.filter((c) => c.type === activeTab);
 
@@ -837,243 +983,106 @@ export default function MemberDashboardPage() {
             )}
           </div>
 
-          {/* Checklists */}
-          <div
-            style={{
-              background: '#1A1A1A',
-              border: '1px solid #2D2D2D',
-              borderRadius: '1rem',
-              padding: '1.25rem',
-            }}
-          >
-            <h2
-              style={{
-                color: '#FFFFFF',
-                fontSize: '1.125rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem',
-              }}
-            >
-              Checklists
-            </h2>
-            <p style={{ color: '#52525B', fontSize: '0.75rem', marginBottom: '0.75rem' }}>
-              Tasks auto-reset at the end of each day / week / month
-            </p>
+          {/* Checklists - grouped by category */}
+          <div style={{ background: '#1A1A1A', border: '1px solid #2D2D2D', borderRadius: '1rem', padding: '1.25rem' }}>
+            <h2 style={{ color: '#FFFFFF', fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.25rem' }}>Checklists</h2>
+            <p style={{ color: '#52525B', fontSize: '0.75rem', marginBottom: '0.75rem' }}>Tasks auto-reset based on their schedule</p>
 
-            {/* Tabs */}
-            <div
-              style={{
-                display: 'flex',
-                gap: '0.25rem',
-                marginBottom: '1rem',
-                background: '#141414',
-                borderRadius: '0.5rem',
-                padding: '0.25rem',
-              }}
-            >
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    flex: 1,
-                    padding: '0.5rem',
-                    borderRadius: '0.375rem',
-                    border: 'none',
-                    background: activeTab === tab ? '#10B981' : 'transparent',
-                    color: activeTab === tab ? '#FFFFFF' : '#71717A',
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    textTransform: 'capitalize',
-                  }}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+            {checklists.length === 0 ? (
+              <p style={{ color: '#71717A', fontSize: '0.875rem', padding: '1rem 0' }}>No checklist items assigned yet</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '450px', overflowY: 'auto' }}>
+                {checklistsByCategory.map(({ cat, items }) => {
+                  const catKey = cat ? `cat-${cat.id}` : 'uncategorized';
+                  const isCollapsed = collapsedCats.has(catKey);
+                  const catColor = cat?.color || '#52525B';
+                  const completed = items.filter((i) => i.is_completed).length;
+                  // Group items by type within category
+                  const byType: Record<string, ChecklistItem[]> = {};
+                  items.forEach((item) => { (byType[item.type] = byType[item.type] || []).push(item); });
 
-            {/* Checklist items */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.375rem',
-                marginBottom: '1rem',
-                maxHeight: '300px',
-                overflowY: 'auto',
-              }}
-            >
-              {filteredChecklists.length === 0 && (
-                <p style={{ color: '#71717A', fontSize: '0.875rem' }}>
-                  No {activeTab} items yet
-                </p>
-              )}
-              {filteredChecklists.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.625rem',
-                    padding: '0.625rem 0.75rem',
-                    background: '#141414',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #2D2D2D',
-                  }}
-                >
-                  {/* Toggle checkbox */}
-                  <button
-                    onClick={() => handleToggleChecklist(item)}
-                    disabled={!isSelf && !canManage}
-                    style={{
-                      padding: 0,
-                      background: 'none',
-                      border: 'none',
-                      cursor: isSelf || canManage ? 'pointer' : 'default',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {item.is_completed ? (
-                      <CheckCircleSolidIcon
-                        style={{ width: '20px', height: '20px', color: '#10B981' }}
-                      />
-                    ) : (
-                      <CheckCircleIcon
-                        style={{ width: '20px', height: '20px', color: '#3D3D3D' }}
-                      />
-                    )}
-                  </button>
-
-                  {/* Title - editable inline */}
-                  {editingChecklistId === item.id ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flex: 1 }}>
-                      <input
-                        value={editChecklistValue}
-                        onChange={(e) => setEditChecklistValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleEditChecklist(item.id);
-                          if (e.key === 'Escape') setEditingChecklistId(null);
-                        }}
-                        autoFocus
-                        style={{
-                          flex: 1,
-                          padding: '0.25rem 0.5rem',
-                          background: '#0D0D0D',
-                          border: '1px solid #3B82F6',
-                          borderRadius: '0.375rem',
-                          color: '#FFFFFF',
-                          fontSize: '0.875rem',
-                          outline: 'none',
-                        }}
-                      />
-                      <button
-                        onClick={() => handleEditChecklist(item.id)}
-                        style={{ padding: '0.125rem', background: 'none', border: 'none', color: '#10B981', cursor: 'pointer' }}
+                  return (
+                    <div key={catKey} style={{ background: '#141414', border: '1px solid #2D2D2D', borderRadius: '0.625rem', overflow: 'hidden' }}>
+                      {/* Category header */}
+                      <div
+                        onClick={() => setCollapsedCats((prev) => { const n = new Set(prev); if (n.has(catKey)) n.delete(catKey); else n.add(catKey); return n; })}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 0.75rem', cursor: 'pointer', transition: 'background 0.15s' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = '#1A1A1A')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                       >
-                        <CheckIcon style={{ width: '16px', height: '16px' }} />
-                      </button>
-                      <button
-                        onClick={() => setEditingChecklistId(null)}
-                        style={{ padding: '0.125rem', background: 'none', border: 'none', color: '#71717A', cursor: 'pointer' }}
-                      >
-                        <XMarkIcon style={{ width: '16px', height: '16px' }} />
-                      </button>
+                        <div style={{ width: '3px', height: '18px', borderRadius: '2px', background: catColor, flexShrink: 0 }} />
+                        <FolderIcon style={{ width: '16px', height: '16px', color: catColor, flexShrink: 0 }} />
+                        <span style={{ color: '#FFFFFF', fontSize: '0.8125rem', fontWeight: 600, flex: 1 }}>{cat?.name || 'Uncategorized'}</span>
+                        <span style={{ color: '#52525B', fontSize: '0.6875rem' }}>{completed}/{items.length}</span>
+                        <ChevronDownIcon style={{ width: '14px', height: '14px', color: '#3D3D3D', transition: 'transform 0.2s', transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }} />
+                      </div>
+
+                      {!isCollapsed && (
+                        <div style={{ padding: '0 0.75rem 0.625rem' }}>
+                          {(['daily', 'weekly', 'monthly'] as const).map((type) => {
+                            const typeItems = byType[type];
+                            if (!typeItems || typeItems.length === 0) return null;
+                            const sample = typeItems[0];
+                            return (
+                              <div key={type} style={{ marginTop: '0.375rem' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.125rem 0.5rem', borderRadius: '1rem', background: `${TYPE_COLORS[type]}12`, border: `1px solid ${TYPE_COLORS[type]}20`, marginBottom: '0.25rem' }}>
+                                  <ArrowPathIcon style={{ width: '10px', height: '10px', color: TYPE_COLORS[type] }} />
+                                  <span style={{ color: TYPE_COLORS[type], fontSize: '0.625rem', fontWeight: 600 }}>
+                                    {formatScheduleBadge(type, sample.reset_time, sample.reset_day_of_week, sample.reset_day_of_month)}
+                                  </span>
+                                </div>
+                                {typeItems.map((item) => (
+                                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem 0.375rem', borderRadius: '0.375rem', transition: 'background 0.1s' }}
+                                    onMouseEnter={(e) => (e.currentTarget.style.background = '#1A1A1A')} onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
+                                    <button onClick={() => handleToggleChecklist(item)} disabled={!isSelf && !canManage}
+                                      style={{ padding: 0, background: 'none', border: 'none', cursor: isSelf || canManage ? 'pointer' : 'default', flexShrink: 0, lineHeight: 0 }}>
+                                      {item.is_completed ? <CheckCircleSolidIcon style={{ width: '18px', height: '18px', color: '#10B981' }} /> : <CheckCircleIcon style={{ width: '18px', height: '18px', color: '#3D3D3D' }} />}
+                                    </button>
+                                    {editingChecklistId === item.id ? (
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flex: 1 }}>
+                                        <input value={editChecklistValue} onChange={(e) => setEditChecklistValue(e.target.value)}
+                                          onKeyDown={(e) => { if (e.key === 'Enter') handleEditChecklist(item.id); if (e.key === 'Escape') setEditingChecklistId(null); }}
+                                          autoFocus style={{ flex: 1, padding: '0.25rem 0.5rem', background: '#0D0D0D', border: '1px solid #3B82F6', borderRadius: '0.25rem', color: '#FFFFFF', fontSize: '0.8125rem', outline: 'none' }} />
+                                        <button onClick={() => handleEditChecklist(item.id)} style={{ padding: '0.125rem', background: 'none', border: 'none', color: '#10B981', cursor: 'pointer', lineHeight: 0 }}><CheckIcon style={{ width: '14px', height: '14px' }} /></button>
+                                      </div>
+                                    ) : (
+                                      <span style={{ flex: 1, color: item.is_completed ? '#52525B' : '#FFFFFF', fontSize: '0.8125rem', textDecoration: item.is_completed ? 'line-through' : 'none' }}>{item.title}</span>
+                                    )}
+                                    {(canManage || isSelf) && editingChecklistId !== item.id && (
+                                      <div style={{ display: 'flex', gap: '0.125rem', opacity: 0, transition: 'opacity 0.15s' }}
+                                        onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')} onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}>
+                                        <button onClick={() => { setEditingChecklistId(item.id); setEditChecklistValue(item.title); }}
+                                          style={{ padding: '0.125rem', background: 'none', border: 'none', color: '#52525B', cursor: 'pointer', lineHeight: 0 }}
+                                          onMouseEnter={(e) => (e.currentTarget.style.color = '#3B82F6')} onMouseLeave={(e) => (e.currentTarget.style.color = '#52525B')}>
+                                          <PencilIcon style={{ width: '12px', height: '12px' }} /></button>
+                                        <button onClick={() => handleDeleteChecklist(item.id)}
+                                          style={{ padding: '0.125rem', background: 'none', border: 'none', color: '#52525B', cursor: 'pointer', lineHeight: 0 }}
+                                          onMouseEnter={(e) => (e.currentTarget.style.color = '#EF4444')} onMouseLeave={(e) => (e.currentTarget.style.color = '#52525B')}>
+                                          <TrashIcon style={{ width: '12px', height: '12px' }} /></button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })}
+                          {/* Add item */}
+                          {(canManage || isSelf) && (
+                            <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem' }}>
+                              <input value={newChecklistTitle} onChange={(e) => setNewChecklistTitle(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleAddChecklist(); }}
+                                placeholder="Add item..." style={{ flex: 1, padding: '0.4375rem 0.625rem', background: '#0D0D0D', border: '1px solid #3D3D3D', borderRadius: '0.375rem', color: '#FFFFFF', fontSize: '0.8125rem', outline: 'none' }}
+                                onFocus={(e) => (e.currentTarget.style.borderColor = '#3B82F6')} onBlur={(e) => (e.currentTarget.style.borderColor = '#3D3D3D')} />
+                              <button onClick={handleAddChecklist} disabled={!newChecklistTitle.trim() || saving}
+                                style={{ padding: '0.4375rem', background: newChecklistTitle.trim() ? '#10B981' : '#3D3D3D', border: 'none', borderRadius: '0.375rem', color: '#FFF', cursor: newChecklistTitle.trim() ? 'pointer' : 'not-allowed', lineHeight: 0 }}>
+                                <PlusIcon style={{ width: '16px', height: '16px' }} /></button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <span
-                      style={{
-                        flex: 1,
-                        color: item.is_completed ? '#71717A' : '#FFFFFF',
-                        fontSize: '0.875rem',
-                        textDecoration: item.is_completed ? 'line-through' : 'none',
-                      }}
-                    >
-                      {item.title}
-                    </span>
-                  )}
-
-                  {/* Edit & Delete buttons */}
-                  {(canManage || isSelf) && editingChecklistId !== item.id && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
-                      <button
-                        onClick={() => {
-                          setEditingChecklistId(item.id);
-                          setEditChecklistValue(item.title);
-                        }}
-                        style={{
-                          padding: '0.125rem',
-                          background: 'none',
-                          border: 'none',
-                          color: '#71717A',
-                          cursor: 'pointer',
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = '#3B82F6')}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = '#71717A')}
-                        title="Edit"
-                      >
-                        <PencilIcon style={{ width: '14px', height: '14px' }} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteChecklist(item.id)}
-                        style={{
-                          padding: '0.125rem',
-                          background: 'none',
-                          border: 'none',
-                          color: '#71717A',
-                          cursor: 'pointer',
-                          flexShrink: 0,
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = '#EF4444')}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = '#71717A')}
-                        title="Delete"
-                      >
-                        <TrashIcon style={{ width: '14px', height: '14px' }} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Add checklist item */}
-            {(canManage || isSelf) && (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  value={newChecklistTitle}
-                  onChange={(e) => setNewChecklistTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddChecklist();
-                  }}
-                  placeholder={`Add ${activeTab} item...`}
-                  style={{
-                    flex: 1,
-                    padding: '0.625rem 0.75rem',
-                    background: '#141414',
-                    border: '1px solid #3D3D3D',
-                    borderRadius: '0.5rem',
-                    color: '#FFFFFF',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = '#3B82F6')}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = '#3D3D3D')}
-                />
-                <button
-                  onClick={handleAddChecklist}
-                  disabled={!newChecklistTitle.trim() || saving}
-                  style={{
-                    padding: '0.625rem',
-                    background: newChecklistTitle.trim() ? '#10B981' : '#3D3D3D',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    color: '#FFFFFF',
-                    cursor: newChecklistTitle.trim() ? 'pointer' : 'not-allowed',
-                  }}
-                >
-                  <PlusIcon style={{ width: '18px', height: '18px' }} />
-                </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1092,9 +1101,13 @@ export default function MemberDashboardPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
                 <div>
                   <h3 style={{ color: '#FFFFFF', fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>Daily Report</h3>
-                  <p style={{ color: '#71717A', fontSize: '0.8125rem', margin: '0.25rem 0 0' }}>
-                    {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+                    <span style={{ color: '#71717A', fontSize: '0.8125rem' }}>
+                      {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </span>
+                    <span style={{ color: '#3D3D3D' }}>|</span>
+                    <span style={{ color: '#10B981', fontSize: '0.75rem', fontWeight: 600 }}>{deptName}</span>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   {reportStatus === 'submitted' && (
@@ -1189,6 +1202,71 @@ export default function MemberDashboardPage() {
                     onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
                     onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
                   />
+                </div>
+                {/* File Attachments */}
+                <div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: '#A1A1AA', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 500 }}>
+                    <PaperClipIcon style={{ width: '16px', height: '16px' }} /> Attachments
+                  </label>
+                  {/* Existing attachments */}
+                  {attachments.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', marginBottom: '0.625rem' }}>
+                      {attachments.map((att) => {
+                        const isImage = att.file_type.startsWith('image/');
+                        const isVideo = att.file_type.startsWith('video/');
+                        return (
+                          <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.5rem 0.75rem', background: '#141414', borderRadius: '0.5rem', border: '1px solid #2D2D2D' }}>
+                            {isImage && (
+                              <img src={att.file_url} alt={att.file_name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '0.375rem', flexShrink: 0 }} />
+                            )}
+                            {isVideo && (
+                              <div style={{ width: '40px', height: '40px', borderRadius: '0.375rem', background: '#0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <PhotoIcon style={{ width: '20px', height: '20px', color: '#71717A' }} />
+                              </div>
+                            )}
+                            {!isImage && !isVideo && (
+                              <div style={{ width: '40px', height: '40px', borderRadius: '0.375rem', background: '#0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <PaperClipIcon style={{ width: '18px', height: '18px', color: '#71717A' }} />
+                              </div>
+                            )}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <a href={att.file_url} target="_blank" rel="noopener noreferrer"
+                                style={{ color: '#3B82F6', fontSize: '0.8125rem', textDecoration: 'none', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}>
+                                {att.file_name}
+                              </a>
+                              <span style={{ color: '#52525B', fontSize: '0.6875rem' }}>{formatFileSize(att.file_size)}</span>
+                            </div>
+                            {reportStatus !== 'submitted' && (
+                              <button onClick={() => handleDeleteAttachment(att)}
+                                style={{ padding: '0.25rem', background: 'none', border: 'none', color: '#52525B', cursor: 'pointer', lineHeight: 0, flexShrink: 0 }}
+                                onMouseEnter={(e) => (e.currentTarget.style.color = '#EF4444')}
+                                onMouseLeave={(e) => (e.currentTarget.style.color = '#52525B')}>
+                                <TrashIcon style={{ width: '14px', height: '14px' }} />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {/* Upload button */}
+                  {reportStatus !== 'submitted' && (
+                    <label style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                      padding: '0.5rem 0.875rem', background: '#141414', border: '1px dashed #3D3D3D',
+                      borderRadius: '0.5rem', color: '#71717A', fontSize: '0.8125rem',
+                      cursor: uploading ? 'wait' : 'pointer', transition: 'all 0.15s',
+                      opacity: uploading ? 0.6 : 1,
+                    }}>
+                      <PaperClipIcon style={{ width: '14px', height: '14px' }} />
+                      {uploading ? 'Uploading...' : 'Upload files (images, videos, docs)'}
+                      <input type="file" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                        onChange={handleFileUpload} disabled={uploading}
+                        style={{ display: 'none' }} />
+                    </label>
+                  )}
                 </div>
               </div>
 

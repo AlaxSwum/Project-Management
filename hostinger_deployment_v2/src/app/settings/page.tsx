@@ -16,9 +16,12 @@ import {
   TrashIcon,
   ArrowUpTrayIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  SunIcon,
+  MoonIcon,
 } from '@heroicons/react/24/outline';
 import Sidebar from '@/components/Sidebar';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface Session {
   id: string;
@@ -31,6 +34,7 @@ interface Session {
 export default function SettingsPage() {
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
+  const { theme, toggleTheme, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState('edit-profile');
   const [isMobile, setIsMobile] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
@@ -244,15 +248,32 @@ export default function SettingsPage() {
     }
   };
 
+  // Theme-aware colors
+  const colors = {
+    bg: isDark ? '#0D0D0D' : '#FAFAF8',
+    bgSecondary: isDark ? '#141414' : '#FFFFFF',
+    text: isDark ? '#FFFFFF' : '#1A1A2E',
+    textMuted: isDark ? '#71717A' : '#6B7280',
+    textSecondary: isDark ? '#A1A1AA' : '#4B5563',
+    textLabel: isDark ? '#E4E4E7' : '#374151',
+    border: isDark ? '#1F1F1F' : '#E5E7EB',
+    borderLight: isDark ? '#3D3D3D' : '#D1D5DB',
+    inputBg: isDark ? '#141414' : '#FFFFFF',
+    surface: isDark ? '#141414' : '#FFFFFF',
+    surfaceHover: isDark ? '#1A1A1A' : '#F3F4F6',
+    cardBorder: isDark ? '#2D2D2D' : '#E5E7EB',
+  };
+
   const tabs = [
     { id: 'edit-profile', label: 'Edit profile', icon: UserCircleIcon },
     { id: 'password', label: 'Password', icon: KeyIcon },
+    { id: 'appearance', label: 'Appearance', icon: PaintBrushIcon },
     { id: 'sessions', label: 'Sessions', icon: ComputerDesktopIcon },
   ];
 
   if (authLoading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100vh', background: colors.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '40px', height: '40px', border: '4px solid rgba(16, 185, 129, 0.2)', borderTop: '4px solid #10B981', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } }` }} />
       </div>
@@ -262,31 +283,31 @@ export default function SettingsPage() {
   if (!isAuthenticated) return null;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0D0D0D', display: 'flex' }}>
+    <div style={{ minHeight: '100vh', background: colors.bg, display: 'flex' }}>
       <Sidebar projects={projects} onCreateProject={() => {}} />
-      
-      <div className="page-main" style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', display: 'flex', flexDirection: 'column', background: '#0D0D0D' }}>
+
+      <div className="page-main" style={{ flex: 1, marginLeft: isMobile ? 0 : '280px', display: 'flex', flexDirection: 'column', background: colors.bg }}>
         {/* Header */}
-        <div style={{ padding: '2rem', borderBottom: '1px solid #1F1F1F', background: '#141414' }}>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>Settings</h1>
-          <p style={{ color: '#71717A', fontSize: '0.9375rem', marginTop: '0.5rem' }}>
+        <div style={{ padding: '2rem', borderBottom: `1px solid ${colors.border}`, background: colors.bgSecondary }}>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: colors.text, margin: 0 }}>Settings</h1>
+          <p style={{ color: colors.textMuted, fontSize: '0.9375rem', marginTop: '0.5rem' }}>
             Manage your account settings and preferences
           </p>
         </div>
 
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           {/* Sidebar Tabs */}
-          <div style={{ 
-            width: '250px', 
-            background: '#141414', 
-            borderRight: '1px solid #1F1F1F',
+          <div style={{
+            width: '250px',
+            background: colors.bgSecondary,
+            borderRight: `1px solid ${colors.border}`,
             padding: '1.5rem 1rem',
             overflowY: 'auto'
           }}>
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
-              
+
               return (
                 <button
                   key={tab.id}
@@ -300,7 +321,7 @@ export default function SettingsPage() {
                     background: isActive ? '#3B82F6' : 'transparent',
                     border: isActive ? '1px solid #3B82F6' : '1px solid transparent',
                     borderRadius: '8px',
-                    color: isActive ? '#FFFFFF' : '#A1A1AA',
+                    color: isActive ? '#FFFFFF' : colors.textSecondary,
                     fontSize: '0.875rem',
                     fontWeight: 500,
                     cursor: 'pointer',
@@ -310,14 +331,14 @@ export default function SettingsPage() {
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.background = '#1A1A1A';
-                      e.currentTarget.style.color = '#FFFFFF';
+                      e.currentTarget.style.background = colors.surfaceHover;
+                      e.currentTarget.style.color = colors.text;
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
                       e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = '#A1A1AA';
+                      e.currentTarget.style.color = colors.textSecondary;
                     }
                   }}
                 >
@@ -326,7 +347,7 @@ export default function SettingsPage() {
                 </button>
               );
             })}
-            
+
             {/* Delete Account */}
             <button
               onClick={() => {
@@ -369,13 +390,13 @@ export default function SettingsPage() {
           <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
             {activeTab === 'edit-profile' && (
               <div style={{ maxWidth: '600px' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: colors.text, marginBottom: '1.5rem' }}>
                   Edit profile
                 </h2>
-                
+
                 {/* Avatar */}
                 <div style={{ marginBottom: '2rem' }}>
-                  <label style={{ display: 'block', color: '#E4E4E7', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.75rem' }}>
+                  <label style={{ display: 'block', color: colors.textLabel, fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.75rem' }}>
                     Avatar
                   </label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
@@ -383,8 +404,8 @@ export default function SettingsPage() {
                       width: '80px',
                       height: '80px',
                       borderRadius: '50%',
-                      background: profileData.avatar_url 
-                        ? `url(${profileData.avatar_url}) center/cover` 
+                      background: profileData.avatar_url
+                        ? `url(${profileData.avatar_url}) center/cover`
                         : 'linear-gradient(135deg, #8B5CF6, #EC4899)',
                       display: 'flex',
                       alignItems: 'center',
@@ -424,16 +445,16 @@ export default function SettingsPage() {
                         disabled={uploadingAvatar}
                         style={{ display: 'none' }}
                       />
-                      <p style={{ fontSize: '0.75rem', color: '#71717A', marginTop: '0.5rem' }}>
+                      <p style={{ fontSize: '0.75rem', color: colors.textMuted, marginTop: '0.5rem' }}>
                         At least 800x800 px recommended. JPG or PNG and GIF is allowed
                       </p>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Name */}
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', color: '#E4E4E7', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', color: colors.textLabel, fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
                     Name
                   </label>
                   <input
@@ -444,21 +465,21 @@ export default function SettingsPage() {
                     style={{
                       width: '100%',
                       padding: '0.75rem 1rem',
-                      background: '#141414',
-                      border: '1px solid #3D3D3D',
+                      background: colors.inputBg,
+                      border: `1px solid ${colors.borderLight}`,
                       borderRadius: '8px',
-                      color: '#FFFFFF',
+                      color: colors.text,
                       fontSize: '0.9375rem',
                       outline: 'none',
                     }}
                     onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = colors.borderLight}
                   />
                 </div>
-                
+
                 {/* Location */}
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', color: '#E4E4E7', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', color: colors.textLabel, fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
                     Location
                   </label>
                   <input
@@ -469,23 +490,23 @@ export default function SettingsPage() {
                     style={{
                       width: '100%',
                       padding: '0.75rem 1rem',
-                      background: '#141414',
-                      border: '1px solid #3D3D3D',
+                      background: colors.inputBg,
+                      border: `1px solid ${colors.borderLight}`,
                       borderRadius: '8px',
-                      color: '#FFFFFF',
+                      color: colors.text,
                       fontSize: '0.9375rem',
                       outline: 'none',
                     }}
                     onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = colors.borderLight}
                   />
                 </div>
-                
+
                 {/* Bio */}
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', color: '#E4E4E7', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', color: colors.textLabel, fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
                     Bio
-                    <span style={{ color: '#71717A', fontWeight: 400, marginLeft: '0.5rem' }}>880</span>
+                    <span style={{ color: colors.textMuted, fontWeight: 400, marginLeft: '0.5rem' }}>880</span>
                   </label>
                   <textarea
                     value={profileData.bio}
@@ -496,19 +517,19 @@ export default function SettingsPage() {
                     style={{
                       width: '100%',
                       padding: '0.75rem 1rem',
-                      background: '#141414',
-                      border: '1px solid #3D3D3D',
+                      background: colors.inputBg,
+                      border: `1px solid ${colors.borderLight}`,
                       borderRadius: '8px',
-                      color: '#FFFFFF',
+                      color: colors.text,
                       fontSize: '0.9375rem',
                       outline: 'none',
                       resize: 'vertical',
                     }}
                     onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = colors.borderLight}
                   />
                 </div>
-                
+
                 {/* Save Button */}
                 <button
                   onClick={handleSaveProfile}
@@ -533,13 +554,13 @@ export default function SettingsPage() {
 
             {activeTab === 'password' && (
               <div style={{ maxWidth: '600px' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: colors.text, marginBottom: '1.5rem' }}>
                   Password
                 </h2>
-                
+
                 {/* Old Password */}
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', color: '#E4E4E7', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', color: colors.textLabel, fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
                     Old password
                   </label>
                   <input
@@ -550,21 +571,21 @@ export default function SettingsPage() {
                     style={{
                       width: '100%',
                       padding: '0.75rem 1rem',
-                      background: '#141414',
-                      border: '1px solid #3D3D3D',
+                      background: colors.inputBg,
+                      border: `1px solid ${colors.borderLight}`,
                       borderRadius: '8px',
-                      color: '#FFFFFF',
+                      color: colors.text,
                       fontSize: '0.9375rem',
                       outline: 'none',
                     }}
                     onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = colors.borderLight}
                   />
                 </div>
-                
+
                 {/* New Password */}
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', color: '#E4E4E7', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', color: colors.textLabel, fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
                     New password
                   </label>
                   <input
@@ -575,24 +596,24 @@ export default function SettingsPage() {
                     style={{
                       width: '100%',
                       padding: '0.75rem 1rem',
-                      background: '#141414',
-                      border: '1px solid #3D3D3D',
+                      background: colors.inputBg,
+                      border: `1px solid ${colors.borderLight}`,
                       borderRadius: '8px',
-                      color: '#FFFFFF',
+                      color: colors.text,
                       fontSize: '0.9375rem',
                       outline: 'none',
                     }}
                     onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = colors.borderLight}
                   />
-                  <p style={{ fontSize: '0.75rem', color: '#71717A', marginTop: '0.5rem' }}>
+                  <p style={{ fontSize: '0.75rem', color: colors.textMuted, marginTop: '0.5rem' }}>
                     Minimum 8 characters
                   </p>
                 </div>
-                
+
                 {/* Confirm Password */}
                 <div style={{ marginBottom: '2rem' }}>
-                  <label style={{ display: 'block', color: '#E4E4E7', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', color: colors.textLabel, fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
                     Confirm new password
                   </label>
                   <input
@@ -603,28 +624,28 @@ export default function SettingsPage() {
                     style={{
                       width: '100%',
                       padding: '0.75rem 1rem',
-                      background: '#141414',
-                      border: '1px solid #3D3D3D',
+                      background: colors.inputBg,
+                      border: `1px solid ${colors.borderLight}`,
                       borderRadius: '8px',
-                      color: '#FFFFFF',
+                      color: colors.text,
                       fontSize: '0.9375rem',
                       outline: 'none',
                     }}
                     onFocus={(e) => e.currentTarget.style.borderColor = '#3B82F6'}
-                    onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = colors.borderLight}
                   />
-                  <p style={{ fontSize: '0.75rem', color: '#71717A', marginTop: '0.5rem' }}>
+                  <p style={{ fontSize: '0.75rem', color: colors.textMuted, marginTop: '0.5rem' }}>
                     Minimum 8 characters
                   </p>
                 </div>
-                
+
                 {/* Change Password Button */}
                 <button
                   onClick={handleChangePassword}
                   disabled={changingPassword || !passwordData.new_password || !passwordData.confirm_password}
                   style={{
                     padding: '0.75rem 2rem',
-                    background: passwordData.new_password && passwordData.confirm_password ? '#3B82F6' : '#3D3D3D',
+                    background: passwordData.new_password && passwordData.confirm_password ? '#3B82F6' : colors.borderLight,
                     color: '#FFFFFF',
                     border: 'none',
                     borderRadius: '8px',
@@ -650,18 +671,147 @@ export default function SettingsPage() {
               </div>
             )}
 
+            {activeTab === 'appearance' && (
+              <div style={{ maxWidth: '600px' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: colors.text, marginBottom: '0.5rem' }}>
+                  Appearance
+                </h2>
+                <p style={{ color: colors.textMuted, fontSize: '0.875rem', marginBottom: '2rem' }}>
+                  Customize how Focus looks on your device
+                </p>
+
+                {/* Theme Toggle */}
+                <div style={{
+                  padding: '1.5rem',
+                  background: colors.surface,
+                  border: `1px solid ${colors.cardBorder}`,
+                  borderRadius: '12px',
+                  marginBottom: '1.5rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '10px',
+                        background: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(251, 191, 36, 0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        {isDark
+                          ? <MoonIcon style={{ width: '22px', height: '22px', color: '#3B82F6' }} />
+                          : <SunIcon style={{ width: '22px', height: '22px', color: '#F59E0B' }} />
+                        }
+                      </div>
+                      <div>
+                        <div style={{ color: colors.text, fontSize: '0.9375rem', fontWeight: 600 }}>
+                          Dark mode
+                        </div>
+                        <div style={{ color: colors.textMuted, fontSize: '0.8125rem', marginTop: '0.125rem' }}>
+                          {isDark ? 'Dark theme is currently active' : 'Light theme is currently active'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Toggle Switch */}
+                    <button
+                      onClick={toggleTheme}
+                      style={{
+                        position: 'relative',
+                        width: '52px',
+                        height: '28px',
+                        borderRadius: '14px',
+                        background: isDark ? '#3B82F6' : '#D1D5DB',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s',
+                        padding: 0,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div style={{
+                        position: 'absolute',
+                        top: '3px',
+                        left: isDark ? '27px' : '3px',
+                        width: '22px',
+                        height: '22px',
+                        borderRadius: '50%',
+                        background: '#FFFFFF',
+                        transition: 'left 0.2s',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                      }} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Theme Preview Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  {/* Dark Card */}
+                  <button
+                    onClick={() => { if (!isDark) toggleTheme(); }}
+                    style={{
+                      padding: '1.25rem',
+                      background: '#0D0D0D',
+                      border: isDark ? '2px solid #3B82F6' : `2px solid ${colors.cardBorder}`,
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'border-color 0.2s',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <div style={{ height: '8px', width: '60%', background: '#2D2D2D', borderRadius: '4px' }} />
+                      <div style={{ height: '8px', width: '80%', background: '#1F1F1F', borderRadius: '4px' }} />
+                      <div style={{ height: '8px', width: '40%', background: '#2D2D2D', borderRadius: '4px' }} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <MoonIcon style={{ width: '16px', height: '16px', color: isDark ? '#3B82F6' : '#71717A' }} />
+                      <span style={{ color: isDark ? '#FFFFFF' : '#71717A', fontSize: '0.875rem', fontWeight: 500 }}>Dark</span>
+                      {isDark && <CheckIcon style={{ width: '16px', height: '16px', color: '#3B82F6', marginLeft: 'auto' }} />}
+                    </div>
+                  </button>
+
+                  {/* Light Card */}
+                  <button
+                    onClick={() => { if (isDark) toggleTheme(); }}
+                    style={{
+                      padding: '1.25rem',
+                      background: '#FAFAF8',
+                      border: !isDark ? '2px solid #3B82F6' : `2px solid ${colors.cardBorder}`,
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'border-color 0.2s',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <div style={{ height: '8px', width: '60%', background: '#E5E7EB', borderRadius: '4px' }} />
+                      <div style={{ height: '8px', width: '80%', background: '#F3F4F6', borderRadius: '4px' }} />
+                      <div style={{ height: '8px', width: '40%', background: '#E5E7EB', borderRadius: '4px' }} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <SunIcon style={{ width: '16px', height: '16px', color: !isDark ? '#F59E0B' : '#A1A1AA' }} />
+                      <span style={{ color: !isDark ? '#1A1A2E' : '#A1A1AA', fontSize: '0.875rem', fontWeight: 500 }}>Light</span>
+                      {!isDark && <CheckIcon style={{ width: '16px', height: '16px', color: '#3B82F6', marginLeft: 'auto' }} />}
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'sessions' && (
               <div style={{ maxWidth: '700px' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '0.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: colors.text, marginBottom: '0.5rem' }}>
                   Your sessions
                 </h2>
-                <p style={{ color: '#71717A', fontSize: '0.875rem', marginBottom: '2rem' }}>
+                <p style={{ color: colors.textMuted, fontSize: '0.875rem', marginBottom: '2rem' }}>
                   This is a list of devices that have logged into your account. Revoke any sessions that you do not recognize.
                 </p>
-                
+
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <h3 style={{ color: '#E4E4E7', fontSize: '1rem', fontWeight: 500, marginBottom: '1rem' }}>Devices</h3>
-                  
+                  <h3 style={{ color: colors.textLabel, fontSize: '1rem', fontWeight: 500, marginBottom: '1rem' }}>Devices</h3>
+
                   {sessions.map((session) => (
                     <div
                       key={session.id}
@@ -670,8 +820,8 @@ export default function SettingsPage() {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '1.25rem',
-                        background: '#141414',
-                        border: '1px solid #2D2D2D',
+                        background: colors.surface,
+                        border: `1px solid ${colors.cardBorder}`,
                         borderRadius: '12px',
                         marginBottom: '0.75rem',
                       }}
@@ -689,7 +839,7 @@ export default function SettingsPage() {
                           <ComputerDesktopIcon style={{ width: '24px', height: '24px', color: '#FFFFFF' }} />
                         </div>
                         <div>
-                          <div style={{ color: '#FFFFFF', fontSize: '0.9375rem', fontWeight: 500 }}>
+                          <div style={{ color: colors.text, fontSize: '0.9375rem', fontWeight: 500 }}>
                             {session.device}
                             {session.current && (
                               <span style={{
@@ -705,24 +855,24 @@ export default function SettingsPage() {
                               </span>
                             )}
                           </div>
-                          <div style={{ color: '#71717A', fontSize: '0.8125rem', marginTop: '0.25rem' }}>
+                          <div style={{ color: colors.textMuted, fontSize: '0.8125rem', marginTop: '0.25rem' }}>
                             {session.ip}
                           </div>
-                          <div style={{ color: '#71717A', fontSize: '0.75rem', marginTop: '0.125rem' }}>
+                          <div style={{ color: colors.textMuted, fontSize: '0.75rem', marginTop: '0.125rem' }}>
                             Signed in Nov 17, 2023
                           </div>
                         </div>
                       </div>
-                      
+
                       {!session.current && (
                         <button
                           onClick={() => handleRevokeSession(session.id)}
                           style={{
                             padding: '0.5rem 1rem',
                             background: 'transparent',
-                            border: '1px solid #3D3D3D',
+                            border: `1px solid ${colors.borderLight}`,
                             borderRadius: '6px',
-                            color: '#E4E4E7',
+                            color: colors.textLabel,
                             fontSize: '0.8125rem',
                             fontWeight: 500,
                             cursor: 'pointer',
@@ -733,8 +883,8 @@ export default function SettingsPage() {
                             e.currentTarget.style.color = '#EF4444';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = '#3D3D3D';
-                            e.currentTarget.style.color = '#E4E4E7';
+                            e.currentTarget.style.borderColor = colors.borderLight;
+                            e.currentTarget.style.color = colors.textLabel;
                           }}
                         >
                           Revoke
@@ -743,7 +893,7 @@ export default function SettingsPage() {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Sign out all devices */}
                 <button
                   onClick={handleSignOutAll}

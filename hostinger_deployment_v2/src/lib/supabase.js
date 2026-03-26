@@ -160,7 +160,8 @@ export const supabaseAuth = {
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('supabase_user', JSON.stringify(authUser))
-        localStorage.setItem('supabase_token', `sb-token-${newUser.id}`)
+        localStorage.setItem('supabase_token', `sb-token-${newUser.id}`),
+        localStorage.setItem('accessToken', `sb-token-${newUser.id}`) //for api calls using access token
       }
 
       return { user: authUser, error: null }
