@@ -54,8 +54,6 @@ export default function NewTicketPage() {
   const [steps, setSteps] = useState('');
   const [expected, setExpected] = useState('');
   const [actual, setActual] = useState('');
-  const [environment, setEnvironment] = useState('production');
-  const [browserDevice, setBrowserDevice] = useState('');
 
   const isAdmin = user?.role === 'admin' || user?.email === 'swumpyaesone.personal@gmail.com';
 
@@ -78,15 +76,6 @@ export default function NewTicketPage() {
     })();
   }, [user, authLoading, router, isAdmin]);
 
-  // Auto-detect browser for bug type
-  useEffect(() => {
-    if (type === 'bug' && !browserDevice && typeof navigator !== 'undefined') {
-      const ua = navigator.userAgent;
-      const browser = ua.match(/(Chrome|Safari|Firefox|Edge|Opera)\/[\d.]+/)?.[0] || '';
-      const os = ua.match(/(Windows|Mac OS X|Linux|iPhone|Android)[\s/]?[\d._]*/)?.[0] || '';
-      setBrowserDevice([browser, os].filter(Boolean).join(' / ') || ua.slice(0, 60));
-    }
-  }, [type, browserDevice]);
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
@@ -109,8 +98,6 @@ export default function NewTicketPage() {
         steps_to_reproduce: steps.trim() || null,
         expected_behaviour: expected.trim() || null,
         actual_behaviour: actual.trim() || null,
-        environment: type === 'bug' ? environment : null,
-        browser_device: type === 'bug' ? browserDevice.trim() || null : null,
         reporter_id: user.id, ticket_number: '',
       }).select().single();
       if (error) throw error;
@@ -270,22 +257,6 @@ export default function NewTicketPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', color: '#71717A', fontSize: '0.6875rem', fontWeight: 500, marginBottom: '0.25rem' }}>Environment</label>
-                  <select value={environment} onChange={(e) => setEnvironment(e.target.value)} style={{ ...inp(), fontSize: '0.8125rem' }}>
-                    <option value="production">Production (live)</option>
-                    <option value="staging">Staging (test)</option>
-                    <option value="development">Development</option>
-                    <option value="local">Local</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', color: '#71717A', fontSize: '0.6875rem', fontWeight: 500, marginBottom: '0.25rem' }}>Browser / Device</label>
-                  <input value={browserDevice} onChange={(e) => setBrowserDevice(e.target.value)}
-                    placeholder="Auto-detected" style={{ ...inp(), fontSize: '0.8125rem' }} />
-                </div>
-              </div>
             </div>
           )}
 

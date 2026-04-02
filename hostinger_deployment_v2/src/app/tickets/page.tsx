@@ -8,7 +8,10 @@ import { supabase } from '@/lib/supabase';
 import Sidebar from '@/components/Sidebar';
 import {
   PlusIcon, MagnifyingGlassIcon, XMarkIcon, ArrowPathIcon,
-  ExclamationTriangleIcon, Cog6ToothIcon,
+  ExclamationTriangleIcon, Cog6ToothIcon, TrashIcon,
+  BugAntIcon, LightBulbIcon, WrenchScrewdriverIcon,
+  ClipboardDocumentCheckIcon, ChatBubbleLeftEllipsisIcon,
+  FunnelIcon, ChevronLeftIcon, ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 
 interface TicketSystem { id: number; name: string; slug: string; prefix: string; colour: string; }
@@ -19,22 +22,30 @@ interface Ticket {
   reporter_name?: string; assignee_name?: string; system_name?: string; system_colour?: string;
 }
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  open: { bg: '#1E3A5F', text: '#93C5FD', label: 'Open' },
-  in_progress: { bg: '#422006', text: '#FCD34D', label: 'In Progress' },
-  in_review: { bg: '#2E1065', text: '#C4B5FD', label: 'In Review' },
-  testing: { bg: '#042F2E', text: '#5EEAD4', label: 'Testing' },
-  done: { bg: '#052E16', text: '#86EFAC', label: 'Done' },
-  closed: { bg: '#1C1C1C', text: '#A1A1AA', label: 'Closed' },
-  on_hold: { bg: '#1C1C1C', text: '#A1A1AA', label: 'On Hold' },
-  wont_fix: { bg: '#1C1C1C', text: '#A1A1AA', label: "Won't Fix" },
+const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string; dot: string }> = {
+  open:        { bg: 'rgba(59,130,246,0.10)', text: '#60A5FA', label: 'Open', dot: '#3B82F6' },
+  in_progress: { bg: 'rgba(234,179,8,0.10)',  text: '#FBBF24', label: 'In Progress', dot: '#EAB308' },
+  in_review:   { bg: 'rgba(167,139,250,0.10)', text: '#A78BFA', label: 'In Review', dot: '#8B5CF6' },
+  testing:     { bg: 'rgba(45,212,191,0.10)', text: '#2DD4BF', label: 'Testing', dot: '#14B8A6' },
+  done:        { bg: 'rgba(34,197,94,0.10)',  text: '#4ADE80', label: 'Done', dot: '#22C55E' },
+  closed:      { bg: 'rgba(113,113,122,0.08)', text: '#71717A', label: 'Closed', dot: '#52525B' },
+  on_hold:     { bg: 'rgba(113,113,122,0.08)', text: '#71717A', label: 'On Hold', dot: '#52525B' },
+  wont_fix:    { bg: 'rgba(113,113,122,0.08)', text: '#71717A', label: "Won't Fix", dot: '#52525B' },
 };
 
-const PRIORITY_CONFIG: Record<string, { colour: string; bg: string }> = {
-  critical: { colour: '#FCA5A5', bg: '#450A0A' },
-  high: { colour: '#FDBA74', bg: '#431407' },
-  medium: { colour: '#FDE047', bg: '#422006' },
-  low: { colour: '#A1A1AA', bg: '#1C1C1C' },
+const PRIORITY_CONFIG: Record<string, { colour: string; icon: string }> = {
+  critical: { colour: '#EF4444', icon: '!!!' },
+  high:     { colour: '#F97316', icon: '!!' },
+  medium:   { colour: '#EAB308', icon: '!' },
+  low:      { colour: '#52525B', icon: '—' },
+};
+
+const TYPE_ICONS: Record<string, React.ComponentType<any>> = {
+  bug: BugAntIcon,
+  feature_request: LightBulbIcon,
+  improvement: WrenchScrewdriverIcon,
+  task: ClipboardDocumentCheckIcon,
+  support: ChatBubbleLeftEllipsisIcon,
 };
 
 const TYPE_LABELS: Record<string, string> = { bug: 'Bug', feature_request: 'Feature', improvement: 'Improvement', task: 'Task', support: 'Support' };
@@ -42,12 +53,12 @@ const TYPE_LABELS: Record<string, string> = { bug: 'Bug', feature_request: 'Feat
 function timeAgo(d: string): string {
   const diff = Date.now() - new Date(d).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 1) return 'now';
-  if (m < 60) return `${m}m`;
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
+  if (h < 24) return `${h}h ago`;
   const days = Math.floor(h / 24);
-  if (days < 7) return `${days}d`;
+  if (days < 7) return `${days}d ago`;
   return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 }
 
@@ -64,6 +75,7 @@ export default function TicketsPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const perPage = 20;
 
@@ -104,6 +116,7 @@ export default function TicketsPage() {
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
   const hasFilters = filterSystem !== 'all' || filterStatus !== 'all' || filterPriority !== 'all' || search;
+  const activeFilterCount = [filterSystem !== 'all', filterStatus !== 'all', filterPriority !== 'all'].filter(Boolean).length;
 
   const openCount = tickets.filter(t => t.status === 'open').length;
   const progressCount = tickets.filter(t => t.status === 'in_progress').length;
@@ -111,160 +124,326 @@ export default function TicketsPage() {
   const doneCount = tickets.filter(t => ['done', 'closed'].includes(t.status)).length;
 
   if (authLoading || !user) {
-    return <div style={{ background: '#09090B', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#52525B' }}>Loading...</div>;
+    return (
+      <div style={{ background: '#09090B', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ width: '24px', height: '24px', border: '2px solid #27272A', borderTopColor: '#FAFAFA', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <span style={{ color: '#52525B', fontSize: '0.8125rem' }}>Loading...</span>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      </div>
+    );
   }
 
-  const selectStyle: React.CSSProperties = { height: '32px', padding: '0 0.5rem', background: '#111113', border: '1px solid #27272A', borderRadius: '6px', color: '#D4D4D8', fontSize: '0.75rem', outline: 'none', cursor: 'pointer', WebkitAppearance: 'none' as any, appearance: 'none' as any, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2352525B' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', paddingRight: '24px' };
-
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#09090B', fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#09090B', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
       <Sidebar />
-      <main className="page-main" style={{ flex: 1, marginLeft: '280px', padding: '1.25rem 1.75rem', overflowY: 'auto' }}>
+      <main className="page-main" style={{ flex: 1, marginLeft: '280px', padding: '0', overflowY: 'auto', height: '100vh' }}>
 
-        {/* Top Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <div>
-            <h1 style={{ color: '#FAFAFA', fontSize: '1.25rem', fontWeight: 600, margin: 0, letterSpacing: '-0.02em' }}>Tickets</h1>
-            <p style={{ color: '#52525B', fontSize: '0.6875rem', marginTop: '0.125rem' }}>{filtered.length} ticket{filtered.length !== 1 ? 's' : ''} {hasFilters ? '(filtered)' : ''}</p>
-          </div>
-          <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center' }}>
-            {isAdmin && (
-              <Link href="/tickets/admin" style={{ height: '32px', display: 'flex', alignItems: 'center', padding: '0 0.625rem', background: '#111113', border: '1px solid #27272A', borderRadius: '6px', color: '#71717A', fontSize: '0.75rem', textDecoration: 'none', gap: '0.25rem' }}>
-                <Cog6ToothIcon style={{ width: '13px', height: '13px' }} /> Admin
-              </Link>
-            )}
-            <button onClick={fetchData} style={{ height: '32px', width: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111113', border: '1px solid #27272A', borderRadius: '6px', color: '#71717A', cursor: 'pointer' }}>
-              <ArrowPathIcon style={{ width: '14px', height: '14px' }} />
-            </button>
-            <Link href="/tickets/new" style={{ height: '32px', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0 0.75rem', background: '#FAFAFA', color: '#09090B', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, textDecoration: 'none' }}>
-              <PlusIcon style={{ width: '13px', height: '13px' }} /> New Ticket
-            </Link>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
-          {[
-            { label: 'Open', value: openCount, accent: '#3B82F6', glow: 'rgba(59,130,246,0.08)' },
-            { label: 'In Progress', value: progressCount, accent: '#EAB308', glow: 'rgba(234,179,8,0.08)' },
-            { label: 'Critical', value: criticalCount, accent: '#EF4444', glow: 'rgba(239,68,68,0.08)' },
-            { label: 'Resolved', value: doneCount, accent: '#10B981', glow: 'rgba(16,185,129,0.08)' },
-          ].map(s => (
-            <div key={s.label} style={{ padding: '0.75rem 0.875rem', background: s.glow, border: '1px solid #1A1A1E', borderRadius: '8px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', background: s.accent, borderRadius: '0 2px 2px 0' }} />
-              <div style={{ color: '#FAFAFA', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1 }}>{s.value}</div>
-              <div style={{ color: '#71717A', fontSize: '0.625rem', fontWeight: 500, marginTop: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</div>
+        {/* Header Section */}
+        <div style={{ padding: '1.5rem 2rem 0', borderBottom: '1px solid #18181B' }}>
+          {/* Top row */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+            <div>
+              <h1 style={{ color: '#FAFAFA', fontSize: '1.5rem', fontWeight: 700, margin: 0, letterSpacing: '-0.035em', lineHeight: 1.2 }}>Tickets</h1>
+              <p style={{ color: '#52525B', fontSize: '0.8125rem', marginTop: '0.25rem', fontWeight: 400 }}>
+                Track and manage issues across your systems
+              </p>
             </div>
-          ))}
-        </div>
-
-        {/* Filters Row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.75rem' }}>
-          <div style={{ position: 'relative', width: '200px' }}>
-            <MagnifyingGlassIcon style={{ position: 'absolute', left: '0.5rem', top: '50%', transform: 'translateY(-50%)', width: '13px', height: '13px', color: '#3F3F46' }} />
-            <input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search tickets..."
-              style={{ width: '100%', height: '32px', padding: '0 0.5rem 0 1.75rem', background: '#111113', border: '1px solid #27272A', borderRadius: '6px', color: '#D4D4D8', fontSize: '0.75rem', outline: 'none', boxSizing: 'border-box' }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = '#3F3F46')} onBlur={(e) => (e.currentTarget.style.borderColor = '#27272A')} />
-          </div>
-          <select value={filterSystem} onChange={(e) => { setFilterSystem(e.target.value === 'all' ? 'all' : Number(e.target.value)); setPage(1); }} style={selectStyle}>
-            <option value="all">All Systems</option>
-            {systems.filter(s => userSystems.includes(s.id)).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }} style={selectStyle}>
-            <option value="all">All Status</option>
-            {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-          </select>
-          <select value={filterPriority} onChange={(e) => { setFilterPriority(e.target.value); setPage(1); }} style={selectStyle}>
-            <option value="all">All Priority</option>
-            <option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
-          </select>
-          {hasFilters && (
-            <button onClick={() => { setFilterSystem('all'); setFilterStatus('all'); setFilterPriority('all'); setSearch(''); setPage(1); }}
-              style={{ height: '32px', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0 0.5rem', background: 'none', border: '1px solid #27272A', borderRadius: '6px', color: '#52525B', fontSize: '0.6875rem', cursor: 'pointer' }}>
-              <XMarkIcon style={{ width: '11px', height: '11px' }} /> Clear
-            </button>
-          )}
-          <div style={{ flex: 1 }} />
-          <span style={{ color: '#3F3F46', fontSize: '0.625rem' }}>{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
-        </div>
-
-        {/* Ticket List */}
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#3F3F46' }}>Loading...</div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem 2rem', background: '#111113', borderRadius: '8px', border: '1px solid #1A1A1E' }}>
-            <ExclamationTriangleIcon style={{ width: '28px', height: '28px', color: '#27272A', margin: '0 auto 0.75rem' }} />
-            <p style={{ color: '#71717A', fontSize: '0.8125rem', margin: '0 0 0.25rem' }}>No tickets found</p>
-            <p style={{ color: '#3F3F46', fontSize: '0.75rem', margin: 0 }}>{hasFilters ? 'Adjust your filters' : 'Create your first ticket'}</p>
-          </div>
-        ) : (
-          <div style={{ background: '#111113', border: '1px solid #1A1A1E', borderRadius: '8px', overflow: 'hidden' }}>
-            {/* Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 70px 70px 90px 90px 50px', gap: '0.5rem', padding: '0.5rem 0.875rem', borderBottom: '1px solid #1A1A1E' }}>
-              {['Ticket', 'Title', 'Type', 'Priority', 'Status', 'Assignee', ''].map(h => (
-                <span key={h} style={{ color: '#3F3F46', fontSize: '0.5625rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
-              ))}
-            </div>
-
-            {/* Rows */}
-            {paginated.map((t, i) => {
-              const ss = STATUS_CONFIG[t.status] || STATUS_CONFIG.open;
-              const pp = PRIORITY_CONFIG[t.priority] || PRIORITY_CONFIG.medium;
-              return (
-                <Link key={t.id} href={`/tickets/${t.id}`}
-                  style={{ display: 'grid', gridTemplateColumns: '100px 1fr 70px 70px 90px 90px 50px', gap: '0.5rem', padding: '0.625rem 0.875rem', borderBottom: i < paginated.length - 1 ? '1px solid #141416' : 'none', textDecoration: 'none', transition: 'background 0.1s', alignItems: 'center' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#151517')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-
-                  {/* Ticket # + System */}
-                  <div>
-                    <div style={{ color: '#D4D4D8', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '-0.01em' }}>{t.ticket_number}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.0625rem' }}>
-                      <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: t.system_colour }} />
-                      <span style={{ color: '#3F3F46', fontSize: '0.5625rem' }}>{t.system_name}</span>
-                    </div>
-                  </div>
-
-                  {/* Title */}
-                  <span style={{ color: '#E4E4E7', fontSize: '0.8125rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
-
-                  {/* Type */}
-                  <span style={{ color: '#71717A', fontSize: '0.6875rem' }}>{TYPE_LABELS[t.type] || t.type}</span>
-
-                  {/* Priority */}
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.125rem 0.375rem', borderRadius: '4px', background: pp.bg, width: 'fit-content' }}>
-                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: pp.colour }} />
-                    <span style={{ color: pp.colour, fontSize: '0.625rem', fontWeight: 500, textTransform: 'capitalize' }}>{t.priority}</span>
-                  </span>
-
-                  {/* Status */}
-                  <span style={{ display: 'inline-block', padding: '0.125rem 0.5rem', borderRadius: '4px', background: ss.bg, color: ss.text, fontSize: '0.625rem', fontWeight: 600, width: 'fit-content', letterSpacing: '0.01em' }}>{ss.label}</span>
-
-                  {/* Assignee */}
-                  <span style={{ color: t.assignee_name ? '#71717A' : '#27272A', fontSize: '0.6875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {t.assignee_name || 'Unassigned'}
-                  </span>
-
-                  {/* Time */}
-                  <span style={{ color: '#27272A', fontSize: '0.625rem', textAlign: 'right' }}>{timeAgo(t.created_at)}</span>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              {isAdmin && (
+                <Link href="/tickets/admin" style={{ height: '36px', display: 'flex', alignItems: 'center', padding: '0 0.875rem', background: 'transparent', border: '1px solid #27272A', borderRadius: '8px', color: '#A1A1AA', fontSize: '0.8125rem', fontWeight: 500, textDecoration: 'none', gap: '0.375rem', transition: 'all 0.15s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3F3F46'; e.currentTarget.style.color = '#D4D4D8'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#27272A'; e.currentTarget.style.color = '#A1A1AA'; }}>
+                  <Cog6ToothIcon style={{ width: '15px', height: '15px' }} /> Settings
                 </Link>
-              );
-            })}
+              )}
+              <Link href="/tickets/new" style={{ height: '36px', display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0 1rem', background: '#FAFAFA', color: '#09090B', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, textDecoration: 'none', transition: 'all 0.15s', boxShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#E4E4E7')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#FAFAFA')}>
+                <PlusIcon style={{ width: '15px', height: '15px', strokeWidth: 2.5 }} /> New Ticket
+              </Link>
+            </div>
+          </div>
+
+          {/* Stats row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+            {[
+              { label: 'Open', value: openCount, colour: '#3B82F6', emoji: '○' },
+              { label: 'In Progress', value: progressCount, colour: '#EAB308', emoji: '◐' },
+              { label: 'Critical', value: criticalCount, colour: '#EF4444', emoji: '◉' },
+              { label: 'Resolved', value: doneCount, colour: '#22C55E', emoji: '●' },
+            ].map(s => (
+              <div key={s.label} style={{ padding: '1rem', background: '#0F0F11', borderRadius: '10px', border: '1px solid #1C1C20', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#27272A'; e.currentTarget.style.background = '#111114'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1C1C20'; e.currentTarget.style.background = '#0F0F11'; }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ color: '#52525B', fontSize: '0.75rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
+                  <span style={{ color: s.colour, fontSize: '0.875rem', opacity: 0.6 }}>{s.emoji}</span>
+                </div>
+                <div style={{ color: '#FAFAFA', fontSize: '1.75rem', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>{s.value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Search + Filter bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingBottom: '0.875rem' }}>
+            <div style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
+              <MagnifyingGlassIcon style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: '#3F3F46' }} />
+              <input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search by ticket ID or title..."
+                style={{ width: '100%', height: '36px', padding: '0 0.75rem 0 2.25rem', background: '#0F0F11', border: '1px solid #1C1C20', borderRadius: '8px', color: '#D4D4D8', fontSize: '0.8125rem', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = '#3F3F46')} onBlur={(e) => (e.currentTarget.style.borderColor = '#1C1C20')} />
+            </div>
+
+            <button onClick={() => setShowFilters(!showFilters)}
+              style={{ height: '36px', display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0 0.75rem', background: showFilters ? '#18181B' : 'transparent', border: `1px solid ${showFilters ? '#27272A' : '#1C1C20'}`, borderRadius: '8px', color: showFilters ? '#D4D4D8' : '#71717A', fontSize: '0.8125rem', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', position: 'relative' }}>
+              <FunnelIcon style={{ width: '14px', height: '14px' }} /> Filters
+              {activeFilterCount > 0 && (
+                <span style={{ background: '#3B82F6', color: '#fff', fontSize: '0.625rem', fontWeight: 700, width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{activeFilterCount}</span>
+              )}
+            </button>
+
+            <button onClick={fetchData} title="Refresh"
+              style={{ height: '36px', width: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '1px solid #1C1C20', borderRadius: '8px', color: '#52525B', cursor: 'pointer', transition: 'all 0.15s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#27272A'; e.currentTarget.style.color = '#A1A1AA'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1C1C20'; e.currentTarget.style.color = '#52525B'; }}>
+              <ArrowPathIcon style={{ width: '15px', height: '15px' }} />
+            </button>
+
+            <div style={{ flex: 1 }} />
+            <span style={{ color: '#3F3F46', fontSize: '0.75rem' }}>{filtered.length} ticket{filtered.length !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
+
+        {/* Expandable filter panel */}
+        {showFilters && (
+          <div style={{ padding: '0.75rem 2rem', background: '#0C0C0E', borderBottom: '1px solid #18181B', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ color: '#52525B', fontSize: '0.75rem', fontWeight: 500, minWidth: 'fit-content' }}>Filter by:</span>
+
+            <div style={{ display: 'flex', gap: '0.5rem', flex: 1, flexWrap: 'wrap' }}>
+              {/* System pills */}
+              <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                <button onClick={() => { setFilterSystem('all'); setPage(1); }}
+                  style={{ height: '28px', padding: '0 0.625rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', border: 'none',
+                    background: filterSystem === 'all' ? '#27272A' : 'transparent',
+                    color: filterSystem === 'all' ? '#D4D4D8' : '#52525B',
+                  }}>All Systems</button>
+                {systems.filter(s => userSystems.includes(s.id)).map(s => (
+                  <button key={s.id} onClick={() => { setFilterSystem(s.id); setPage(1); }}
+                    style={{ height: '28px', padding: '0 0.625rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', border: 'none', display: 'flex', alignItems: 'center', gap: '0.375rem',
+                      background: filterSystem === s.id ? '#27272A' : 'transparent',
+                      color: filterSystem === s.id ? '#D4D4D8' : '#52525B',
+                    }}>
+                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: s.colour, flexShrink: 0 }} />
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ width: '1px', height: '20px', background: '#1C1C20', flexShrink: 0 }} />
+
+              {/* Status pills */}
+              <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                <button onClick={() => { setFilterStatus('all'); setPage(1); }}
+                  style={{ height: '28px', padding: '0 0.625rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', border: 'none',
+                    background: filterStatus === 'all' ? '#27272A' : 'transparent',
+                    color: filterStatus === 'all' ? '#D4D4D8' : '#52525B',
+                  }}>All Status</button>
+                {Object.entries(STATUS_CONFIG).map(([k, v]) => (
+                  <button key={k} onClick={() => { setFilterStatus(k); setPage(1); }}
+                    style={{ height: '28px', padding: '0 0.625rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', border: 'none', display: 'flex', alignItems: 'center', gap: '0.375rem',
+                      background: filterStatus === k ? '#27272A' : 'transparent',
+                      color: filterStatus === k ? '#D4D4D8' : '#52525B',
+                    }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: v.dot, flexShrink: 0 }} />
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ width: '1px', height: '20px', background: '#1C1C20', flexShrink: 0 }} />
+
+              {/* Priority pills */}
+              <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                <button onClick={() => { setFilterPriority('all'); setPage(1); }}
+                  style={{ height: '28px', padding: '0 0.625rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', border: 'none',
+                    background: filterPriority === 'all' ? '#27272A' : 'transparent',
+                    color: filterPriority === 'all' ? '#D4D4D8' : '#52525B',
+                  }}>All Priority</button>
+                {['critical', 'high', 'medium', 'low'].map(p => (
+                  <button key={p} onClick={() => { setFilterPriority(p); setPage(1); }}
+                    style={{ height: '28px', padding: '0 0.625rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s', border: 'none', display: 'flex', alignItems: 'center', gap: '0.375rem', textTransform: 'capitalize',
+                      background: filterPriority === p ? '#27272A' : 'transparent',
+                      color: filterPriority === p ? '#D4D4D8' : '#52525B',
+                    }}>
+                    <span style={{ color: PRIORITY_CONFIG[p]?.colour, fontSize: '0.6875rem', fontWeight: 700, fontFamily: 'monospace' }}>{PRIORITY_CONFIG[p]?.icon}</span>
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {hasFilters && (
+              <button onClick={() => { setFilterSystem('all'); setFilterStatus('all'); setFilterPriority('all'); setSearch(''); setPage(1); }}
+                style={{ height: '28px', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0 0.5rem', background: 'none', border: 'none', color: '#52525B', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#A1A1AA')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#52525B')}>
+                <XMarkIcon style={{ width: '12px', height: '12px' }} /> Clear all
+              </button>
+            )}
           </div>
         )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.75rem' }}>
-            <span style={{ color: '#3F3F46', fontSize: '0.625rem' }}>Page {page}/{totalPages}</span>
-            <div style={{ display: 'flex', gap: '0.25rem' }}>
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                style={{ height: '28px', padding: '0 0.625rem', background: '#111113', border: '1px solid #1A1A1E', borderRadius: '4px', color: page === 1 ? '#1A1A1E' : '#71717A', fontSize: '0.6875rem', cursor: page === 1 ? 'default' : 'pointer' }}>Prev</button>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                style={{ height: '28px', padding: '0 0.625rem', background: '#111113', border: '1px solid #1A1A1E', borderRadius: '4px', color: page === totalPages ? '#1A1A1E' : '#71717A', fontSize: '0.6875rem', cursor: page === totalPages ? 'default' : 'pointer' }}>Next</button>
+        {/* Content area */}
+        <div style={{ padding: '0 2rem 2rem' }}>
+
+          {/* Ticket List */}
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5rem 2rem', gap: '0.75rem' }}>
+              <div style={{ width: '24px', height: '24px', border: '2px solid #1C1C20', borderTopColor: '#52525B', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              <span style={{ color: '#3F3F46', fontSize: '0.8125rem' }}>Loading tickets...</span>
+              <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
             </div>
-          </div>
-        )}
+          ) : filtered.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5rem 2rem' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#111114', border: '1px solid #1C1C20', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                <ExclamationTriangleIcon style={{ width: '22px', height: '22px', color: '#27272A' }} />
+              </div>
+              <p style={{ color: '#A1A1AA', fontSize: '0.9375rem', fontWeight: 600, margin: '0 0 0.25rem' }}>No tickets found</p>
+              <p style={{ color: '#52525B', fontSize: '0.8125rem', margin: '0 0 1.25rem' }}>{hasFilters ? 'Try adjusting your filters' : 'Create your first ticket to get started'}</p>
+              {!hasFilters && (
+                <Link href="/tickets/new" style={{ height: '36px', display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0 1rem', background: '#FAFAFA', color: '#09090B', borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600, textDecoration: 'none' }}>
+                  <PlusIcon style={{ width: '15px', height: '15px', strokeWidth: 2.5 }} /> New Ticket
+                </Link>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Table Header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 100px 90px 110px 110px 70px 36px', gap: '0.5rem', padding: '0.625rem 1rem', marginTop: '0.25rem' }}>
+                {['Ticket', 'Title', 'Type', 'Priority', 'Status', 'Assignee', 'Created', ''].map(h => (
+                  <span key={h} style={{ color: '#3F3F46', fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</span>
+                ))}
+              </div>
+
+              {/* Rows */}
+              <div style={{ borderRadius: '10px', border: '1px solid #1C1C20', overflow: 'hidden', background: '#0F0F11' }}>
+                {paginated.map((t, i) => {
+                  const ss = STATUS_CONFIG[t.status] || STATUS_CONFIG.open;
+                  const pp = PRIORITY_CONFIG[t.priority] || PRIORITY_CONFIG.medium;
+                  const TypeIcon = TYPE_ICONS[t.type] || ClipboardDocumentCheckIcon;
+                  return (
+                    <Link key={t.id} href={`/tickets/${t.id}`}
+                      style={{ display: 'grid', gridTemplateColumns: '110px 1fr 100px 90px 110px 110px 70px 36px', gap: '0.5rem', padding: '0.75rem 1rem', borderBottom: i < paginated.length - 1 ? '1px solid #151518' : 'none', textDecoration: 'none', transition: 'background 0.12s', alignItems: 'center' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = '#131316')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
+
+                      {/* Ticket # + System dot */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
+                        <span style={{ color: '#A1A1AA', fontSize: '0.8125rem', fontWeight: 600, fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace', letterSpacing: '-0.01em' }}>{t.ticket_number}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: t.system_colour, flexShrink: 0 }} />
+                          <span style={{ color: '#3F3F46', fontSize: '0.6875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.system_name}</span>
+                        </div>
+                      </div>
+
+                      {/* Title */}
+                      <span style={{ color: '#E4E4E7', fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4 }}>{t.title}</span>
+
+                      {/* Type */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <TypeIcon style={{ width: '14px', height: '14px', color: '#52525B', flexShrink: 0 }} />
+                        <span style={{ color: '#71717A', fontSize: '0.8125rem' }}>{TYPE_LABELS[t.type] || t.type}</span>
+                      </div>
+
+                      {/* Priority */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <span style={{ color: pp.colour, fontSize: '0.75rem', fontWeight: 700, fontFamily: 'monospace', lineHeight: 1, width: '18px' }}>{pp.icon}</span>
+                        <span style={{ color: pp.colour, fontSize: '0.75rem', fontWeight: 500, textTransform: 'capitalize' }}>{t.priority}</span>
+                      </div>
+
+                      {/* Status badge */}
+                      <div>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.1875rem 0.5rem', borderRadius: '999px', background: ss.bg, width: 'fit-content' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: ss.dot, flexShrink: 0 }} />
+                          <span style={{ color: ss.text, fontSize: '0.75rem', fontWeight: 500 }}>{ss.label}</span>
+                        </span>
+                      </div>
+
+                      {/* Assignee */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        {t.assignee_name ? (
+                          <>
+                            <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#1C1C20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <span style={{ fontSize: '0.625rem', color: '#71717A', fontWeight: 600 }}>{t.assignee_name.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <span style={{ color: '#A1A1AA', fontSize: '0.8125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.assignee_name}</span>
+                          </>
+                        ) : (
+                          <span style={{ color: '#27272A', fontSize: '0.8125rem' }}>—</span>
+                        )}
+                      </div>
+
+                      {/* Time */}
+                      <span style={{ color: '#3F3F46', fontSize: '0.75rem', textAlign: 'right' }}>{timeAgo(t.created_at)}</span>
+
+                      {/* Delete */}
+                      {isAdmin ? (
+                        <button onClick={async (e) => {
+                          e.preventDefault(); e.stopPropagation();
+                          if (!confirm(`Delete ${t.ticket_number}?`)) return;
+                          try {
+                            await supabase.from('ticket_activity_log').delete().eq('ticket_id', t.id);
+                            await supabase.from('ticket_comments').delete().eq('ticket_id', t.id);
+                            await supabase.from('ticket_attachments').delete().eq('ticket_id', t.id);
+                            await supabase.from('ticket_notifications').delete().eq('ticket_id', t.id);
+                            await supabase.from('tickets').delete().eq('id', t.id);
+                            fetchData();
+                          } catch (err) { console.error(err); }
+                        }}
+                          style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', borderRadius: '6px', color: '#27272A', cursor: 'pointer', transition: 'all .15s', padding: 0 }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = '#27272A'; e.currentTarget.style.background = 'transparent'; }}>
+                          <TrashIcon style={{ width: '14px', height: '14px' }} />
+                        </button>
+                      ) : <span />}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem', padding: '0 0.25rem' }}>
+                  <span style={{ color: '#3F3F46', fontSize: '0.8125rem' }}>
+                    Showing <span style={{ color: '#71717A' }}>{(page - 1) * perPage + 1}–{Math.min(page * perPage, filtered.length)}</span> of <span style={{ color: '#71717A' }}>{filtered.length}</span>
+                  </span>
+                  <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                      style={{ height: '32px', width: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: page === 1 ? 'transparent' : '#111114', border: '1px solid #1C1C20', borderRadius: '6px', color: page === 1 ? '#1C1C20' : '#71717A', cursor: page === 1 ? 'default' : 'pointer', transition: 'all 0.15s' }}>
+                      <ChevronLeftIcon style={{ width: '14px', height: '14px' }} />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                      .map((p, idx, arr) => (
+                        <React.Fragment key={p}>
+                          {idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ color: '#27272A', fontSize: '0.75rem', padding: '0 0.25rem' }}>...</span>}
+                          <button onClick={() => setPage(p)}
+                            style={{ height: '32px', minWidth: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0.375rem', background: p === page ? '#27272A' : 'transparent', border: `1px solid ${p === page ? '#3F3F46' : '#1C1C20'}`, borderRadius: '6px', color: p === page ? '#FAFAFA' : '#52525B', fontSize: '0.8125rem', fontWeight: p === page ? 600 : 400, cursor: 'pointer', transition: 'all 0.15s' }}>
+                            {p}
+                          </button>
+                        </React.Fragment>
+                      ))}
+                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                      style={{ height: '32px', width: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: page === totalPages ? 'transparent' : '#111114', border: '1px solid #1C1C20', borderRadius: '6px', color: page === totalPages ? '#1C1C20' : '#71717A', cursor: page === totalPages ? 'default' : 'pointer', transition: 'all 0.15s' }}>
+                      <ChevronRightIcon style={{ width: '14px', height: '14px' }} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </main>
     </div>
   );
