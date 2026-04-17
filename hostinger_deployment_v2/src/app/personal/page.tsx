@@ -424,7 +424,7 @@ export default function PersonalPage() {
   
   const [blocks, setBlocks] = useState<TimeBlock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<ViewMode>('day');
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedBlock, setSelectedBlock] = useState<TimeBlock | null>(null);
   const [showPanel, setShowPanel] = useState(false);
@@ -2100,7 +2100,22 @@ export default function PersonalPage() {
 
     // Convert meetings to blocks for display
     const meetingsAsBlocks: TimeBlock[] = meetings
-      .filter(meeting => meeting.date === dateStr && meeting.time) // Only meetings for this date with a time
+      .filter((meeting: any) => {
+        if (!meeting.time) return false;
+        const meetingDateStr = typeof meeting.date === 'string' ? meeting.date.split('T')[0] : meeting.date;
+        const excludedDates: string[] = meeting.excluded_dates || [];
+        if (excludedDates.includes(dateStr)) return false;
+
+        // Direct match
+        if (meetingDateStr === dateStr) return true;
+
+        // Daily recurring: show on every day from after start date up to end date
+        if (meeting.recurring && meeting.recurring_end_date && meetingDateStr) {
+          return dateStr > meetingDateStr && dateStr <= meeting.recurring_end_date;
+        }
+
+        return false;
+      })
       .map(meeting => {
         const startTime = meeting.time; // Format: HH:MM
         const duration = meeting.duration || 60; // Default 60 minutes
@@ -3317,9 +3332,12 @@ export default function PersonalPage() {
             });
           } else if (viewMode === 'week') {
             const weekStart = new Date(currentDate);
-            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            const mondayOffset = (weekStart.getDay() + 6) % 7;
+            weekStart.setDate(weekStart.getDate() - mondayOffset);
+            weekStart.setHours(0, 0, 0, 0);
             const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekEnd.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
             return projectTasks.filter(task => {
               if (!task.due_date) return false;
               const taskDate = new Date(task.due_date);
@@ -3330,17 +3348,35 @@ export default function PersonalPage() {
         };
 
         const getFilteredMeetings = () => {
+          const meetingDateStr = (m: any) =>
+            typeof m.date === 'string' ? m.date.split('T')[0] : m.date;
+
+          const matchesDate = (m: any, dateStr: string) => {
+            const base = meetingDateStr(m);
+            const excluded: string[] = m.excluded_dates || [];
+            if (excluded.includes(dateStr)) return false;
+            if (base === dateStr) return true;
+            if (m.recurring && m.recurring_end_date && base) {
+              return dateStr > base && dateStr <= m.recurring_end_date;
+            }
+            return false;
+          };
+
           if (viewMode === 'day') {
             const dateStr = formatDate(currentDate);
-            return meetings.filter(m => formatDate(new Date(m.date)) === dateStr);
+            return meetings.filter(m => matchesDate(m, dateStr));
           } else if (viewMode === 'week') {
             const weekStart = new Date(currentDate);
-            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-            const weekEnd = new Date(weekStart);
-            weekEnd.setDate(weekEnd.getDate() + 6);
+            const mondayOffset = (weekStart.getDay() + 6) % 7;
+            weekStart.setDate(weekStart.getDate() - mondayOffset);
+            weekStart.setHours(0, 0, 0, 0);
             return meetings.filter(m => {
-              const meetingDate = new Date(m.date);
-              return meetingDate >= weekStart && meetingDate <= weekEnd;
+              for (let i = 0; i < 7; i++) {
+                const d = new Date(weekStart);
+                d.setDate(weekStart.getDate() + i);
+                if (matchesDate(m, formatDate(d))) return true;
+              }
+              return false;
             });
           }
           return meetings; // Month view shows all
@@ -3356,9 +3392,12 @@ export default function PersonalPage() {
             });
           } else if (viewMode === 'week') {
             const weekStart = new Date(currentDate);
-            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            const mondayOffset = (weekStart.getDay() + 6) % 7;
+            weekStart.setDate(weekStart.getDate() - mondayOffset);
+            weekStart.setHours(0, 0, 0, 0);
             const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekEnd.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
             return timelineItems.filter(item => {
               const itemStart = new Date(item.start_date);
               const itemEnd = item.end_date ? new Date(item.end_date) : itemStart;
@@ -3375,9 +3414,12 @@ export default function PersonalPage() {
             return contentPosts.filter(post => post.planned_date === dateStr);
           } else if (viewMode === 'week') {
             const weekStart = new Date(currentDate);
-            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            const mondayOffset = (weekStart.getDay() + 6) % 7;
+            weekStart.setDate(weekStart.getDate() - mondayOffset);
+            weekStart.setHours(0, 0, 0, 0);
             const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekEnd.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
             return contentPosts.filter(post => {
               const postDate = new Date(post.planned_date);
               return postDate >= weekStart && postDate <= weekEnd;
