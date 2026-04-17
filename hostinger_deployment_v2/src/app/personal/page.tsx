@@ -1027,10 +1027,28 @@ export default function PersonalPage() {
     if (!user?.id) return;
     
     try {
-      // Fetch user's assigned project tasks
-      const [tasksData, meetingsData, projectsData] = await Promise.all([
+      // Hydrate meetings from cache instantly so boxes render without a 2-3s wait
+      try {
+        const cached = localStorage.getItem(`meetings_cache_${user.id}`);
+        if (cached) setMeetings(JSON.parse(cached));
+      } catch {}
+
+      // Kick off meetings fetch independently so it doesn't wait on tasks/projects
+      const meetingsPromise = meetingService.getMeetings().then((meetingsData: any) => {
+        const userMeetings = (meetingsData || []).filter((m: any) => {
+          const isCreator = m.created_by_id === user.id || m.created_by?.id === user.id;
+          const isAttendee = Array.isArray(m.attendee_ids) && m.attendee_ids.includes(user.id);
+          return isCreator || isAttendee;
+        });
+        setMeetings(userMeetings);
+        try {
+          localStorage.setItem(`meetings_cache_${user.id}`, JSON.stringify(userMeetings));
+        } catch {}
+        return userMeetings;
+      });
+
+      const [tasksData, projectsData] = await Promise.all([
         taskService.getUserTasks(),
-        meetingService.getMeetings(),
         projectService.getProjects()
       ]);
 
@@ -1045,19 +1063,13 @@ export default function PersonalPage() {
       });
       setProjectTasks(tasksWithProjects);
 
-      // Filter meetings where user is involved (match calendar page logic)
-      const userMeetings = (meetingsData || []).filter((m: any) => {
-        const isCreator = m.created_by_id === user.id || m.created_by?.id === user.id;
-        const isAttendee = Array.isArray(m.attendee_ids) && m.attendee_ids.includes(user.id);
-        return isCreator || isAttendee;
-      }).map((m: any) => {
-        const project = (projectsData || []).find((p: any) => p.id === (m.project_id || m.project));
-        return {
-          ...m,
-          project_name: project?.name || 'Unknown Project',
-        };
+      // Once meetings land, enrich them with project names (cheap re-render)
+      meetingsPromise.then((userMeetings) => {
+        setMeetings(userMeetings.map((m: any) => {
+          const project = (projectsData || []).find((p: any) => p.id === (m.project_id || m.project));
+          return { ...m, project_name: project?.name || 'Unknown Project' };
+        }));
       });
-      setMeetings(userMeetings);
 
       // Fetch timeline items and goals in parallel
       const today = formatDate(new Date());
