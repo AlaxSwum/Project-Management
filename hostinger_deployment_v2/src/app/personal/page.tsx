@@ -1045,10 +1045,10 @@ export default function PersonalPage() {
       });
       setProjectTasks(tasksWithProjects);
 
-      // Filter meetings where user is involved
+      // Filter meetings where user is involved (match calendar page logic)
       const userMeetings = (meetingsData || []).filter((m: any) => {
-        const isCreator = m.created_by?.id === user.id;
-        const isAttendee = m.attendee_ids?.includes(user.id);
+        const isCreator = m.created_by_id === user.id || m.created_by?.id === user.id;
+        const isAttendee = Array.isArray(m.attendee_ids) && m.attendee_ids.includes(user.id);
         return isCreator || isAttendee;
       }).map((m: any) => {
         const project = (projectsData || []).find((p: any) => p.id === (m.project_id || m.project));
