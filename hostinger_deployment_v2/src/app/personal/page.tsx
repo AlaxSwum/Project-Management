@@ -9,6 +9,7 @@ import { projectService, taskService, meetingService } from '@/lib/api-compatibi
 import { supabase } from '@/lib/supabase';
 import { showNotification, notificationScheduler } from '@/lib/electron-notifications';
 import { goalsService, Goal, GoalCompletion } from '@/lib/goals-service';
+import { getDisplayTimes, TIMEZONES } from '@/lib/timezone-utils';
 import {
   PlusIcon,
   ChevronLeftIcon,
@@ -228,7 +229,10 @@ const slideIn = {
 
 // Utility functions
 const formatDate = (date: Date): string => {
-  return date.toISOString().split('T')[0];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 };
 
 const formatTime = (time: string): string => {
@@ -930,7 +934,7 @@ export default function PersonalPage() {
     
     const checkDeadlineTasks = () => {
       const now = new Date();
-      const todayStr = now.toISOString().split('T')[0];
+      const todayStr = formatDate(now);
       
       // Get already notified tasks from localStorage
       const notifiedKey = 'deadline_notified_tasks';
@@ -980,7 +984,7 @@ export default function PersonalPage() {
     
     const checkTimelineDeadlines = () => {
       const now = new Date();
-      const todayStr = now.toISOString().split('T')[0];
+      const todayStr = formatDate(now);
       
       const notifiedKey = 'timeline_notified_items';
       const notifiedStr = localStorage.getItem(notifiedKey) || '{}';
@@ -1056,7 +1060,7 @@ export default function PersonalPage() {
       setMeetings(userMeetings);
 
       // Fetch timeline items and goals in parallel
-      const today = new Date().toISOString().split('T')[0];
+      const today = formatDate(new Date());
       const [
         { data: timelineData, error: timelineError },
         goalsResult,
@@ -1931,7 +1935,7 @@ export default function PersonalPage() {
 
   // Check if a goal is completed for today
   const isGoalCompletedToday = (goalId: string): boolean => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDate(new Date());
     return goalCompletions.some(c => c.goal_id === goalId && c.completed_date === today);
   };
 
@@ -3947,11 +3951,25 @@ export default function PersonalPage() {
                           <div style={{ fontSize: '12px', fontWeight: '500', color: '#FFFFFF', marginBottom: '4px', lineHeight: '1.3' }}>
                             {meeting.title}
                   </div>
-                          <div style={{ fontSize: '10px', color: '#71717A', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ color: '#F59E0B', fontWeight: '600' }}>{meeting.time}</span>
+                          <div style={{ fontSize: '10px', color: '#71717A', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                             <span>{meeting.duration}min</span>
                             <span>{new Date(meeting.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
             </div>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            {getDisplayTimes(meeting.time, ['UK', 'MM', 'TH']).map(dt => (
+                              <span key={dt.timezone} style={{
+                                fontSize: '10px',
+                                fontWeight: 600,
+                                color: dt.config.color,
+                                background: `${dt.config.color}20`,
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                whiteSpace: 'nowrap',
+                              }}>
+                                {dt.config.shortLabel} {dt.formatted}{dt.dateLabel ? ` ${dt.dateLabel}` : ''}
+                              </span>
+                            ))}
+                          </div>
                         </motion.div>
                       );
                     })}

@@ -31,7 +31,7 @@ import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import Sidebar from '@/components/Sidebar';
 import MeetingDetailModal from '@/components/MeetingDetailModal';
 import MobileHeader from '@/components/MobileHeader';
-import { TIMEZONES, TIMEZONE_KEYS, convertToUK, convertTime, adjustDate, getDisplayTimes, type TimezoneKey } from '@/lib/timezone-utils';
+import { getDisplayTimes, type TimezoneKey } from '@/lib/timezone-utils';
 
 interface User {
   id: number;
@@ -194,18 +194,15 @@ export default function CalendarPage() {
           return false;
         })
         .map((meeting: any) => {
-          // Convert stored UK time to user's local timezone for correct calendar positioning
+          // Meetings are always UK time/date — keep as-is for placement on the UK calendar.
           const ukTime = meeting.time || '00:00';
-          const { time: localTime, dateDelta } = convertTime(ukTime, 'UK', userTimezone);
-          const localDate = meeting.date ? adjustDate(meeting.date, dateDelta) : null;
-
-          const startDateTime = localDate && meeting.time
-            ? `${localDate}T${localTime}`
-            : localDate || null;
+          const startDateTime = meeting.date && meeting.time
+            ? `${meeting.date}T${ukTime}`
+            : meeting.date || null;
 
           let dueDateTime = startDateTime;
           if (meeting.duration && startDateTime) {
-            const start = new Date(startDateTime);
+            const start = new Date(`${meeting.date}T${ukTime}`);
             start.setMinutes(start.getMinutes() + meeting.duration);
             dueDateTime = start.toISOString();
           }
@@ -402,9 +399,9 @@ export default function CalendarPage() {
     setCreatingMeeting(true);
     
     try {
-      // Convert to UK time from selected timezone
-      const { time: ukTime, dateDelta } = convertToUK(newMeeting.start_time, newMeeting.timezone);
-      const ukDate = adjustDate(newMeeting.start_date, dateDelta);
+      // Meetings are always entered in UK time — no conversion needed on input.
+      const ukTime = newMeeting.start_time;
+      const ukDate = newMeeting.start_date;
 
       // Insert into projects_meeting table (base fields only)
       const meetingInsert: any = {
@@ -469,7 +466,7 @@ export default function CalendarPage() {
         recurring: false,
         recurring_end_date: '',
         timezone: 'UK' as TimezoneKey,
-        display_timezones: ['UK', 'MM'] as TimezoneKey[],
+        display_timezones: ['UK', 'MM', 'TH'] as TimezoneKey[],
       });
       setNewAgendaItem('');
       setShowCreateMeeting(false);
@@ -2769,6 +2766,20 @@ export default function CalendarPage() {
                                 </span>
                               )}
                             </div>
+                            {(task as any)._meetingData?.time && (
+                              <div style={{
+                                marginTop: '2px',
+                                fontSize: '9px',
+                                fontWeight: 600,
+                                color: 'rgba(255,255,255,0.85)',
+                                lineHeight: 1.3,
+                                letterSpacing: '0.02em',
+                              }}>
+                                {getDisplayTimes((task as any)._meetingData.time, ['UK', 'MM', 'TH'])
+                                  .map(dt => `${dt.config.shortLabel} ${dt.formatted}`)
+                                  .join(' · ')}
+                              </div>
+                            )}
                           </div>
                         ))}
                         {(dayTasks || []).length > 3 && (
@@ -3377,77 +3388,7 @@ export default function CalendarPage() {
                     </div>
 
                     {/* Timezone Selection */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-                      <div>
-                        <label style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          color: '#E4E4E7',
-                          fontSize: '0.875rem',
-                          fontWeight: 600,
-                          marginBottom: '8px'
-                        }}>
-                          <ClockIcon style={{ width: '16px', height: '16px', color: '#C77DFF' }} />
-                          Input Timezone
-                        </label>
-                        <select
-                          value={newMeeting.timezone}
-                          onChange={(e) => setNewMeeting({ ...newMeeting, timezone: e.target.value as TimezoneKey })}
-                          style={{
-                            width: '100%',
-                            padding: '12px 14px',
-                            background: '#141414',
-                            border: '1px solid #3D3D3D',
-                            borderRadius: '8px',
-                            color: '#FFFFFF',
-                            fontSize: '0.875rem',
-                            outline: 'none',
-                            cursor: 'pointer',
-                          }}
-                          onFocus={(e) => e.currentTarget.style.borderColor = '#C77DFF'}
-                          onBlur={(e) => e.currentTarget.style.borderColor = '#3D3D3D'}
-                        >
-                          {TIMEZONE_KEYS.map(tz => (
-                            <option key={tz} value={tz}>{TIMEZONES[tz].label}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{
-                          color: '#E4E4E7',
-                          fontSize: '0.875rem',
-                          fontWeight: 600,
-                          marginBottom: '8px',
-                          display: 'block',
-                        }}>
-                          Also show in:
-                        </label>
-                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', padding: '10px 0' }}>
-                          {TIMEZONE_KEYS.map(tz => (
-                            <label key={tz} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#A1A1AA', fontSize: '0.875rem' }}>
-                              <input
-                                type="checkbox"
-                                checked={newMeeting.display_timezones.includes(tz)}
-                                onChange={(e) => {
-                                  const checked = e.target.checked;
-                                  setNewMeeting(prev => ({
-                                    ...prev,
-                                    display_timezones: checked
-                                      ? [...prev.display_timezones, tz]
-                                      : prev.display_timezones.filter(t => t !== tz)
-                                  }));
-                                }}
-                                style={{ cursor: 'pointer', accentColor: '#C77DFF' }}
-                              />
-                              <span style={{ color: TIMEZONES[tz].color, fontWeight: '600' }}>{TIMEZONES[tz].shortLabel}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Time Preview */}
+                    {/* Time Preview - Meeting times are always UK. Auto-converted to MM + TH. */}
                     {newMeeting.start_time && (
                       <div style={{
                         marginBottom: '20px',
@@ -3456,17 +3397,16 @@ export default function CalendarPage() {
                         borderRadius: '8px',
                         border: '1px solid #3D3D3D',
                       }}>
-                        {(() => {
-                          const { time: ukTime } = convertToUK(newMeeting.start_time, newMeeting.timezone);
-                          const displayTimes = getDisplayTimes(ukTime, newMeeting.display_timezones);
-                          return displayTimes.map(dt => (
-                            <div key={dt.timezone} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                              <span style={{ fontWeight: '700', color: dt.config.color, fontSize: '12px', minWidth: '24px' }}>{dt.config.shortLabel}</span>
-                              <span style={{ color: dt.config.color, fontWeight: '500', fontSize: '13px' }}>{dt.formatted}</span>
-                              {dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '11px', fontWeight: '600' }}>{dt.dateLabel}</span>}
-                            </div>
-                          ));
-                        })()}
+                        <div style={{ fontSize: '11px', color: '#71717A', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                          Times in other regions
+                        </div>
+                        {getDisplayTimes(newMeeting.start_time, ['UK', 'MM', 'TH']).map(dt => (
+                          <div key={dt.timezone} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <span style={{ fontWeight: '700', color: dt.config.color, fontSize: '12px', minWidth: '24px' }}>{dt.config.shortLabel}</span>
+                            <span style={{ color: dt.config.color, fontWeight: '500', fontSize: '13px' }}>{dt.formatted}</span>
+                            {dt.dateLabel && <span style={{ color: '#EF4444', fontSize: '11px', fontWeight: '600' }}>{dt.dateLabel}</span>}
+                          </div>
+                        ))}
                       </div>
                     )}
 
