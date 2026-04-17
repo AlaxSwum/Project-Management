@@ -40,9 +40,9 @@ export default function RootLayout({
           * { margin: 0; padding: 0; box-sizing: border-box; }
           html, body { min-height: 100vh !important; }
           html.dark, html.dark body { background: #0D0D0D !important; color: #FFFFFF !important; }
-          html.light, html.light body { background: #FAFAF8 !important; color: #1A1A2E !important; }
+          html.light, html.light body { background: #F9FAFB !important; color: #111827 !important; }
           html.dark #__next { background: #0D0D0D !important; min-height: 100vh !important; }
-          html.light #__next { background: #FAFAF8 !important; min-height: 100vh !important; }
+          html.light #__next { background: #F9FAFB !important; min-height: 100vh !important; }
         `}} />
       </head>
       <body className="h-full antialiased" style={{ minHeight: '100vh', fontFamily: 'Mabry Pro, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif' }}>

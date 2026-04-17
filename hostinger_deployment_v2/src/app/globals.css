@@ -3049,54 +3049,54 @@ option {
 }
 
 /* ============================================================
-   LIGHT THEME - Deel-inspired warm white design
+   LIGHT THEME - Asana-inspired cool white design
    Activated by adding class="light" to <html>
    ============================================================ */
 
 html.light {
-  /* Light theme neutral colors */
-  --background: #FAFAF8 !important;
-  --background-secondary: #F5F5F0 !important;
+  /* Softer backgrounds — not pure white, slight warmth */
+  --background: #F9FAFB !important;
+  --background-secondary: #F3F4F6 !important;
   --surface: #FFFFFF !important;
-  --surface-light: #F9F9F6 !important;
-  --surface-dark: #F0F0EC !important;
+  --surface-light: #F3F4F6 !important;
+  --surface-dark: #E5E7EB !important;
   --surface-elevated: #FFFFFF !important;
-  --surface-subtle: #F5F5F0 !important;
-  --surface-hover: #F0F0EC !important;
+  --surface-subtle: #F3F4F6 !important;
+  --surface-hover: #EFF0F3 !important;
 
-  /* Light theme text colors */
-  --text-primary: #1A1A2E !important;
-  --text-secondary: #6B7280 !important;
-  --text-muted: #9CA3AF !important;
-  --text-light: #D1D5DB !important;
+  /* Text colors with good contrast */
+  --text-primary: #111827 !important;
+  --text-secondary: #4B5563 !important;
+  --text-muted: #6B7280 !important;
+  --text-light: #9CA3AF !important;
   --text-inverse: #FFFFFF !important;
 
-  /* Light theme border colors */
-  --border: #E5E5E0 !important;
-  --border-light: #EBEBEA !important;
-  --border-dark: #D4D4CF !important;
-  --border-accent: #D4D4CF !important;
+  /* Visible borders */
+  --border: #E5E7EB !important;
+  --border-light: #F3F4F6 !important;
+  --border-dark: #D1D5DB !important;
+  --border-accent: #D1D5DB !important;
 
-  /* Light shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04) !important;
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04) !important;
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03) !important;
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.12) !important;
-  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
-  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.1) !important;
+  /* Shadows with more presence */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+  --shadow-lg: 0 4px 14px rgba(0, 0, 0, 0.10) !important;
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+  --shadow-2xl: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05) !important;
+  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.10) !important;
 
-  /* Light gradients */
-  --gradient-surface: linear-gradient(135deg, #FFFFFF, #F9F9F6) !important;
-  --gradient-background: linear-gradient(180deg, #FAFAF8, #F5F5F0) !important;
-  --gradient-sidebar: linear-gradient(180deg, #FAFAF8, #F5F5F0) !important;
+  /* Flat design */
+  --gradient-surface: #FFFFFF !important;
+  --gradient-background: #F9FAFB !important;
+  --gradient-sidebar: linear-gradient(180deg, #1E1F21, #252628) !important;
 }
 
 /* --- Light theme base overrides --- */
 html.light,
 html.light body {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 html.light #__next {
@@ -3105,8 +3105,8 @@ html.light #__next {
 
 html.light body .min-h-full,
 html.light body > div {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 /* Light scrollbar */
@@ -3120,10 +3120,23 @@ html.light ::-webkit-scrollbar-thumb:hover {
   background: #9CA3AF !important;
 }
 
-/* Light headings */
+/* Asana headings */
 html.light h1, html.light h2, html.light h3,
 html.light h4, html.light h5, html.light h6 {
-  color: #1A1A2E !important;
+  color: #1E1F21 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Scrollbar */
+html.light ::-webkit-scrollbar-track {
+  background: #F3F4F6 !important;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #D1D5DB !important;
+  border-radius: 4px !important;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF !important;
 }
 
 /* Light inputs */
@@ -3138,8 +3151,8 @@ html.light input[type="date"],
 html.light input[type="time"],
 html.light select,
 html.light textarea {
-  background: #FFFFFF !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
   border-color: #E5E5E0 !important;
 }
 
@@ -3151,33 +3164,51 @@ html.light textarea::placeholder {
 html.light input:focus,
 html.light textarea:focus,
 html.light select:focus {
-  border-color: #10B981 !important;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+  border-color: #4573D2 !important;
+  box-shadow: 0 0 0 2px rgba(69, 115, 210, 0.12) !important;
 }
 
-/* Light tables */
+html.light input[type="email"],
+html.light input[type="password"],
+html.light input[type="text"],
+html.light input[type="tel"],
+html.light input[type="number"],
+html.light input[type="url"],
+html.light input[type="search"],
+html.light input[type="date"],
+html.light input[type="time"],
+html.light select,
+html.light textarea {
+  background: #FFFFFF !important;
+  color: #111827 !important;
+  border-color: #D1D5DB !important;
+}
+
+/* Tables */
 html.light table {
-  color: #1A1A2E !important;
+  color: #111827 !important;
 }
 html.light thead {
-  background-color: #F5F5F0 !important;
+  background-color: #F9FAFB !important;
 }
 html.light thead th {
   color: #6B7280 !important;
-  border-bottom: 1px solid #E5E5E0 !important;
+  border-bottom: 1px solid #E5E7EB !important;
+  font-weight: 500 !important;
+  font-size: 11px !important;
 }
 html.light tbody tr {
-  border-bottom: 1px solid #F0F0EC !important;
+  border-bottom: 1px solid #F3F4F6 !important;
 }
 html.light tbody tr:hover {
-  background-color: #F9F9F6 !important;
+  background-color: #F3F4F6 !important;
 }
 html.light tbody td {
-  color: #1A1A2E !important;
+  color: #1E1F21 !important;
 }
 html.light option {
   background-color: #FFFFFF !important;
-  color: #1A1A2E !important;
+  color: #1E1F21 !important;
 }
 
 /* Light selection */
@@ -3186,41 +3217,93 @@ html.light ::selection {
   color: #FFFFFF !important;
 }
 
-/* ---- SIDEBAR LIGHT THEME ---- */
+/* ---- SIDEBAR LIGHT THEME (Todoist-style: light sidebar) ---- */
 html.light .sidebar-panel {
-  background: #FAFAF8 !important;
-  border-right: 1px solid #E5E5E0 !important;
+  background: #FAFAFA !important;
+  border-right: 1px solid #E5E7EB !important;
 }
 
 html.light .sidebar-header {
-  border-bottom: 1px solid #E5E5E0 !important;
+  border-bottom: 1px solid #E5E7EB !important;
+  background: #FAFAFA !important;
 }
 
 html.light .sidebar-bottom {
-  border-top: 1px solid #E5E5E0 !important;
+  border-top: 1px solid #E5E7EB !important;
+  background: #FAFAFA !important;
+}
+
+html.light .sidebar-panel h1,
+html.light .sidebar-panel h2,
+html.light .sidebar-panel h3,
+html.light .sidebar-panel h4,
+html.light .sidebar-panel h5 {
+  color: #111827 !important;
+}
+
+html.light .sidebar-panel span,
+html.light .sidebar-panel p,
+html.light .sidebar-panel a,
+html.light .sidebar-panel label,
+html.light .sidebar-panel div:not(.sidebar-overlay) {
+  color: #4B5563 !important;
+}
+
+html.light .sidebar-panel svg {
+  color: #6B7280 !important;
 }
 
 html.light .mobile-topbar {
-  background: #FAFAF8 !important;
-  border-bottom: 1px solid #E5E5E0 !important;
+  background: #F9FAFB !important;
+  border-bottom: 1px solid #E5E7EB !important;
 }
 
 html.light .mobile-hamburger-badge {
-  border-color: #FAFAF8 !important;
+  border-color: #FAFAFA !important;
 }
 
 html.light .sidebar-overlay {
   background: rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Sidebar link colors in light mode */
+/* Sidebar links */
 html.light .sidebar-panel .sidebar-link {
-  color: #6B7280 !important;
+  color: #4B5563 !important;
 }
 
 html.light .sidebar-panel .sidebar-link:hover {
-  background: #F0F0EC !important;
-  color: #1A1A2E !important;
+  background: #F3F4F6 !important;
+  color: #111827 !important;
+}
+
+html.light .sidebar-panel .sidebar-link:hover svg {
+  color: #111827 !important;
+}
+
+html.light .sidebar-panel .sidebar-link.active,
+html.light .sidebar-panel .sidebar-link[data-active="true"] {
+  background: #EDE9FE !important;
+  color: #7C3AED !important;
+}
+
+html.light .sidebar-panel .sidebar-link.active span,
+html.light .sidebar-panel .sidebar-link.active svg {
+  color: #7C3AED !important;
+}
+
+/* Sidebar section labels */
+html.light .sidebar-panel [style*="textTransform: uppercase"],
+html.light .sidebar-panel [style*="text-transform: uppercase"] {
+  color: #9CA3AF !important;
+}
+
+/* Theme toggle in sidebar */
+html.light .theme-toggle-btn {
+  color: #6B7280 !important;
+}
+html.light .theme-toggle-btn:hover {
+  background: #F3F4F6 !important;
+  color: #111827 !important;
 }
 
 /* ---- GLOBAL OVERRIDES FOR LIGHT THEME ---- */
@@ -3228,27 +3311,27 @@ html.light .sidebar-panel .sidebar-link:hover {
 
 /* Main page wrapper - all pages use this */
 html.light .page-main {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 /* Personal page variants */
 html.light .personal-main,
 html.light .personal-page {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 /* Calendar container */
 html.light .calendar-container {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 /* The outer flex wrapper that contains Sidebar + content */
 html.light body > div > div > div {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 /* Broad light theme background/text override for page structure.
@@ -3257,35 +3340,35 @@ html.light body > div > div > div {
 
 /* Target the layout wrapper div */
 html.light .min-h-full {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 /* Target all major structural divs that render as page containers */
 html.light .min-h-full > div {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 /* All page-main content areas and their direct children */
 html.light .page-main > div,
 html.light .page-main > header,
 html.light .page-main > section {
-  color: #1A1A2E !important;
+  color: #1E1F21 !important;
 }
 
 /* Override hardcoded dark backgrounds on page-level containers.
    These have inline style={{ background: '#0D0D0D' }} which CSS !important CAN override. */
 html.light .min-h-full > div > div:not(.sidebar-panel):not(.sidebar-overlay):not(.create-project-overlay) {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 /* Page main and all flex containers inside pages */
 html.light .page-main,
 html.light .page-main > div {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 /* Headers inside pages (typically have bg #141414) */
@@ -3298,19 +3381,661 @@ html.light div[class*="rounded"] {
   border-color: #E5E5E0 !important;
 }
 
-/* Fix white text on light backgrounds - target common page text patterns */
-html.light .page-main span,
-html.light .page-main p,
-html.light .page-main label,
-html.light .page-main div {
-  /* Only override when not inside colored elements */
+/* ================================================================
+   MEGA OVERRIDE: Remap ALL hardcoded dark inline colors to light.
+   Pages use inline style={{ background: '#09090B', color: '#FAFAFA' }}
+   CSS !important DOES override inline styles.
+   ================================================================ */
+
+/* ── DARK BACKGROUNDS → SOFT LIGHT ── */
+
+/* Page-level dark bg → off-white */
+html.light [style*="background: #09090B"],
+html.light [style*="background: #0A0A0C"],
+html.light [style*="background: #0D0D0D"] {
+  background: #F9FAFB !important;
+}
+
+/* Surface dark bg → white */
+html.light [style*="background: #0E0E10"],
+html.light [style*="background: #0E0E11"],
+html.light [style*="background: #0F0F11"],
+html.light [style*="background: #0C0C0E"],
+html.light [style*="background: #111113"],
+html.light [style*="background: #111114"],
+html.light [style*="background: #141414"],
+html.light [style*="background: #141416"],
+html.light [style*="background: #151517"],
+html.light [style*="background: #151518"],
+html.light [style*="background: #131316"] {
+  background: #FFFFFF !important;
+}
+
+/* Elevated surfaces */
+html.light [style*="background: #18181B"],
+html.light [style*="background: #1A1A1A"],
+html.light [style*="background: #1A1A1E"],
+html.light [style*="background: #1C1C20"],
+html.light [style*="background: #1E1F21"] {
+  background: #FFFFFF !important;
+}
+
+/* Hover / muted surfaces → visible soft gray */
+html.light [style*="background: #27272A"],
+html.light [style*="background: #2A2A2E"],
+html.light [style*="background: #1F1F23"],
+html.light [style*="background: #222226"],
+html.light [style*="background: #252628"] {
+  background: #EFF0F3 !important;
+}
+
+/* Gradient backgrounds */
+html.light [style*="background: linear-gradient(180deg, #111114"],
+html.light [style*="background: linear-gradient(180deg, #1E1F21"] {
+  background: #FFFFFF !important;
+}
+
+/* ── TEXT REMAPS (high contrast on light bg) ── */
+
+/* Bright text → dark */
+html.light .page-main [style*="color: #FAFAFA"],
+html.light .page-main [style*="color: #F4F4F5"],
+html.light .page-main [style*="color: #E4E4E7"],
+html.light .page-main [style*="color: #FFFFFF"] {
+  color: #111827 !important;
+}
+
+html.light .page-main [style*="color: #D4D4D8"] {
+  color: #1F2937 !important;
+}
+html.light .page-main [style*="color: #A1A1AA"] {
+  color: #4B5563 !important;
+}
+html.light .page-main [style*="color: #71717A"] {
+  color: #4B5563 !important;
+}
+html.light .page-main [style*="color: #52525B"] {
+  color: #6B7280 !important;
+}
+html.light .page-main [style*="color: #3F3F46"] {
+  color: #9CA3AF !important;
+}
+html.light .page-main [style*="color: #27272A"] {
+  color: #D1D5DB !important;
+}
+html.light .page-main [style*="color: #1C1C20"] {
+  color: #D1D5DB !important;
+}
+
+/* ── BORDERS ── */
+
+html.light .page-main [style*="border-bottom: 1px solid #141416"],
+html.light .page-main [style*="border-bottom: 1px solid #151518"],
+html.light .page-main [style*="border-bottom: 1px solid #18181B"],
+html.light .page-main [style*="border-bottom: 1px solid #1A1A1E"],
+html.light .page-main [style*="border-bottom: 1px solid #1C1C20"] {
+  border-bottom-color: #E5E7EB !important;
+}
+
+html.light .page-main [style*="border: 1px solid #1A1A1E"],
+html.light .page-main [style*="border: 1px solid #1C1C20"],
+html.light .page-main [style*="border: 1px solid #141416"],
+html.light .page-main [style*="border: 1px solid #27272A"] {
+  border-color: #E5E7EB !important;
+}
+
+html.light .page-main [style*="border-right: 1px solid #141416"] {
+  border-right-color: #E5E7EB !important;
+}
+
+html.light .page-main [style*="border-top: 1px solid #141416"] {
+  border-top-color: #E5E7EB !important;
+}
+
+/* ── HOVER STATES ── */
+
+/* Row hovers: dark hover bg → visible light hover */
+html.light .page-main a:hover,
+html.light .page-main button:hover {
+  transition: background 0.15s, color 0.15s !important;
+}
+
+/* Links inside page-main */
+html.light .page-main a[style*="textDecoration: none"]:hover {
+  background: #F3F4F6 !important;
+}
+
+/* Buttons - primary (white bg button) */
+html.light .page-main button[style*="background: #FAFAFA"],
+html.light .page-main a[style*="background: #FAFAFA"] {
+  background: #111827 !important;
+  color: #FFFFFF !important;
+}
+
+/* Buttons - ghost/outline */
+html.light .page-main button[style*="background: transparent"] {
+  color: #4B5563 !important;
+}
+html.light .page-main button[style*="background: transparent"]:hover {
+  background: #F3F4F6 !important;
+  color: #111827 !important;
+}
+
+/* ── DROPDOWN MENUS ── */
+html.light [style*="background: #18181B"][style*="border: 1px solid #27272A"],
+html.light [style*="background: #1C1C20"][style*="border: 1px solid #2A2A2E"] {
+  background: #FFFFFF !important;
+  border-color: #E5E7EB !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10) !important;
+}
+
+/* Dropdown items */
+html.light [style*="background: #27272A"][style*="border-radius: 6px"],
+html.light [style*="background: #27272A"][style*="border-radius: 5px"] {
+  background: #F3F4F6 !important;
+}
+
+/* ── KEEP COLORED ELEMENTS INTACT ── */
+
+/* Status/priority badge backgrounds - DON'T override these */
+html.light .page-main [style*="background: rgba(59,130,246"],
+html.light .page-main [style*="background: rgba(234,179,8"],
+html.light .page-main [style*="background: rgba(167,139,250"],
+html.light .page-main [style*="background: rgba(45,212,191"],
+html.light .page-main [style*="background: rgba(34,197,94"],
+html.light .page-main [style*="background: rgba(113,113,122"],
+html.light .page-main [style*="background: rgba(239,68,68"],
+html.light .page-main [style*="background: rgba(234,179,8,0.0"],
+html.light .page-main [style*="background: rgba(34,197,94,0.0"],
+html.light .page-main [style*="background: rgba(239,68,68,0.0"] {
+  /* preserve colored backgrounds */
+}
+
+/* ── INPUT OVERRIDES ── */
+html.light .page-main input,
+html.light .page-main textarea,
+html.light .page-main select {
+  background: #FFFFFF !important;
+  color: #111827 !important;
+  border-color: #D1D5DB !important;
+}
+
+html.light .page-main input:focus,
+html.light .page-main textarea:focus {
+  border-color: #4573D2 !important;
+  box-shadow: 0 0 0 2px rgba(69, 115, 210, 0.12) !important;
+}
+
+html.light .page-main input::placeholder,
+html.light .page-main textarea::placeholder {
+  color: #9CA3AF !important;
+}
+
+/* ── CHECKBOX ── */
+html.light .page-main input[type="checkbox"] {
+  accent-color: #10B981 !important;
+}
+
+/* ── TOP NAV / STICKY HEADERS ── */
+html.light .page-main [style*="position: sticky"] {
+  background: #F9FAFB !important;
+  border-bottom-color: #E5E7EB !important;
+}
+
+/* Sticky header text */
+html.light .page-main [style*="position: sticky"] a,
+html.light .page-main [style*="position: sticky"] span,
+html.light .page-main [style*="position: sticky"] button {
+  color: #4B5563 !important;
+}
+
+html.light .page-main [style*="position: sticky"] a:hover,
+html.light .page-main [style*="position: sticky"] button:hover {
+  color: #111827 !important;
+}
+
+/* ── TICKET DETAIL RIGHT SIDEBAR ── */
+/* The right column with #0C0C0E background */
+html.light .page-main [style*="background: #0C0C0E"] {
+  background: #FAFAFA !important;
+}
+
+/* Card backgrounds in sidebar */
+html.light .page-main [style*="background: linear-gradient"] {
+  background: #FFFFFF !important;
+  border-color: #E5E7EB !important;
+}
+
+/* ── ALL DARK TEXT ON LIGHT: deeper nested ── */
+html.light .page-main [style*="color: #FAFAFA"] * {
+  color: inherit !important;
+}
+
+/* ── DROPDOWN / POPOVER MENUS (inside page-main) ── */
+html.light .page-main [style*="position: absolute"][style*="background: #1C1C20"],
+html.light .page-main [style*="position: absolute"][style*="background: #18181B"],
+html.light .page-main [style*="position: relative"] > [style*="position: absolute"][style*="background: #1C1C20"],
+html.light .page-main [style*="position: relative"] > [style*="position: absolute"][style*="background: #18181B"] {
+  background: #FFFFFF !important;
+  border: 1px solid #E5E7EB !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10) !important;
+}
+
+/* Dropdown items inside popover */
+html.light .page-main [style*="position: absolute"] button[style*="background: transparent"],
+html.light .page-main [style*="position: absolute"] button[style*="background: #27272A"] {
+  color: #374151 !important;
+}
+
+html.light .page-main [style*="position: absolute"] button[style*="background: transparent"]:hover {
+  background: #F3F4F6 !important;
+  color: #111827 !important;
+}
+
+html.light .page-main [style*="position: absolute"] button[style*="background: #27272A"] {
+  background: #EFF0F3 !important;
+  color: #111827 !important;
+}
+
+/* Dropdown dot colors - keep them */
+html.light .page-main [style*="position: absolute"] button span[style*="border-radius: 50%"] {
+  /* keep colored dots */
+}
+
+/* ── STATUS ACTION BUTTONS (Move to In Progress, etc.) ── */
+/* These have colored backgrounds like ${STATUS[ns]?.colour}0A - keep them but fix text */
+html.light .page-main [style*="position: sticky"] button[style*="border-radius: 8px"] {
+  color: inherit !important;
+}
+
+/* ── COMMENT BOX IN LIGHT MODE ── */
+html.light .page-main textarea {
+  background: #FFFFFF !important;
+  color: #111827 !important;
+  border-color: #D1D5DB !important;
+}
+
+html.light .page-main textarea:focus {
+  border-color: #4573D2 !important;
+}
+
+/* Comment footer bar */
+html.light .page-main [style*="background: #0C0C0E"][style*="padding"] {
+  background: #F9FAFB !important;
+  border-top-color: #E5E7EB !important;
+}
+
+/* ── AVATAR CIRCLES ── */
+html.light .page-main [style*="border-radius: 50%"][style*="background: #151518"],
+html.light .page-main [style*="border-radius: 50%"][style*="background: #18181B"],
+html.light .page-main [style*="border-radius: 50%"][style*="background: #1A1A1E"],
+html.light .page-main [style*="border-radius: 50%"][style*="background: #1C1C20"] {
+  background: #E5E7EB !important;
+}
+
+html.light .page-main [style*="border-radius: 50%"][style*="background: #151518"] span,
+html.light .page-main [style*="border-radius: 50%"][style*="background: #18181B"] span,
+html.light .page-main [style*="border-radius: 50%"][style*="background: #1C1C20"] span {
+  color: #6B7280 !important;
+}
+
+/* ── ACTIVITY BAR COLORS (keep colored bars) ── */
+html.light .page-main [style*="width: 3px"][style*="background: #1C1C20"],
+html.light .page-main [style*="width: 3px"][style*="background: #1A1A1E"] {
+  background: #E5E7EB !important;
+}
+
+/* ── BORDER OVERRIDES FOR NESTED ELEMENTS ── */
+html.light .page-main [style*="border: 1px solid #1A1A1E"] {
+  border-color: #E5E7EB !important;
+}
+
+html.light .page-main [style*="border: 1px solid #1C1C20"] {
+  border-color: #E5E7EB !important;
+}
+
+html.light .page-main [style*="border-bottom: 1px solid #111114"] {
+  border-bottom-color: #E5E7EB !important;
+}
+
+/* ══════════════════════════════════════════════════
+   NUCLEAR: Catch ALL remaining dark inline styles
+   ══════════════════════════════════════════════════ */
+
+/* ALL dark bg divs/spans/buttons inside page-main */
+html.light .page-main div[style*="background: #09090B"],
+html.light .page-main div[style*="background: #0A0A0C"],
+html.light .page-main div[style*="background: #0D0D0D"],
+html.light .page-main div[style*="background: #0E0E"],
+html.light .page-main div[style*="background: #0F0F"],
+html.light .page-main div[style*="background: #0C0C"],
+html.light .page-main div[style*="background: #1111"],
+html.light .page-main div[style*="background: #1414"],
+html.light .page-main div[style*="background: #1515"],
+html.light .page-main div[style*="background: #1313"],
+html.light .page-main div[style*="background: #1818"],
+html.light .page-main div[style*="background: #1A1A"],
+html.light .page-main div[style*="background: #1C1C"],
+html.light .page-main div[style*="background: #1E1E"],
+html.light .page-main div[style*="background: #1E1F"],
+html.light .page-main div[style*="background: #2727"],
+html.light .page-main div[style*="background: #2A2A"],
+html.light .page-main div[style*="background: #1F1F"],
+html.light .page-main div[style*="background: #2222"],
+html.light .page-main div[style*="background: #2525"] {
+  background: #F9FAFB !important;
+  color: #111827 !important;
+}
+
+/* Buttons with dark bg */
+html.light .page-main button[style*="background: #09090B"],
+html.light .page-main button[style*="background: #0D0D"],
+html.light .page-main button[style*="background: #1111"],
+html.light .page-main button[style*="background: #1414"],
+html.light .page-main button[style*="background: #1818"],
+html.light .page-main button[style*="background: #1A1A"],
+html.light .page-main button[style*="background: #1C1C"],
+html.light .page-main button[style*="background: #1E1E"],
+html.light .page-main button[style*="background: #1E1F"],
+html.light .page-main button[style*="background: #2727"],
+html.light .page-main button[style*="background: #2A2A"] {
+  background: #F3F4F6 !important;
+  color: #111827 !important;
+  border-color: #E5E7EB !important;
+}
+
+/* Active tab / selected button with dark bg → subtle highlight */
+html.light .page-main button[style*="background: #FAFAFA"],
+html.light .page-main a[style*="background: #FAFAFA"] {
+  background: #111827 !important;
+  color: #FFFFFF !important;
+}
+
+/* Links with dark bg */
+html.light .page-main a[style*="background: #09090B"],
+html.light .page-main a[style*="background: #0D0D"],
+html.light .page-main a[style*="background: #1111"],
+html.light .page-main a[style*="background: #1414"],
+html.light .page-main a[style*="background: #1818"],
+html.light .page-main a[style*="background: #1A1A"],
+html.light .page-main a[style*="background: #1C1C"],
+html.light .page-main a[style*="background: #1E1F"],
+html.light .page-main a[style*="background: #2727"] {
+  background: #F3F4F6 !important;
+  color: #111827 !important;
+}
+
+/* Spans with dark bg (badges, tags, counts) */
+html.light .page-main span[style*="background: #09090B"],
+html.light .page-main span[style*="background: #0D0D"],
+html.light .page-main span[style*="background: #1111"],
+html.light .page-main span[style*="background: #1414"],
+html.light .page-main span[style*="background: #1818"],
+html.light .page-main span[style*="background: #1A1A"],
+html.light .page-main span[style*="background: #1C1C"],
+html.light .page-main span[style*="background: #1E1F"],
+html.light .page-main span[style*="background: #2727"],
+html.light .page-main span[style*="background: #2A2A"] {
+  background: #E5E7EB !important;
+  color: #111827 !important;
+}
+
+/* ── KANBAN COLUMNS ── */
+/* Column header bars */
+html.light .page-main [style*="background: #1A1A1E"],
+html.light .page-main [style*="background: #18181B"] {
+  background: #FFFFFF !important;
+}
+
+/* Kanban cards */
+html.light .page-main [style*="background: #141416"],
+html.light .page-main [style*="background: #111114"] {
+  background: #FFFFFF !important;
+  border-color: #E5E7EB !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+}
+
+/* ── ALL TEXT COLOR OVERRIDES (nuclear) ── */
+html.light .page-main [style*="color: #FAFAFA"],
+html.light .page-main [style*="color: #FFFFFF"],
+html.light .page-main [style*="color: #F4F4F5"],
+html.light .page-main [style*="color: #E4E4E7"] {
+  color: #111827 !important;
+}
+
+html.light .page-main [style*="color: #D4D4D8"] {
+  color: #1F2937 !important;
+}
+
+html.light .page-main [style*="color: #A1A1AA"],
+html.light .page-main [style*="color: #71717A"] {
+  color: #4B5563 !important;
+}
+
+html.light .page-main [style*="color: #52525B"],
+html.light .page-main [style*="color: #3F3F46"] {
+  color: #6B7280 !important;
+}
+
+html.light .page-main [style*="color: #27272A"],
+html.light .page-main [style*="color: #1C1C20"] {
+  color: #9CA3AF !important;
+}
+
+/* ── ALL BORDER OVERRIDES (nuclear) ── */
+html.light .page-main [style*="border"][style*="#1A1A1E"],
+html.light .page-main [style*="border"][style*="#1C1C20"],
+html.light .page-main [style*="border"][style*="#141416"],
+html.light .page-main [style*="border"][style*="#18181B"],
+html.light .page-main [style*="border"][style*="#27272A"],
+html.light .page-main [style*="border"][style*="#111114"],
+html.light .page-main [style*="border"][style*="#151518"] {
+  border-color: #E5E7EB !important;
+}
+
+/* ── KEEP ACCENT COLORS (don't override these) ── */
+/* Status colors */
+html.light .page-main [style*="color: #3B82F6"] { color: #3B82F6 !important; }
+html.light .page-main [style*="color: #60A5FA"] { color: #2563EB !important; }
+html.light .page-main [style*="color: #EAB308"] { color: #CA8A04 !important; }
+html.light .page-main [style*="color: #FBBF24"] { color: #D97706 !important; }
+html.light .page-main [style*="color: #8B5CF6"] { color: #7C3AED !important; }
+html.light .page-main [style*="color: #A78BFA"] { color: #7C3AED !important; }
+html.light .page-main [style*="color: #14B8A6"] { color: #0D9488 !important; }
+html.light .page-main [style*="color: #2DD4BF"] { color: #0D9488 !important; }
+html.light .page-main [style*="color: #22C55E"] { color: #16A34A !important; }
+html.light .page-main [style*="color: #4ADE80"] { color: #16A34A !important; }
+html.light .page-main [style*="color: #EF4444"] { color: #DC2626 !important; }
+html.light .page-main [style*="color: #F97316"] { color: #EA580C !important; }
+html.light .page-main [style*="color: #10B981"] { color: #059669 !important; }
+html.light .page-main [style*="color: #D97706"] { color: #B45309 !important; }
+
+/* ── MORE DARK BG CATCHES (hex without # prefix variations) ── */
+html.light .page-main div[style*="background: #2D2D2D"],
+html.light .page-main button[style*="background: #2D2D2D"],
+html.light .page-main span[style*="background: #2D2D2D"],
+html.light .page-main a[style*="background: #2D2D2D"] {
+  background: #E5E7EB !important;
+  color: #111827 !important;
+}
+
+html.light .page-main div[style*="background: #3F3F46"],
+html.light .page-main button[style*="background: #3F3F46"],
+html.light .page-main span[style*="background: #3F3F46"] {
+  background: #D1D5DB !important;
+  color: #111827 !important;
+}
+
+html.light .page-main div[style*="background: #3A3B3D"],
+html.light .page-main button[style*="background: #3A3B3D"],
+html.light .page-main span[style*="background: #3A3B3D"] {
+  background: #E5E7EB !important;
+  color: #111827 !important;
+}
+
+/* ── KANBAN TASK CARDS: keep colored gradients but fix text visibility ── */
+html.light .page-main [style*="background: linear-gradient(135deg, #EF4444"],
+html.light .page-main [style*="background: linear-gradient(135deg, #F97316"],
+html.light .page-main [style*="background: linear-gradient(135deg, #EAB308"],
+html.light .page-main [style*="background: linear-gradient(135deg, #10B981"],
+html.light .page-main [style*="background: linear-gradient(135deg, #3B82F6"],
+html.light .page-main [style*="background: linear-gradient(135deg, #52525B"] {
+  /* Keep the colored gradient backgrounds for task cards */
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+}
+
+/* Task card text INSIDE colored cards must stay white */
+html.light .page-main [style*="background: linear-gradient(135deg"] span,
+html.light .page-main [style*="background: linear-gradient(135deg"] div,
+html.light .page-main [style*="background: linear-gradient(135deg"] p,
+html.light .page-main [style*="background: linear-gradient(135deg"] button {
+  color: #FFFFFF !important;
+}
+
+/* Delete icon on kanban cards */
+html.light .page-main [style*="background: linear-gradient(135deg"] svg {
+  color: rgba(255,255,255,0.7) !important;
+}
+
+/* ── HOVER TEXT FIX: JS hover changes color to #FFFFFF which gets overridden ── */
+/* When hovering tab items, the JS sets color: #FFFFFF → should become #111827 in light */
+html.light .page-main button:hover {
+  color: #111827 !important;
+}
+
+/* But keep buttons with explicit white bg text correct */
+html.light .page-main button[style*="color: #FFFFFF"][style*="background: #10B981"],
+html.light .page-main button[style*="color: #FFFFFF"][style*="background: #EF4444"],
+html.light .page-main a[style*="color: #FFFFFF"][style*="background: #10B981"],
+html.light .page-main a[style*="background: #10B981"] {
+  color: #FFFFFF !important;
+}
+
+/* ══ FINAL NUCLEAR: override EVERY dark bg inside page-main ══ */
+/* This catches any element with any dark hex inline background */
+html.light .page-main *[style*="background: #0"],
+html.light .page-main *[style*="background: #1"],
+html.light .page-main *[style*="background: #2"] {
+  background: #F3F4F6 !important;
+}
+
+/* But restore page-level bg to slightly lighter */
+html.light .page-main[style*="background: #0"],
+html.light .page-main > div[style*="background: #0"] {
+  background: #F9FAFB !important;
+}
+
+/* Restore white for card-like elements (have border-radius) */
+html.light .page-main *[style*="background: #0"][style*="borderRadius"],
+html.light .page-main *[style*="background: #0"][style*="border-radius"],
+html.light .page-main *[style*="background: #1"][style*="borderRadius"],
+html.light .page-main *[style*="background: #1"][style*="border-radius"] {
+  background: #FFFFFF !important;
+}
+
+/* KEEP gradient task cards colored */
+html.light .page-main *[style*="background: linear-gradient(135deg, #E"],
+html.light .page-main *[style*="background: linear-gradient(135deg, #F"],
+html.light .page-main *[style*="background: linear-gradient(135deg, #1"],
+html.light .page-main *[style*="background: linear-gradient(135deg, #3"],
+html.light .page-main *[style*="background: linear-gradient(135deg, #5"] {
+  background: unset !important;
+}
+
+/* Keep rgba colored backgrounds (status badges) */
+html.light .page-main *[style*="background: rgba("] {
+  background: unset !important;
+}
+
+/* KEEP green/red solid button backgrounds */
+html.light .page-main *[style*="background: #10B981"] { background: #10B981 !important; color: #FFFFFF !important; }
+html.light .page-main *[style*="background: #EF4444"] { background: #EF4444 !important; color: #FFFFFF !important; }
+html.light .page-main *[style*="background: #059669"] { background: #059669 !important; color: #FFFFFF !important; }
+html.light .page-main *[style*="background: #DC2626"] { background: #DC2626 !important; color: #FFFFFF !important; }
+
+/* Keep colored dot backgrounds (small circles) */
+html.light .page-main *[style*="backgroundColor: #EF4444"],
+html.light .page-main *[style*="backgroundColor: #F97316"],
+html.light .page-main *[style*="backgroundColor: #EAB308"],
+html.light .page-main *[style*="backgroundColor: #10B981"],
+html.light .page-main *[style*="backgroundColor: #22C55E"],
+html.light .page-main *[style*="backgroundColor: #3B82F6"],
+html.light .page-main *[style*="backgroundColor: #8B5CF6"] {
+  background-color: unset !important;
+}
+
+/* Force ALL text in page-main to be readable */
+html.light .page-main *[style*="color: #FAFAFA"] { color: #111827 !important; }
+html.light .page-main *[style*="color: #FFFFFF"] { color: #111827 !important; }
+html.light .page-main *[style*="color: #E4E4E7"] { color: #111827 !important; }
+html.light .page-main *[style*="color: #F4F4F5"] { color: #111827 !important; }
+html.light .page-main *[style*="color: #D4D4D8"] { color: #1F2937 !important; }
+
+/* But text inside gradient cards MUST stay white */
+html.light .page-main *[style*="background: linear-gradient"] *[style*="color: #FFFFFF"],
+html.light .page-main *[style*="background: linear-gradient"] *[style*="color: #FAFAFA"],
+html.light .page-main *[style*="background: linear-gradient"] span,
+html.light .page-main *[style*="background: linear-gradient"] div,
+html.light .page-main *[style*="background: linear-gradient"] p {
+  color: #FFFFFF !important;
+}
+
+/* Text inside green/red buttons stays white */
+html.light .page-main *[style*="background: #10B981"] span,
+html.light .page-main *[style*="background: #10B981"] div,
+html.light .page-main *[style*="background: #EF4444"] span,
+html.light .page-main *[style*="background: #EF4444"] div,
+html.light .page-main a[style*="background: #10B981"] * {
+  color: #FFFFFF !important;
+}
+
+/* ══ PROJECT PAGE: View Tabs + Kanban Column Headers ══ */
+html.light .view-tab-bar {
+  background: #F3F4F6 !important;
+  border: 1px solid #E5E7EB !important;
+}
+
+html.light .view-tab {
+  color: #6B7280 !important;
+  background: transparent !important;
+}
+
+html.light .view-tab:hover {
+  color: #111827 !important;
+  background: #E5E7EB !important;
+}
+
+html.light .view-tab-active {
+  background: #FFFFFF !important;
+  color: #111827 !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
+}
+
+html.light .view-tab-active svg,
+html.light .view-tab-active span {
+  color: #111827 !important;
+}
+
+html.light .view-tab svg {
+  color: #9CA3AF !important;
+}
+
+/* Kanban column header labels */
+html.light .kanban-col-label {
+  color: #111827 !important;
+}
+
+html.light .kanban-col-count {
+  background: #E5E7EB !important;
+  color: #4B5563 !important;
 }
 
 /* Calendar-specific overrides */
 html.light .calendar-container,
 html.light .calendar-container > div {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 /* Card-like containers */
@@ -3321,20 +4046,71 @@ html.light .card-interactive {
   border-color: #E5E5E0 !important;
 }
 
-/* Modals light theme */
+/* ── MODALS & POPUPS LIGHT THEME ── */
 html.light [style*="background: rgba(0,0,0,0.7)"],
-html.light [style*="background: rgba(0, 0, 0, 0.7)"] {
-  background: rgba(0, 0, 0, 0.3) !important;
+html.light [style*="background: rgba(0, 0, 0, 0.7)"],
+html.light [style*="background: rgba(0,0,0,0.5)"],
+html.light [style*="background: rgba(0, 0, 0, 0.5)"],
+html.light [style*="background: rgba(0,0,0,0.6)"],
+html.light [style*="background: rgba(0, 0, 0, 0.6)"] {
+  background: rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
 }
 
 html.light .modal-backdrop {
-  background: rgba(0, 0, 0, 0.3) !important;
+  background: rgba(0, 0, 0, 0.25) !important;
 }
 
 html.light .modal-content {
   background: #FFFFFF !important;
-  border-color: #E5E5E0 !important;
-  color: #1A1A2E !important;
+  border-color: #E5E7EB !important;
+  color: #111827 !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04) !important;
+  border-radius: 12px !important;
+}
+
+/* All popup/overlay divs with fixed/absolute + dark bg */
+html.light [style*="position: fixed"][style*="background: #09090B"],
+html.light [style*="position: fixed"][style*="background: #0D0D0D"],
+html.light [style*="position: fixed"][style*="background: #0A0A0C"],
+html.light [style*="position: fixed"][style*="background: rgba(0"],
+html.light [style*="position: fixed"][style*="z-index: 9999"],
+html.light [style*="position: fixed"][style*="z-index: 999"] {
+  background: rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Modal inner content boxes */
+html.light [style*="position: fixed"] > div[style*="background: #18181B"],
+html.light [style*="position: fixed"] > div[style*="background: #111114"],
+html.light [style*="position: fixed"] > div[style*="background: #0E0E11"],
+html.light [style*="position: fixed"] > div[style*="background: #141416"],
+html.light [style*="position: fixed"] > div[style*="background: #1A1A1E"],
+html.light [style*="position: fixed"] > div[style*="background: #09090B"] {
+  background: #FFFFFF !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12) !important;
+  color: #111827 !important;
+}
+
+/* Popup dropdown menus (position: absolute) */
+html.light [style*="position: absolute"][style*="background: #18181B"],
+html.light [style*="position: absolute"][style*="background: #1C1C20"],
+html.light [style*="position: absolute"][style*="z-index: 50"] {
+  background: #FFFFFF !important;
+  border: 1px solid #E5E7EB !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10) !important;
+  border-radius: 10px !important;
+}
+
+/* Popup items text */
+html.light [style*="position: absolute"][style*="z-index: 50"] button {
+  color: #374151 !important;
+}
+html.light [style*="position: absolute"][style*="z-index: 50"] button:hover {
+  background: #F3F4F6 !important;
+  color: #111827 !important;
 }
 
 /* Keep active nav items with green background readable */
@@ -3383,8 +4159,8 @@ html.light .theme-toggle-btn:hover {
 /* Light theme: fix common page containers that use dark inline styles */
 html.light div[style*="minHeight: '100vh'"],
 html.light div[style*="min-height: 100vh"] {
-  background: #FAFAF8 !important;
-  color: #1A1A2E !important;
+  background: #F9FAFB !important;
+  color: #111827 !important;
 }
 
 /* Fix the online status dot border in light mode */
@@ -3396,5 +4172,5 @@ html.light div[style*="border: 2px solid #0D0D0D"] {
 /* Light mode nav item hover fix for sidebar */
 html.light .sidebar-nav .sidebar-link:hover {
   background: #F0F0EC !important;
-  color: #1A1A2E !important;
+  color: #1E1F21 !important;
 }

@@ -996,7 +996,7 @@ n              {/* Team Members Button - Avatar Style */}
               
           {/* View Tabs and Search */}
           <div style={{ display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '0.75rem' : '0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: '#1A1A1A', borderRadius: '0.5rem', padding: '0.25rem', width: isMobile ? '100%' : 'auto', overflowX: 'auto' }}>
+            <div className="view-tab-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: '#1A1A1A', borderRadius: '0.5rem', padding: '0.25rem', width: isMobile ? '100%' : 'auto', overflowX: 'auto' }}>
               {[
                 { id: 'kanban', label: 'Kanban', icon: Squares2X2Icon },
                 { id: 'list', label: 'List', icon: ListBulletIcon },
@@ -1010,6 +1010,7 @@ n              {/* Team Members Button - Avatar Style */}
                     setSelectedView(view.id as any);
                     setSelectedTab(view.id as any);
                   }}
+                  className={selectedView === view.id ? 'view-tab-active' : 'view-tab'}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -2046,8 +2047,8 @@ n              {/* Team Members Button - Avatar Style */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', padding: '0 0.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: status.color }} />
-                      <span style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{status.label}</span>
-                      <span style={{ padding: '0.125rem 0.5rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA', fontWeight: 600 }}>
+                      <span className="kanban-col-label" style={{ color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 600 }}>{status.label}</span>
+                      <span className="kanban-col-count" style={{ padding: '0.125rem 0.5rem', background: '#2D2D2D', borderRadius: '0.375rem', fontSize: '0.75rem', color: '#A1A1AA', fontWeight: 600 }}>
                       {statusTasks.length}
                     </span>
                   </div>

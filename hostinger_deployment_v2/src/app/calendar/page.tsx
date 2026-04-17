@@ -251,14 +251,15 @@ export default function CalendarPage() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   };
 
   const getFirstDayOfMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+    const jsDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+    return (jsDay + 6) % 7;
   };
 
   const previousMonth = () => {
@@ -2799,10 +2800,11 @@ export default function CalendarPage() {
                 }}>
                   {Array.from({ length: 7 }).map((_, dayIndex) => {
                     const weekStart = new Date(currentDate);
-                    weekStart.setDate(currentDate.getDate() - currentDate.getDay() + dayIndex);
+                    const mondayOffset = (currentDate.getDay() + 6) % 7;
+                    weekStart.setDate(currentDate.getDate() - mondayOffset + dayIndex);
                     const dayTasks = getTasksForDate(weekStart);
                     const isToday = weekStart.toDateString() === today.toDateString();
-                    const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayIndex];
+                    const dayName = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][dayIndex];
                     const dayNumber = weekStart.getDate();
 
                   return (

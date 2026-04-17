@@ -2254,19 +2254,17 @@ export default function PersonalPage() {
               >
                 {/* Sliding Background Indicator */}
                 <motion.div
-                  layout
-                  layoutId="viewModeIndicator"
                   style={{
                     position: 'absolute',
                     top: '3px',
                     bottom: '3px',
-                    width: 'calc(33.33% - 2px)',
+                    width: '72px',
                     background: '#3B82F6',
                     borderRadius: '8px',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
                   }}
                   animate={{
-                    left: viewMode === 'day' ? '3px' : viewMode === 'week' ? 'calc(33.33% + 1px)' : 'calc(66.66% - 1px)',
+                    left: viewMode === 'day' ? 3 : viewMode === 'week' ? 75 : 147,
                   }}
                   transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
@@ -2276,7 +2274,8 @@ export default function PersonalPage() {
                     onClick={() => setViewMode(mode)}
                     whileTap={{ scale: 0.97 }}
                     style={{
-                      padding: '7px 16px',
+                      width: '72px',
+                      padding: '7px 0',
                       fontSize: '12px',
                       fontWeight: '600',
                       border: 'none',
@@ -2285,6 +2284,7 @@ export default function PersonalPage() {
                       background: 'transparent',
                       color: viewMode === mode ? '#FFFFFF' : '#71717A',
                       textTransform: 'capitalize',
+                      textAlign: 'center',
                       position: 'relative',
                       zIndex: 1,
                       transition: 'color 0.15s ease',
@@ -3019,11 +3019,8 @@ export default function PersonalPage() {
                               const top = ((startHour - 1) * 60 + startMin) * pxPerMinute;
                               const height = Math.max(((endHour * 60 + endMin) - (startHour * 60 + startMin)) * pxPerMinute, 35);
                               
-                              // Use colorful palette based on block type or index
-                              const colorIndex = block.type ? 
-                                ['work', 'meeting', 'personal', 'health', 'learning', 'creative', 'other'].indexOf(block.type) : 
-                                blockIdx;
-                              const colors = calendarColors[Math.abs(colorIndex) % calendarColors.length];
+                              // Use consistent block type colors (matches day/month views)
+                              const colors = blockTypeColors[block.type] || blockTypeColors.focus;
                               
                               const overlapInfo = overlapPositions.get(block.id);
                               const column = overlapInfo?.column || 0;
